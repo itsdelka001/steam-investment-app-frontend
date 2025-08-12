@@ -636,6 +636,7 @@ export default function App() {
           </ModernDialogTitle>
           <DialogContent dividers sx={{ p: 3, m: 0 }}>
             <Grid container spacing={3}>
+              {/* Автозаповнення тепер завжди в окремому Grid item */}
               <Grid item xs={12} md={selectedItemDetails ? 6 : 12}>
                 <Autocomplete
                   options={itemOptions}
