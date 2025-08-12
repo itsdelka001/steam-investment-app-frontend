@@ -237,13 +237,14 @@ const LANGUAGES = {
 };
 
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
+const STEAM_CDN_URL = "https://community.akamai.steamstatic.com/economy/image/";
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
   const [name, setName] = useState("");
   const [count, setCount] = useState(1);
   const [buyPrice, setBuyPrice] = useState(0);
-  const [buyCurrency, setBuyCurrency] = useState(CURRENCIES[2]); // Змінено на UAH за замовчуванням
+  const [buyCurrency, setBuyCurrency] = useState(CURRENCIES[2]);
   const [game, setGame] = useState(GAMES[1]);
   const [boughtDate, setBoughtDate] = useState(new Date().toISOString().split('T')[0]);
   const [tabValue, setTabValue] = useState(0);
@@ -331,8 +332,17 @@ export default function App() {
         }
 
         const data = await response.json();
-        const formattedOptions = data.map(item => ({ label: item.name, image: item.icon_url, float: item.float }));
-
+        const formattedOptions = data.map(item => {
+          // Використовуємо більш надійний спосіб для формування URL зображення
+          const imageUrl = item.icon_url.startsWith('https://')
+            ? item.icon_url
+            : `${STEAM_CDN_URL}${item.icon_url}`;
+          return {
+            label: item.name,
+            image: imageUrl,
+            float: item.float
+          };
+        });
         setItemOptions(formattedOptions);
       } catch (error) {
         if (error.name === 'AbortError') {
@@ -405,7 +415,7 @@ export default function App() {
     setSellDialog(false);
     resetForm();
   };
-  
+
   const confirmDelete = (item) => {
     setItemToDelete(item);
     setDeleteDialogOpen(true);
@@ -599,10 +609,11 @@ export default function App() {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label={<GradientText variant="subtitle1">{t.name}</GradientText>}
+                        label={t.name}
                         placeholder="Введіть назву предмета або скіна..."
                         variant="outlined"
                         required
+                        InputLabelProps={{ shrink: autocompleteValue !== null || name !== '' }}
                         InputProps={{
                           ...params.InputProps,
                           endAdornment: (
@@ -644,7 +655,7 @@ export default function App() {
                     />
                   </Box>
                   <TextField
-                    label={t.buyPrice}
+                    label={`${t.buyPrice} ${CURRENCY_SYMBOLS[buyCurrency]}`}
                     type="number"
                     variant="outlined"
                     fullWidth
@@ -652,11 +663,6 @@ export default function App() {
                     onChange={(e) => setBuyPrice(Number(e.target.value))}
                     required
                     inputProps={{ min: 0 }}
-                    InputProps={{
-                      endAdornment: (
-                        <InputLabel>{CURRENCY_SYMBOLS[buyCurrency]}</InputLabel>
-                      )
-                    }}
                   />
                   <TextField
                     label={t.boughtDate}
@@ -687,14 +693,21 @@ export default function App() {
                   }}
                 >
                   {selectedItemDetails?.image ? (
-                    <Box sx={{ width: '100%' }}>
-                      <Typography variant="h6" gutterBottom align="center">
+                    <Box sx={{ width: '100%', textAlign: 'center' }}>
+                      <Typography variant="h6" gutterBottom>
                         <GradientText variant="h6">{t.itemDetails}</GradientText>
                       </Typography>
-                      <Box display="flex" flexDirection="column" alignItems="center">
-                        <img src={selectedItemDetails.image} alt={selectedItemDetails.label} style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px', borderRadius: '8px' }} />
-                        <Typography variant="h6" align="center" mb={2}>{selectedItemDetails.label}</Typography>
-                        <Grid container spacing={2}>
+                      <img
+                        src={selectedItemDetails.image}
+                        alt={selectedItemDetails.label}
+                        style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px', borderRadius: '8px' }}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image';
+                        }}
+                      />
+                      <Typography variant="h6" align="center" mb={2}>{selectedItemDetails.label}</Typography>
+                      <Grid container spacing={2}>
                            <Grid item xs={12} sm={6}>
                               <TextField
                                 label={t.floatValue}
@@ -727,7 +740,6 @@ export default function App() {
                               />
                             </Grid>
                         </Grid>
-                      </Box>
                     </Box>
                   ) : (
                     <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100%">
@@ -758,7 +770,7 @@ export default function App() {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
-                  label={t.sellPrice}
+                  label={`${t.sellPrice} ${CURRENCY_SYMBOLS[itemToSell?.buyCurrency]}`}
                   type="number"
                   variant="outlined"
                   fullWidth
