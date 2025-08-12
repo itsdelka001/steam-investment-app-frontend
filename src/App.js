@@ -354,6 +354,7 @@ export default function App() {
   };
 
   const handleAutocompleteChange = (event, newValue) => {
+    console.log("[App.js] Autocomplete newValue:", newValue); // <-- Додано логування
     setAutocompleteValue(newValue);
     if (newValue && typeof newValue === 'object') {
       setName(newValue.label);
@@ -706,6 +707,7 @@ export default function App() {
                       <Typography variant="h6" gutterBottom>
                         <GradientText variant="h6">{t.itemDetails}</GradientText>
                       </Typography>
+                      {console.log("[App.js] Image src value before render:", selectedItemDetails.image)} {/* <-- Додано логування */}
                       <img
                         src={selectedItemDetails.image || 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image'}
                         alt={selectedItemDetails.label || 'Item image'}
@@ -826,7 +828,7 @@ export default function App() {
           <DialogActions>
             <Button onClick={() => setDeleteDialogOpen(false)}>{t.cancel}</Button>
             <Button onClick={deleteItem} color="error" variant="contained">{t.delete}</Button>
-          </DialogActions>
+          </Dialogactions>
         </Dialog>
 
         {/* Dialog для аналітики */}
