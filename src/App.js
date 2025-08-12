@@ -14,12 +14,7 @@ import {
   Cell
 } from 'recharts';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
-import {
-  getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc,
-  query, where, serverTimestamp
-} from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid'; // Для генерації унікальних ID
 
 const theme = createTheme({
   palette: {
@@ -284,34 +279,19 @@ const LANGUAGES = {
 };
 
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
-
-const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-const InvestmentCard = styled(Card)(({ theme }) => ({
-  background: theme.palette.background.paper,
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  transition: 'box-shadow 0.3s, transform 0.3s',
-  '&:hover': {
-    boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
-    transform: 'translateY(-4px)',
-  },
-}));
-
-const DetailChip = styled(Chip)(({ theme, colorName }) => ({
-  backgroundColor: '#F1F3F5',
-  color: theme.palette.text.primary,
-  fontWeight: 'normal',
-  marginRight: theme.spacing(1),
-  marginBottom: theme.spacing(1),
-  borderRadius: 6,
-}));
+const LOCAL_STORAGE_KEY = 'steam-investments';
 
 export default function App() {
-  const [investments, setInvestments] = useState([]);
+  // Завантаження даних з localStorage при першому завантаженні
+  const [investments, setInvestments] = useState(() => {
+    try {
+      const storedInvestments = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return storedInvestments ? JSON.parse(storedInvestments) : [];
+    } catch (error) {
+      console.error("Failed to load investments from localStorage", error);
+      return [];
+    }
+  });
   const [name, setName] = useState("");
   const [count, setCount] = useState(1);
   const [buyPrice, setBuyPrice] = useState(0);
@@ -336,10 +316,6 @@ export default function App() {
   const abortControllerRef = useRef(null);
   const [autocompleteValue, setAutocompleteValue] = useState(null);
   const [selectedItemDetails, setSelectedItemDetails] = useState(null);
-  const [db, setDb] = useState(null);
-  const [auth, setAuth] = useState(null);
-  const [userId, setUserId] = useState(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
   const [priceHistory, setPriceHistory] = useState([]);
   const [priceHistoryOpen, setPriceHistoryOpen] = useState(false);
   const [priceHistoryLoading, setPriceHistoryLoading] = useState(false);
@@ -350,79 +326,23 @@ export default function App() {
 
   const t = LANGUAGES[lang];
 
+  // Зберігаємо дані в localStorage щоразу, коли 'investments' оновлюється
   useEffect(() => {
     try {
-      const app = initializeApp(firebaseConfig);
-      const authInstance = getAuth(app);
-      const dbInstance = getFirestore(app);
-      setAuth(authInstance);
-      setDb(dbInstance);
-
-      onAuthStateChanged(authInstance, async (user) => {
-        if (user) {
-          setUserId(user.uid);
-        } else {
-          try {
-            await signInAnonymously(authInstance);
-            setUserId(authInstance.currentUser.uid);
-          } catch (error) {
-            console.error("Error signing in anonymously:", error);
-          }
-        }
-        setIsAuthReady(true);
-      });
-
-      if (initialAuthToken) {
-        signInWithCustomToken(authInstance, initialAuthToken).catch((error) => {
-          console.error("Error signing in with custom token:", error);
-        });
-      }
-    } catch (e) {
-      console.error("Firebase initialization failed. Check your config.", e);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isAuthReady && userId && db) {
-      const investmentsCollection = collection(db, `artifacts/${appId}/users/${userId}/investments`);
-      const q = query(investmentsCollection);
-
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const items = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setInvestments(items);
-      }, (error) => {
-        console.error("Error listening to investments:", error);
-      });
-
-      return () => unsubscribe();
-    }
-  }, [isAuthReady, userId, db]);
-
-  const updateInvestment = async (id, data) => {
-    if (!db) return;
-    try {
-      const investmentDoc = doc(db, `artifacts/${appId}/users/${userId}/investments`, id);
-      await updateDoc(investmentDoc, data);
-      showSnackbar(t.itemUpdated, 'success');
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(investments));
     } catch (error) {
-      console.error("Error updating investment:", error);
-      showSnackbar(t.fetchError, 'error');
+      console.error("Failed to save investments to localStorage", error);
     }
+  }, [investments]);
+
+  const updateInvestment = (id, data) => {
+    setInvestments(prev => prev.map(item => (item.id === id ? { ...item, ...data } : item)));
+    showSnackbar(t.itemUpdated, 'success');
   };
 
-  const deleteInvestment = async (id) => {
-    if (!db) return;
-    try {
-      const investmentDoc = doc(db, `artifacts/${appId}/users/${userId}/investments`, id);
-      await deleteDoc(investmentDoc);
-      showSnackbar(t.itemDeleted, 'success');
-    } catch (error) {
-      console.error("Error deleting investment:", error);
-      showSnackbar(t.fetchError, 'error');
-    }
+  const deleteInvestment = (id) => {
+    setInvestments(prev => prev.filter(item => item.id !== id));
+    showSnackbar(t.itemDeleted, 'success');
   };
 
   const getGameFromItemName = (itemName) => {
@@ -441,7 +361,7 @@ export default function App() {
     if (pubgKeywords.some(keyword => lowerItemName.includes(keyword))) {
       return "PUBG";
     }
-    return "CS2"; // Default to CS2 if not found
+    return "CS2"; // За замовчуванням CS2, якщо не знайдено
   };
   
 
@@ -581,13 +501,14 @@ export default function App() {
     }
   };
 
-  const addItem = async () => {
-    if (!name || count <= 0 || buyPrice <= 0 || !boughtDate || !db || !userId) {
+  const addItem = () => {
+    if (!name || count <= 0 || buyPrice <= 0 || !boughtDate) {
       showSnackbar("СИСТЕМНА ПОМИЛКА: ВВЕДІТЬ ПОВНІ ДАНІ", "error");
       return;
     }
 
     const newItem = {
+      id: uuidv4(),
       name,
       market_hash_name: selectedItemDetails?.market_hash_name || name,
       count: Number(count),
@@ -599,18 +520,13 @@ export default function App() {
       sellPrice: 0,
       sellDate: null,
       image: selectedItemDetails?.image || null,
-      createdAt: serverTimestamp(),
+      createdAt: new Date().toISOString(),
     };
 
-    try {
-      await addDoc(collection(db, `artifacts/${appId}/users/${userId}/investments`), newItem);
-      showSnackbar(t.itemAdded, "success");
-      resetForm();
-      setAddDialog(false);
-    } catch (error) {
-      console.error("Error adding investment:", error);
-      showSnackbar(t.fetchError, "error");
-    }
+    setInvestments(prev => [...prev, newItem]);
+    showSnackbar(t.itemAdded, "success");
+    resetForm();
+    setAddDialog(false);
   };
 
   const markAsSold = () => {
