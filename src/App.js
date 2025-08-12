@@ -133,10 +133,6 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
 }));
 
-const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
-  padding: theme.spacing(4),
-}));
-
 const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
   background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
   color: theme.palette.common.white,
@@ -365,7 +361,6 @@ export default function App() {
       setSelectedItemDetails(null);
     }
   };
-
 
   const addItem = () => {
     if (!name || count <= 0 || buyPrice <= 0 || !boughtDate) {
@@ -609,23 +604,15 @@ export default function App() {
                         placeholder="Введіть назву предмета або скіна..."
                         variant="outlined"
                         required
-                        sx={{ mb: 2 }}
-                        InputLabelProps={{
-                          shrink: autocompleteValue !== null || name !== '',
-                          sx: {
-                            backgroundColor: theme.palette.background.paper,
-                            px: 1,
-                            transform: 'translate(14px, -9px) scale(0.75)'
-                          }
+                        InputLabelProps={{ shrink: true }}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 3,
+                          },
+                          mb: 2,
                         }}
                         InputProps={{
                           ...params.InputProps,
-                          sx: {
-                            borderRadius: '12px',
-                            '&:before, &:after': {
-                              display: 'none'
-                            }
-                          },
                           endAdornment: (
                             <React.Fragment>
                               {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
@@ -707,7 +694,7 @@ export default function App() {
                       <Typography variant="h6" gutterBottom>
                         <GradientText variant="h6">{t.itemDetails}</GradientText>
                       </Typography>
-                      {console.log("[App.js] Image src value before render:", selectedItemDetails.image)} {/* <-- Додано логування */}
+                      {console.log("[App.js] Image src value before render:", selectedItemDetails.image)}
                       <img
                         src={selectedItemDetails.image || 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image'}
                         alt={selectedItemDetails.label || 'Item image'}
@@ -828,7 +815,7 @@ export default function App() {
           <DialogActions>
             <Button onClick={() => setDeleteDialogOpen(false)}>{t.cancel}</Button>
             <Button onClick={deleteItem} color="error" variant="contained">{t.delete}</Button>
-          </Dialogactions>
+          </DialogActions>
         </Dialog>
 
         {/* Dialog для аналітики */}
