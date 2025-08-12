@@ -332,7 +332,6 @@ export default function App() {
           return {
             label: item.name,
             image: item.icon_url,
-            // Додаємо float з бекенду в опції
             float: item.float
           };
         });
@@ -357,14 +356,12 @@ export default function App() {
     setAutocompleteValue(newValue);
     if (newValue && typeof newValue === 'object') {
       setName(newValue.label);
-      // Додаємо float до selectedItemDetails
       setSelectedItemDetails({ ...newValue, image: newValue.image, float: newValue.float });
     } else {
       setName(newValue || '');
       setSelectedItemDetails(null);
     }
   };
-
 
   const addItem = () => {
     if (!name || count <= 0 || buyPrice <= 0 || !boughtDate) {
@@ -707,14 +704,14 @@ export default function App() {
                         <GradientText variant="h6">{t.itemDetails}</GradientText>
                       </Typography>
                       <img
-                        src={selectedItemDetails.image ? selectedItemDetails.image : 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image'}
-                        alt={selectedItemDetails.label}
+                        src={selectedItemDetails?.image || 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image'}
+                        alt={selectedItemDetails?.label || 'Item image'}
                         style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px', borderRadius: '8px' }}
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image';
                         }}
-                        crossOrigin="anonymous" // Додано атрибут crossOrigin
+                        crossOrigin="anonymous" 
                       />
                       <Typography variant="h6" align="center" mb={2}>{selectedItemDetails.label}</Typography>
                       <Grid container spacing={2}>
@@ -724,7 +721,7 @@ export default function App() {
                                 type="number"
                                 variant="outlined"
                                 fullWidth
-                                value={selectedItemDetails.float}
+                                value={selectedItemDetails.float || 'N/A'}
                                 disabled
                                 sx={{
                                   '& .MuiOutlinedInput-notchedOutline': {
