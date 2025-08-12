@@ -701,20 +701,19 @@ export default function App() {
                     boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
                   }}
                 >
-                  {selectedItemDetails?.image ? (
+                  {selectedItemDetails ? (
                     <Box sx={{ width: '100%', textAlign: 'center' }}>
                       <Typography variant="h6" gutterBottom>
                         <GradientText variant="h6">{t.itemDetails}</GradientText>
                       </Typography>
                       <img
-                        src={selectedItemDetails.image ? selectedItemDetails.image : 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image'}
-                        alt={selectedItemDetails.label}
+                        src={selectedItemDetails.image || 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image'}
+                        alt={selectedItemDetails.label || 'Item image'}
                         style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px', borderRadius: '8px' }}
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image';
                         }}
-                        crossOrigin="anonymous"
                       />
                       <Typography variant="h6" align="center" mb={2}>{selectedItemDetails.label}</Typography>
                       <Grid container spacing={2}>
