@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Typography,
@@ -35,6 +35,40 @@ import { TrendingUp, Delete, Edit, BarChart, Info } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 
+// Оновлені тексти для локалізації
+const translations = {
+  ua: {
+    title: "Steam Investment Tracker",
+    addItemTitle: "Додати предмет",
+    itemNameLabel: "Назва предмета",
+    gameLabel: "Гра",
+    csgo: "CS2",
+    dota2: "Dota 2",
+    pubg: "PUBG",
+    add: "Додати",
+    myItems: "Мої предмети",
+    item: "Предмет",
+    price: "Поточна ціна",
+    invested: "Інвестовано",
+    profit: "Прибуток",
+    actions: "Дії",
+    editItemTitle: "Редагувати предмет",
+    save: "Зберегти",
+    cancel: "Скасувати",
+    delete: "Видалити",
+    profitAnalytics: "Аналітика прибутку",
+    itemAdded: "Предмет успішно додано!",
+    itemUpdated: "Предмет успішно оновлено!",
+    itemDeleted: "Предмет успішно видалено!",
+    fetchError: "Помилка при отриманні даних",
+    noData: "Немає даних для відображення",
+    noItems: "Список предметів порожній.",
+    fetching: "Завантаження...",
+    history: "Історія",
+    date: "Дата",
+  },
+};
+
 const theme = createTheme({
   palette: {
     mode: 'light',
@@ -56,13 +90,7 @@ const theme = createTheme({
   typography: {
     fontFamily: ['Poppins', 'Inter', 'sans-serif'].join(','),
     h4: {
-      fontWeight: 700,
-    },
-    h6: {
       fontWeight: 600,
-    },
-    body1: {
-      fontSize: '1rem',
     },
   },
   components: {
@@ -71,684 +99,412 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
           textTransform: 'none',
+          fontWeight: 600,
         },
       },
     },
-    MuiPaper: {
+    MuiTableContainer: {
       styleOverrides: {
         root: {
+          borderRadius: 8,
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
           borderRadius: 12,
         },
       },
     },
-    MuiTextField: {
+    MuiChip: {
       styleOverrides: {
         root: {
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 8,
-          },
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-          transition: 'transform 0.2s, box-shadow 0.2s',
-          '&:hover': {
-            transform: 'translateY(-2px)',
-            boxShadow: '0 6px 12px rgba(0, 0, 0, 0.1)',
-          },
+          fontWeight: 600,
         },
       },
     },
   },
 });
-
-const GradientText = styled(Typography)(({ theme }) => ({
-  background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  fontWeight: 700,
-}));
 
 const StyledContainer = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(4),
   marginBottom: theme.spacing(4),
+  backgroundColor: theme.palette.background.default,
+  minHeight: '100vh',
 }));
 
-const StyledCard = styled(Card)(({ theme }) => ({
-  borderRadius: 16,
-  boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-}));
+// Використовуємо `const` для визначення URL-адреси проксі-сервера
+const PROXY_SERVER_URL = "https://steam-investment-app-proxy.onrender.com";
 
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
-  borderBottom: `1px solid ${theme.palette.divider}`,
-}));
-
-const CenteredBox = styled(Box)({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  minHeight: '80vh',
-});
-
-// Hardcoded games list for the Select component
-const GAMES = ["CS2", "Dota 2", "PUBG", "Інші"];
-
-// Localization object for Ukrainian language
-const LANGUAGES = {
-  uk: {
-    portfolio: "Портфель інвестицій",
-    name: "Назва предмета",
-    count: "Кількість",
-    buyPrice: "Ціна купівлі",
-    currentPrice: "Поточна ціна",
-    game: "Гра",
-    boughtDate: "Дата купівлі",
-    action: "Дії",
-    add: "Додати предмет",
-    add_item: "Додати предмет",
-    save: "Зберегти",
-    cancel: "Скасувати",
-    sold: "Продано",
-    yes: "Так",
-    no: "Ні",
-    sellPrice: "Ціна продажу",
-    sellDate: "Дата продажу",
-    editItem: "Редагувати предмет",
-    deleteConfirmation: "Ви впевнені, що хочете видалити цей предмет?",
-    delete: "Видалити",
-    totalInvestment: "Загальні інвестиції",
-    currentValue: "Поточна вартість",
-    profit: "Прибуток",
-    percentageProfit: "Процентний прибуток",
-    analytics: "Аналітика",
-    noData: "Немає даних для відображення.",
-    itemAdded: "Предмет успішно додано!",
-    itemUpdated: "Предмет успішно оновлено!",
-    itemDeleted: "Предмет успішно видалено!",
-    fetchError: "Помилка при отриманні даних з API.",
-  },
-};
-
-const t = LANGUAGES.uk;
-
-const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
-
-// Main App component
 export default function App() {
-  // State variables
-  const [investments, setInvestments] = useState([]);
-  const [name, setName] = useState("");
-  const [count, setCount] = useState(1);
-  const [buyPrice, setBuyPrice] = useState(0);
-  const [currentPrice, setCurrentPrice] = useState(0);
-  const [game, setGame] = useState(GAMES[0]);
-  const [boughtDate, setBoughtDate] = useState(new Date().toISOString().split('T')[0]);
-  const [sellPrice, setSellPrice] = useState(0);
-  const [sellDate, setSellDate] = useState(new Date().toISOString().split('T')[0]);
-  const [editingItem, setEditingItem] = useState(null);
-  const [tabValue, setTabValue] = useState(0);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null);
+  const [t] = useState(translations.ua); // Використовуємо українську мову за замовчуванням
+  const [items, setItems] = useState([]);
+  const [itemName, setItemName] = useState("");
+  const [invested, setInvested] = useState("");
+  const [game, setGame] = useState("CS2");
+  const [currentPrices, setCurrentPrices] = useState({});
+  const [editItem, setEditItem] = useState(null);
+  const [editInvested, setEditInvested] = useState("");
+  const [tabIndex, setTabIndex] = useState(0);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
-  const [sold, setSold] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [profitByDate, setProfitByDate] = useState([]);
-  const [autocompleteLoading, setAutocompleteLoading] = useState(false);
-  const [itemOptions, setItemOptions] = useState([]);
-  const abortControllerRef = useRef(null);
-  const [autocompleteValue, setAutocompleteValue] = useState(null); // State for Autocomplete selected value
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+  const [autocompleteOptions, setAutocompleteOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [inputValue, setInputValue] = useState('');
+  const [selectedItem, setSelectedItem] = useState(null);
 
-  // Load investments from localStorage on initial render
-  useEffect(() => {
-    const savedInvestments = localStorage.getItem("investments");
-    if (savedInvestments) {
-      setInvestments(JSON.parse(savedInvestments));
-    }
-  }, []);
+  const serverUrl = PROXY_SERVER_URL;
 
-  // Save investments to localStorage whenever the investments state changes
-  useEffect(() => {
-    localStorage.setItem("investments", JSON.stringify(investments));
-  }, [investments]);
+  // Використовуємо useRef для відстеження, чи був useEffect вже запущений
+  const initialDataFetched = React.useRef(false);
 
-  // Function to fetch the current price from the proxy server
-  const fetchCurrentPrice = async (itemName, gameName) => {
-    try {
-      const response = await fetch(`${PROXY_SERVER_URL}/price?item_name=${encodeURIComponent(itemName)}&game=${encodeURIComponent(gameName)}`);
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
-      return data.price || 0;
-    } catch (error) {
-      console.error('Error fetching current price:', error);
-      showSnackbar(t.fetchError, "error");
-      return 0;
-    }
-  };
-  
-  // Handle autocomplete input changes and fetch suggestions
-  const handleItemNameChange = async (event, newInputValue) => {
-    console.log("Autocomplete input changed:", newInputValue); // Log 1
-    setName(newInputValue);
-
-    if (newInputValue && newInputValue.length > 2) {
-      console.log("Input length > 2, fetching options..."); // Log 2
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      abortControllerRef.current = new AbortController();
-      const signal = abortControllerRef.current.signal;
-      setAutocompleteLoading(true);
-      
-      try {
-        const url = `${PROXY_SERVER_URL}/search?query=${encodeURIComponent(newInputValue)}&game=${encodeURIComponent(game)}`;
-        console.log("Fetching URL:", url); // Log 3
-        const response = await fetch(url, { signal });
-        
-        if (!response.ok) {
-          console.error("Network response was not ok:", response.status); // Log 4
-          throw new Error('Network response was not ok');
-        }
-        
-        const data = await response.json();
-        console.log("Received data from API:", data); // Log 5
-        
-        // The API now returns an array of objects, we need to extract the 'name' property
-        const formattedOptions = data.map(item => ({ label: item.name, value: item.name }));
-        console.log("Formatted options:", formattedOptions); // Log 6
-        
-        setItemOptions(formattedOptions);
-      } catch (error) {
-        if (error.name === 'AbortError') {
-          console.log('Fetch aborted');
-        } else {
-          console.error('Error fetching autocomplete options:', error);
-          showSnackbar(t.fetchError, "error");
-        }
-      } finally {
-        setAutocompleteLoading(false);
-      }
-    } else {
-      console.log("Input length <= 2, clearing options."); // Log 7
-      setItemOptions([]);
-      setAutocompleteLoading(false);
-    }
-  };
-  
-  const handleAutocompleteChange = (event, newValue) => {
-    console.log("Autocomplete selected value:", newValue); // Log 8
-    setAutocompleteValue(newValue);
-    if (newValue) {
-        setName(newValue.label);
-    } else {
-        setName('');
-    }
-  }
-
-  // Add a new item or update an existing one
-  const addItem = async () => {
-    if (!name || !count || !buyPrice || !boughtDate || !game) {
-      showSnackbar("Будь ласка, заповніть всі обов'язкові поля.", "error");
+  // Оновлюємо цю функцію для роботи з новим API
+  const handleSearch = async (query) => {
+    if (query.length < 3) {
+      setAutocompleteOptions([]);
       return;
     }
-    const currentPriceFromApi = await fetchCurrentPrice(name, game);
-    const newItem = {
-      id: editingItem ? editingItem.id : Date.now(),
-      name,
-      count,
-      buyPrice,
-      currentPrice: currentPriceFromApi,
-      game,
-      boughtDate,
-      sold,
-      sellPrice: sold ? sellPrice : 0,
-      sellDate: sold ? sellDate : null,
-    };
-
-    if (editingItem) {
-      setInvestments(
-        investments.map((item) => (item.id === newItem.id ? newItem : item))
-      );
-      setEditingItem(null);
-      showSnackbar(t.itemUpdated, "success");
-    } else {
-      setInvestments([...investments, newItem]);
-      showSnackbar(t.itemAdded, "success");
+    setLoading(true);
+    try {
+      const response = await fetch(`${serverUrl}/search?query=${query}&game=${game}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch search results");
+      }
+      const data = await response.json();
+      // Зверніть увагу, що ми тепер отримуємо об'єкти з полями name, price, market_hash_name, icon_url
+      setAutocompleteOptions(data);
+    } catch (error) {
+      console.error("Error fetching search results:", error);
+      setSnackbar({ open: true, message: t.fetchError, severity: "error" });
+    } finally {
+      setLoading(false);
     }
-
-    resetForm();
   };
 
-  // Populate the form with item data for editing
-  const editItem = (item) => {
-    setEditingItem(item);
-    setName(item.name);
-    setCount(item.count);
-    setBuyPrice(item.buyPrice);
-    setCurrentPrice(item.currentPrice);
-    setGame(item.game);
-    setBoughtDate(item.boughtDate);
-    setSold(item.sold);
-    setSellPrice(item.sellPrice || 0);
-    setSellDate(item.sellDate || new Date().toISOString().split('T')[0]);
-    setAutocompleteValue({ label: item.name, value: item.name }); // Set value for Autocomplete
+  const getPrice = async (item) => {
+    try {
+      // Використовуємо market_hash_name для запиту ціни
+      const response = await fetch(`${serverUrl}/price?item_name=${item.market_hash_name}&game=${item.game}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch price");
+      }
+      const data = await response.json();
+      return data.price;
+    } catch (error) {
+      console.error(`Error fetching price for ${item.name}:`, error);
+      return null;
+    }
   };
 
-  // Open the delete confirmation dialog
-  const confirmDelete = (item) => {
-    setItemToDelete(item);
-    setDeleteDialogOpen(true);
+  const fetchCurrentPrices = async () => {
+    const prices = {};
+    for (const item of items) {
+      const price = await getPrice(item);
+      if (price !== null) {
+        prices[item.id] = price;
+      }
+    }
+    setCurrentPrices(prices);
+  };
+  
+  // Оновлена функція handleAddItem для роботи з Autocomplete
+  const handleAddItem = async () => {
+    if (!selectedItem || invested === "") {
+      setSnackbar({ open: true, message: "Будь ласка, оберіть предмет і введіть суму інвестиції.", severity: "warning" });
+      return;
+    }
+  
+    // Використовуємо market_hash_name з selectedItem
+    const newItem = {
+      id: Date.now(), // Унікальний ID
+      name: selectedItem.name,
+      invested: parseFloat(invested),
+      game: game,
+      icon_url: selectedItem.icon_url,
+      market_hash_name: selectedItem.market_hash_name, // Зберігаємо market_hash_name
+    };
+  
+    setItems((prevItems) => {
+      const updatedItems = [...prevItems, newItem];
+      localStorage.setItem("mySteamInvestments", JSON.stringify(updatedItems));
+      return updatedItems;
+    });
+  
+    setSnackbar({ open: true, message: t.itemAdded, severity: "success" });
+    setSelectedItem(null); // Скидаємо вибраний предмет
+    setInvested("");
+    setInputValue("");
+    fetchCurrentPrices();
   };
 
-  // Delete an item from the investments list
-  const deleteItem = () => {
-    setInvestments(investments.filter((item) => item.id !== itemToDelete.id));
-    setDeleteDialogOpen(false);
-    setItemToDelete(null);
-    showSnackbar(t.itemDeleted, "success");
+  const handleEditItem = (item) => {
+    setEditItem(item);
+    setEditInvested(item.invested);
   };
 
-  // Reset the form fields to their default values
-  const resetForm = () => {
-    setName("");
-    setCount(1);
-    setBuyPrice(0);
-    setCurrentPrice(0);
-    setGame(GAMES[0]);
-    setBoughtDate(new Date().toISOString().split('T')[0]);
-    setSellPrice(0);
-    setSellDate(new Date().toISOString().split('T')[0]);
-    setSold(false);
-    setEditingItem(null);
-    setAutocompleteValue(null);
-    setItemOptions([]);
+  const handleSaveEdit = () => {
+    setItems((prevItems) => {
+      const updatedItems = prevItems.map((item) =>
+        item.id === editItem.id ? { ...item, invested: parseFloat(editInvested) } : item
+      );
+      localStorage.setItem("mySteamInvestments", JSON.stringify(updatedItems));
+      return updatedItems;
+    });
+    setEditItem(null);
+    setSnackbar({ open: true, message: t.itemUpdated, severity: "success" });
   };
 
-  // Show a snackbar message
-  const showSnackbar = (message, severity) => {
-    setSnackbar({ open: true, message, severity });
+  const handleDeleteItem = (id) => {
+    setItems((prevItems) => {
+      const updatedItems = prevItems.filter((item) => item.id !== id);
+      localStorage.setItem("mySteamInvestments", JSON.stringify(updatedItems));
+      return updatedItems;
+    });
+    setSnackbar({ open: true, message: t.itemDeleted, severity: "success" });
   };
 
-  // Close the snackbar
+  const handleShowAnalytics = async (item) => {
+    setAnalyticsOpen(true);
+    setProfitByDate([]); // Clear previous data
+    // Це заглушка, оскільки ми не маємо історичних даних.
+    // У реальному додатку тут був би запит до API.
+    const today = new Date();
+    const mockData = Array.from({ length: 30 }, (_, i) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() - (29 - i));
+      const priceChange = Math.random() * 2 - 1; // -1 to 1
+      const profit = item.invested * (1 + priceChange);
+      return {
+        date: date.toISOString().split('T')[0],
+        profit: parseFloat(profit.toFixed(2)),
+      };
+    });
+    setProfitByDate(mockData);
+  };
+
   const closeSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  // Calculation functions
-  const calculateTotalInvestment = (items) => items.reduce((sum, item) => sum + item.buyPrice * item.count, 0);
-  const calculateCurrentValue = (items) => items.reduce((sum, item) => {
-    if (item.sold) {
-      return sum + item.sellPrice * item.count;
+  // Використовуємо useEffect для завантаження даних при старті
+  useEffect(() => {
+    if (initialDataFetched.current) {
+      return;
     }
-    return sum + item.currentPrice * item.count;
-  }, 0);
-  const calculateProfit = (items) => {
-    const totalInvest = calculateTotalInvestment(items);
-    const totalValue = calculateCurrentValue(items);
-    return totalValue - totalInvest;
-  };
-  const calculatePercentageProfit = (items) => {
-    const totalInvest = calculateTotalInvestment(items);
-    if (totalInvest === 0) return 0;
-    return (calculateProfit(items) / totalInvest) * 100;
-  };
+    const storedItems = JSON.parse(localStorage.getItem("mySteamInvestments")) || [];
+    setItems(storedItems);
+    fetchCurrentPrices();
+    initialDataFetched.current = true;
+  }, []); // Запускаємо лише один раз
 
-  // Handle opening the analytics dialog and prepare data for the chart
-  const handleAnalyticsOpen = () => {
-    const profitData = investments
-      .filter(item => item.sold)
-      .map(item => ({ date: item.sellDate, profit: (item.sellPrice - item.buyPrice) * item.count, }))
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
+  // Цей useEffect буде оновлювати ціни кожні 5 хвилин
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchCurrentPrices();
+    }, 5 * 60 * 1000); // 5 хвилин
+    return () => clearInterval(interval);
+  }, [items]);
 
-    // Aggregate profit by date
-    const aggregatedProfit = profitData.reduce((acc, curr) => {
-      const existing = acc.find(p => p.date === curr.date);
-      if (existing) {
-        existing.profit += curr.profit;
-      } else {
-        acc.push(curr);
-      }
-      return acc;
-    }, []);
-
-    // Create a running total for the chart
-    let runningTotal = 0;
-    const cumulativeProfit = aggregatedProfit.map(p => {
-      runningTotal += p.profit;
-      return { ...p, profit: runningTotal };
-    });
-
-    setProfitByDate(cumulativeProfit);
-    setAnalyticsOpen(true);
-  };
-  
-  // Filter investments based on the selected tab
-  const filteredInvestments = investments.filter((item) => tabValue === 0 ? true : item.game === GAMES[tabValue - 1] );
-  
-  // Calculate summary stats for the filtered investments
-  const totalInvestment = calculateTotalInvestment(filteredInvestments);
-  const currentValue = calculateCurrentValue(filteredInvestments);
-  const profit = calculateProfit(filteredInvestments);
-  const percentageProfit = calculatePercentageProfit(filteredInvestments);
-  const profitColor = profit >= 0 ? '#28A745' : '#DC3545';
-  
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ minHeight: '100vh', backgroundColor: theme.palette.background.default }}>
+      <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh' }}>
         <StyledContainer maxWidth="lg">
-          {/* Header section with title and analytics button */}
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-            <GradientText variant="h4" component="h1">
-              {t.portfolio}
-            </GradientText>
-            <Button variant="outlined" startIcon={<BarChart />} onClick={handleAnalyticsOpen} >
-              {t.analytics}
-            </Button>
-          </Box>
-          
-          {/* Summary cards section */}
-          <Grid container spacing={3} mb={4}>
-            <Grid item xs={12} sm={6} md={3}>
-              <StyledCard>
-                <CardContent>
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    {t.totalInvestment}
-                  </Typography>
-                  <Typography variant="h5" component="div" fontWeight={600}>
-                    ${totalInvestment.toFixed(2)}
-                  </Typography>
-                </CardContent>
-              </StyledCard>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StyledCard>
-                <CardContent>
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    {t.currentValue}
-                  </Typography>
-                  <Typography variant="h5" component="div" fontWeight={600}>
-                    ${currentValue.toFixed(2)}
-                  </Typography>
-                </CardContent>
-              </StyledCard>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StyledCard>
-                <CardContent>
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    {t.profit}
-                  </Typography>
-                  <Typography variant="h5" component="div" fontWeight={600} sx={{ color: profitColor }}>
-                    ${profit.toFixed(2)}
-                  </Typography>
-                </CardContent>
-              </StyledCard>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StyledCard>
-                <CardContent>
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    {t.percentageProfit}
-                  </Typography>
-                  <Typography variant="h5" component="div" fontWeight={600} sx={{ color: profitColor }}>
-                    {percentageProfit.toFixed(2)}%
-                  </Typography>
-                </CardContent>
-              </StyledCard>
-            </Grid>
-          </Grid>
+          <Typography variant="h4" align="center" gutterBottom color="primary">
+            {t.title}
+          </Typography>
 
-          {/* Form to add or edit an item */}
-          <StyledCard>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                {editingItem ? t.editItem : t.add_item}
-              </Typography>
-              <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} sm={6} md={3}>
-                  <Autocomplete
-                    value={autocompleteValue}
-                    onChange={handleAutocompleteChange}
-                    inputValue={name}
-                    onInputChange={handleItemNameChange}
-                    id="autocomplete-item-name"
-                    options={itemOptions}
-                    getOptionLabel={(option) => option.label || ''}
-                    isOptionEqualToValue={(option, value) => option.value === value.value}
-                    // Add this prop to disable the internal filtering
-                    filterOptions={(x) => x}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label={t.name}
-                        variant="outlined"
-                        fullWidth
-                        InputProps={{
-                          ...params.InputProps,
-                          endAdornment: (
-                            <React.Fragment>
-                              {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
-                              {params.InputProps.endAdornment}
-                            </React.Fragment>
-                          ),
-                        }}
-                      />
-                    )}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={1}>
-                  <TextField
-                    label={t.count}
-                    type="number"
-                    variant="outlined"
-                    fullWidth
-                    value={count}
-                    onChange={(e) => setCount(e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={2}>
-                  <TextField
-                    label={t.buyPrice}
-                    type="number"
-                    variant="outlined"
-                    fullWidth
-                    value={buyPrice}
-                    onChange={(e) => setBuyPrice(e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={2}>
-                  <FormControl fullWidth variant="outlined">
-                    <InputLabel id="game-select-label">{t.game}</InputLabel>
-                    <Select
-                      labelId="game-select-label"
-                      value={game}
-                      onChange={(e) => setGame(e.target.value)}
-                      label={t.game}
-                    >
-                      {GAMES.map((gameOption) => (
-                        <MenuItem key={gameOption} value={gameOption}>
-                          {gameOption}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12} sm={6} md={2}>
-                  <TextField
-                    label={t.boughtDate}
-                    type="date"
-                    variant="outlined"
-                    fullWidth
-                    value={boughtDate}
-                    onChange={(e) => setBoughtDate(e.target.value)}
-                    InputLabelProps={{
-                      shrink: true,
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={2}>
-                  <FormControl fullWidth variant="outlined">
-                    <InputLabel id="sold-select-label">{t.sold}</InputLabel>
-                    <Select
-                      labelId="sold-select-label"
-                      value={sold}
-                      onChange={(e) => setSold(e.target.value)}
-                      label={t.sold}
-                    >
-                      <MenuItem value={true}>{t.yes}</MenuItem>
-                      <MenuItem value={false}>{t.no}</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                {sold && (
-                  <>
-                    <Grid item xs={12} sm={6} md={2}>
-                      <TextField
-                        label={t.sellPrice}
-                        type="number"
-                        variant="outlined"
-                        fullWidth
-                        value={sellPrice}
-                        onChange={(e) => setSellPrice(e.target.value)}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
-                      <TextField
-                        label={t.sellDate}
-                        type="date"
-                        variant="outlined"
-                        fullWidth
-                        value={sellDate}
-                        onChange={(e) => setSellDate(e.target.value)}
-                        InputLabelProps={{
-                          shrink: true,
-                        }}
-                      />
-                    </Grid>
-                  </>
-                )}
-                <Grid item xs={12}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={addItem}
-                    startIcon={<TrendingUp />}
-                    fullWidth
-                  >
-                    {editingItem ? t.save : t.add}
-                  </Button>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </StyledCard>
-
-          {/* Tab navigation for filtering investments */}
-          <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 4, mb: 2 }}>
-            <Tabs
-              value={tabValue}
-              onChange={(e, newValue) => setTabValue(newValue)}
-              aria-label="investment tabs"
-              variant="scrollable"
-              scrollButtons="auto"
-            >
-              <Tab label="Усі" />
-              {GAMES.map((gameOption, index) => (
-                <Tab label={gameOption} key={index} />
-              ))}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+            <Tabs value={tabIndex} onChange={(e, newValue) => setTabIndex(newValue)} centered>
+              <Tab label={t.addItemTitle} />
+              <Tab label={t.myItems} />
             </Tabs>
           </Box>
-          
-          {/* Table displaying investments */}
-          <StyledCard>
-            <CardContent>
-              <Box sx={{ overflowX: 'auto' }}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <StyledTableCell>{t.name}</StyledTableCell>
-                      <StyledTableCell align="right">{t.count}</StyledTableCell>
-                      <StyledTableCell align="right">{t.buyPrice}</StyledTableCell>
-                      <StyledTableCell align="right">{t.currentPrice}</StyledTableCell>
-                      <StyledTableCell align="right">{t.game}</StyledTableCell>
-                      <StyledTableCell align="right">{t.boughtDate}</StyledTableCell>
-                      <StyledTableCell align="right">{t.action}</StyledTableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {filteredInvestments.map((item) => (
-                      <TableRow key={item.id}>
-                        <StyledTableCell component="th" scope="row">
-                          <Box display="flex" alignItems="center">
-                            {/* You could add an image here if the API provided it */}
-                            <Typography>{item.name}</Typography>
-                          </Box>
-                        </StyledTableCell>
-                        <StyledTableCell align="right">{item.count}</StyledTableCell>
-                        <StyledTableCell align="right">${item.buyPrice.toFixed(2)}</StyledTableCell>
-                        <StyledTableCell align="right">
-                          <Chip label={`$${item.currentPrice.toFixed(2)}`} color={item.currentPrice > item.buyPrice ? "success" : "error"} />
-                        </StyledTableCell>
-                        <StyledTableCell align="right">{item.game}</StyledTableCell>
-                        <StyledTableCell align="right">{item.boughtDate}</StyledTableCell>
-                        <StyledTableCell align="right">
-                          <Box display="flex" justifyContent="flex-end">
-                            <Tooltip title="Редагувати">
-                              <IconButton onClick={() => editItem(item)} aria-label="edit">
-                                <Edit color="primary" />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Видалити">
-                              <IconButton onClick={() => confirmDelete(item)} aria-label="delete">
-                                <Delete color="error" />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        </StyledTableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Box>
-            </CardContent>
-          </StyledCard>
 
-          {/* Delete confirmation dialog */}
-          <Dialog
-            open={deleteDialogOpen}
-            onClose={() => setDeleteDialogOpen(false)}
-          >
-            <DialogTitle>{t.deleteConfirmation}</DialogTitle>
+          {tabIndex === 0 && (
+            <Card sx={{ p: 3, mb: 3, boxShadow: 3 }}>
+              <CardContent>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth>
+                      <InputLabel id="game-select-label">{t.gameLabel}</InputLabel>
+                      <Select
+                        labelId="game-select-label"
+                        value={game}
+                        label={t.gameLabel}
+                        onChange={(e) => {
+                          setGame(e.target.value);
+                          setAutocompleteOptions([]); // Очищаємо опції при зміні гри
+                          setSelectedItem(null);
+                          setInputValue('');
+                        }}
+                      >
+                        <MenuItem value="CS2">{t.csgo}</MenuItem>
+                        <MenuItem value="Dota 2">{t.dota2}</MenuItem>
+                        <MenuItem value="PUBG">{t.pubg}</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Autocomplete
+                      options={autocompleteOptions}
+                      getOptionLabel={(option) => option.name || ""}
+                      isOptionEqualToValue={(option, value) => option.name === value.name}
+                      onInputChange={(event, newInputValue) => {
+                        setInputValue(newInputValue);
+                        handleSearch(newInputValue);
+                      }}
+                      onChange={(event, newValue) => {
+                        setSelectedItem(newValue);
+                      }}
+                      inputValue={inputValue}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label={t.itemNameLabel}
+                          variant="outlined"
+                          InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                              <>
+                                {loading ? <CircularProgress color="inherit" size={20} /> : null}
+                                {params.InputProps.endAdornment}
+                              </>
+                            ),
+                          }}
+                        />
+                      )}
+                      renderOption={(props, option) => (
+                        <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+                          <img
+                            loading="lazy"
+                            width="20"
+                            src={option.icon_url}
+                            alt=""
+                          />
+                          {option.name}
+                        </Box>
+                      )}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label={t.invested}
+                      type="number"
+                      value={invested}
+                      onChange={(e) => setInvested(e.target.value)}
+                      variant="outlined"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      color="primary"
+                      onClick={handleAddItem}
+                      disabled={!selectedItem || invested === ""}
+                    >
+                      {t.add}
+                    </Button>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          )}
+
+          {tabIndex === 1 && (
+            <Card sx={{ p: 3, boxShadow: 3 }}>
+              <CardContent>
+                {items.length === 0 ? (
+                  <Typography align="center" color="text.secondary">{t.noItems}</Typography>
+                ) : (
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>{t.item}</TableCell>
+                        <TableCell>{t.invested}</TableCell>
+                        <TableCell>{t.price}</TableCell>
+                        <TableCell>{t.profit}</TableCell>
+                        <TableCell>{t.actions}</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {items.map((item) => {
+                        const currentPrice = currentPrices[item.id] || "N/A";
+                        const profit = currentPrice !== "N/A" ? currentPrice - item.invested : "N/A";
+                        const profitColor = profit === "N/A" ? "default" : profit > 0 ? "success" : profit < 0 ? "error" : "primary";
+
+                        return (
+                          <TableRow key={item.id}>
+                            <TableCell>
+                              <Box display="flex" alignItems="center">
+                                <img src={item.icon_url} alt={item.name} style={{ width: 32, height: 32, marginRight: 8, borderRadius: 4 }} />
+                                <Box>
+                                  <Typography variant="body1">{item.name}</Typography>
+                                  <Chip label={item.game} size="small" />
+                                </Box>
+                              </Box>
+                            </TableCell>
+                            <TableCell>{item.invested.toFixed(2)}</TableCell>
+                            <TableCell>
+                              <Tooltip title={t.fetching} arrow>
+                                <CircularProgress size={16} sx={{ visibility: currentPrice === "N/A" ? 'visible' : 'hidden' }} />
+                              </Tooltip>
+                              <Typography sx={{ visibility: currentPrice !== "N/A" ? 'visible' : 'hidden' }}>{currentPrice !== "N/A" ? currentPrice.toFixed(2) : ''}</Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={profit !== "N/A" ? profit.toFixed(2) : "N/A"}
+                                color={profitColor}
+                                size="small"
+                                sx={{ fontWeight: 'bold' }}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <IconButton onClick={() => handleEditItem(item)}><Edit size={16} /></IconButton>
+                              <IconButton onClick={() => handleDeleteItem(item.id)}><Delete size={16} /></IconButton>
+                              <IconButton onClick={() => handleShowAnalytics(item)}><BarChart size={16} /></IconButton>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Dialog for editing item */}
+          <Dialog open={!!editItem} onClose={() => setEditItem(null)}>
+            <DialogTitle>{t.editItemTitle}</DialogTitle>
             <DialogContent>
-              <Typography>
-                {t.deleteConfirmation}
-              </Typography>
+              <TextField
+                autoFocus
+                margin="dense"
+                label={t.invested}
+                type="number"
+                fullWidth
+                value={editInvested}
+                onChange={(e) => setEditInvested(e.target.value)}
+              />
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setDeleteDialogOpen(false)}>{t.cancel}</Button>
-              <Button onClick={deleteItem} color="error" variant="contained">
-                {t.delete}
-              </Button>
+              <Button onClick={() => setEditItem(null)}>{t.cancel}</Button>
+              <Button onClick={handleSaveEdit} variant="contained">{t.save}</Button>
             </DialogActions>
           </Dialog>
 
-          {/* Analytics chart dialog */}
-          <Dialog
-            open={analyticsOpen}
-            onClose={() => setAnalyticsOpen(false)}
-            maxWidth="md"
-            fullWidth
-          >
-            <DialogTitle>{t.analytics}</DialogTitle>
-            <DialogContent style={{ height: 400 }}>
-              <Typography variant="h6" align="center" mb={2}>
-                {t.profit}
-              </Typography>
+          {/* Dialog for analytics chart */}
+          <Dialog open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} maxWidth="md" fullWidth>
+            <DialogTitle>{t.profitAnalytics}</DialogTitle>
+            <DialogContent sx={{ height: 400 }}>
+              <Tabs value={0}>
+                <Tab label={t.history} />
+              </Tabs>
               {profitByDate.length === 0 ? (
                 <Typography align="center" mt={3}>
                   {t.noData}
