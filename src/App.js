@@ -331,14 +331,14 @@ export default function App() {
         const formattedOptions = data.map(item => {
           return {
             label: item.name,
-            image: item.icon_url || '',
-            float: item.float || null
+            image: item.icon_url,
+            float: item.float
           };
         });
         setItemOptions(formattedOptions);
       } catch (error) {
         if (error.name === 'AbortError') {
-          console.log('Fetch aborted - normal behavior during typing');
+          console.log('Fetch aborted');
         } else {
           console.error('Error fetching autocomplete options:', error);
           showSnackbar(t.fetchError, "error");
@@ -356,11 +356,7 @@ export default function App() {
     setAutocompleteValue(newValue);
     if (newValue && typeof newValue === 'object') {
       setName(newValue.label);
-      setSelectedItemDetails({ 
-        ...newValue, 
-        image: newValue.image || 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image',
-        float: newValue.float || null
-      });
+      setSelectedItemDetails({ ...newValue, image: newValue.image, float: newValue.float });
     } else {
       setName(newValue || '');
       setSelectedItemDetails(null);
@@ -384,7 +380,7 @@ export default function App() {
       sold: false,
       sellPrice: 0,
       sellDate: null,
-      image: selectedItemDetails?.image || 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image',
+      image: selectedItemDetails?.image || null,
       floatValue: selectedItemDetails?.float || null,
     };
 
@@ -708,55 +704,49 @@ export default function App() {
                         <GradientText variant="h6">{t.itemDetails}</GradientText>
                       </Typography>
                       <img
-                        src={selectedItemDetails.image}
-                        alt={selectedItemDetails.label || 'Item image'}
-                        style={{ 
-                          maxWidth: '100%', 
-                          height: 'auto', 
-                          maxHeight: '150px', 
-                          marginBottom: '16px', 
-                          borderRadius: '8px',
-                          objectFit: 'contain'
-                        }}
+                        src={selectedItemDetails?.image || 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image'}
+                        alt={selectedItemDetails?.label || 'Item image'}
+                        style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px', borderRadius: '8px' }}
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image';
                         }}
+                        crossOrigin="anonymous" 
                       />
                       <Typography variant="h6" align="center" mb={2}>{selectedItemDetails.label}</Typography>
                       <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            label={t.floatValue}
-                            type="number"
-                            variant="outlined"
-                            fullWidth
-                            value={selectedItemDetails.float || ''}
-                            disabled
-                            sx={{
-                              '& .MuiOutlinedInput-notchedOutline': {
-                                borderColor: 'rgba(74,20,140,0.5) !important',
-                              },
-                              '& .MuiInputBase-input.Mui-disabled': {
-                                WebkitTextFillColor: '#4A148C',
-                              }
-                            }}
-                          />
+                           <Grid item xs={12} sm={6}>
+                              <TextField
+                                label={t.floatValue}
+                                type="number"
+                                variant="outlined"
+                                fullWidth
+                                value={selectedItemDetails.float || 'N/A'}
+                                disabled
+                                sx={{
+                                  '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'rgba(74,20,140,0.5) !important',
+                                  },
+                                  '& .MuiInputBase-input.Mui-disabled': {
+                                    WebkitTextFillColor: '#4A148C',
+                                  }
+                                }}
+                              />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                              <TextField
+                                label={t.stickers}
+                                variant="outlined"
+                                fullWidth
+                                placeholder="Назва, Назва2, Назва3"
+                                sx={{
+                                  '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'rgba(74,20,140,0.5) !important',
+                                  },
+                                }}
+                              />
+                            </Grid>
                         </Grid>
-                        <Grid item xs={12} sm={6}>
-                          <TextField
-                            label={t.stickers}
-                            variant="outlined"
-                            fullWidth
-                            placeholder="Назва, Назва2, Назва3"
-                            sx={{
-                              '& .MuiOutlinedInput-notchedOutline': {
-                                borderColor: 'rgba(74,20,140,0.5) !important',
-                              },
-                            }}
-                          />
-                        </Grid>
-                      </Grid>
                     </Box>
                   ) : (
                     <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100%">
