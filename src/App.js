@@ -302,7 +302,7 @@ export default function App() {
 
     setIsSuggestionsLoading(true);
     // Звертаємося до нашого локального проксі-сервера
-    const proxyUrl = `http://localhost:3001/api/steam-items?game=${gameName}&query=${encodeURIComponent(query)}`;
+    const proxyUrl = `${process.env.REACT_APP_API_URL}/api/steam-items?game=${gameName}&query=${encodeURIComponent(query)}`;
 
     try {
       const response = await fetch(proxyUrl);
