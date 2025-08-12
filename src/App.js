@@ -353,14 +353,15 @@ export default function App() {
 
   const handleAutocompleteChange = (event, newValue) => {
     setAutocompleteValue(newValue);
-    if (newValue) {
+    if (newValue && typeof newValue === 'object') { // Додано перевірку на тип об'єкта
       setName(newValue.label);
       setSelectedItemDetails({ ...newValue, image: newValue.image });
     } else {
-      setName('');
+      setName(newValue || '');
       setSelectedItemDetails(null);
     }
   };
+
 
   const addItem = () => {
     if (!name || count <= 0 || buyPrice <= 0 || !boughtDate) {
@@ -703,7 +704,6 @@ export default function App() {
                         <GradientText variant="h6">{t.itemDetails}</GradientText>
                       </Typography>
                       <img
-                        // *** Зміни тут: додано перевірку на існування selectedItemDetails.image ***
                         src={selectedItemDetails.image ? selectedItemDetails.image : 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image'}
                         alt={selectedItemDetails.label}
                         style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px', borderRadius: '8px' }}
