@@ -131,6 +131,10 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
 }));
 
+const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
+  paddingTop: theme.spacing(4), // Додаємо відступ зверху для діалогового вікна
+}));
+
 const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
 const CURRENCIES = ["EUR", "USD", "UAH"];
 const CURRENCY_SYMBOLS = { "EUR": "€", "USD": "$", "UAH": "₴" };
@@ -463,7 +467,7 @@ export default function App() {
             <StyledCard>
               <CardContent>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.totalInvestment}</Typography>
-                <Typography variant="h5" fontWeight="bold">{totalInvestment.toFixed(2)}€</Typography>
+                <Typography variant="h4" fontWeight="bold">{totalInvestment.toFixed(2)}€</Typography>
               </CardContent>
             </StyledCard>
           </Grid>
@@ -471,7 +475,7 @@ export default function App() {
             <StyledCard>
               <CardContent>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.profit}</Typography>
-                <Typography variant="h5" fontWeight="bold" sx={{ color: profitColor }}>
+                <Typography variant="h4" fontWeight="bold" sx={{ color: profitColor }}>
                   {profit.toFixed(2)}€
                 </Typography>
               </CardContent>
@@ -481,7 +485,7 @@ export default function App() {
             <StyledCard>
               <CardContent>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.percentageProfit}</Typography>
-                <Typography variant="h5" fontWeight="bold" sx={{ color: profitColor }}>
+                <Typography variant="h4" fontWeight="bold" sx={{ color: profitColor }}>
                   {percentageProfit.toFixed(2)}%
                 </Typography>
               </CardContent>
@@ -563,9 +567,9 @@ export default function App() {
 
         {/* Dialog для додавання інвестиції */}
         <Dialog open={addDialog} onClose={() => { setAddDialog(false); resetForm(); }} maxWidth="lg" fullWidth>
-          <DialogTitle>{t.addInvestment}</DialogTitle>
-          <DialogContent>
-            <Grid container spacing={2}>
+          <DialogTitle sx={{paddingTop: theme.spacing(4)}}>{t.addInvestment}</DialogTitle>
+          <StyledDialogContent dividers>
+            <Grid container spacing={4} sx={{paddingTop: theme.spacing(2)}}>
               <Grid item xs={12} md={6}>
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
@@ -670,7 +674,7 @@ export default function App() {
                 {autocompleteValue ? (
                   <StyledCard>
                     <CardContent>
-                      <Typography variant="h6" gutterBottom>{t.itemDetails}</Typography>
+                      <Typography variant="h6" gutterBottom align="center">{t.itemDetails}</Typography>
                       <Box display="flex" flexDirection="column" alignItems="center">
                         <img src={dummyItemInfo.image} alt={autocompleteValue.label} style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px' }} />
                         <Typography variant="h6" align="center" mb={2}>{autocompleteValue.label}</Typography>
@@ -705,7 +709,7 @@ export default function App() {
                 )}
               </Grid>
             </Grid>
-          </DialogContent>
+          </StyledDialogContent>
           <DialogActions>
             <Button onClick={() => { setAddDialog(false); resetForm(); }}>{t.cancel}</Button>
             <Button onClick={addItem} color="primary" variant="contained">{t.addItem}</Button>
