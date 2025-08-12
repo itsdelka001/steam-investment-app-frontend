@@ -31,8 +31,10 @@ import {
   Autocomplete,
   CircularProgress,
   Divider,
+  AppBar,
+  Toolbar,
 } from "@mui/material";
-import { TrendingUp, Delete, Check, BarChart, Plus, Language } from 'lucide-react';
+import { TrendingUp, Delete, Check, BarChart, Plus, Language, Euro, AttachMoney, CurrencyExchange } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 
@@ -58,6 +60,10 @@ const theme = createTheme({
     fontFamily: ['Poppins', 'Inter', 'sans-serif'].join(','),
     h4: {
       fontWeight: 700,
+    },
+    h5: {
+      fontWeight: 600,
+      fontSize: '2.5rem',
     },
     h6: {
       fontWeight: 600,
@@ -97,10 +103,11 @@ const theme = createTheme({
           borderRadius: 16,
           boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
           transition: 'transform 0.2s, box-shadow 0.2s',
-          '&:hover': {
-            transform: 'translateY(-4px)',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
-          },
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          padding: theme.spacing(2),
         },
       },
     },
@@ -124,6 +131,8 @@ const StyledCard = styled(Card)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
+  alignItems: 'center',
+  textAlign: 'center',
   padding: theme.spacing(2),
 }));
 
@@ -160,6 +169,7 @@ const LANGUAGES = {
     percentageProfit: "Процентний прибуток",
     analytics: "Аналітика",
     noData: "Немає даних для відображення.",
+    noInvestments: "Немає інвестицій у цій категорії.",
     itemAdded: "Предмет успішно додано!",
     itemUpdated: "Предмет успішно оновлено!",
     itemDeleted: "Предмет успішно видалено!",
@@ -168,6 +178,7 @@ const LANGUAGES = {
     markAsSold: "Відмітити як продано",
     total: "Усі",
     currency: "Валюта",
+    displayCurrency: "Валюта відображення",
     language: "Мова",
     priceHistory: "Історія ціни",
   },
@@ -195,6 +206,7 @@ const LANGUAGES = {
     percentageProfit: "Percentage Profit",
     analytics: "Analytics",
     noData: "No data to display.",
+    noInvestments: "No investments in this category.",
     itemAdded: "Item added successfully!",
     itemUpdated: "Item updated successfully!",
     itemDeleted: "Item deleted successfully!",
@@ -203,12 +215,14 @@ const LANGUAGES = {
     markAsSold: "Mark as Sold",
     total: "All",
     currency: "Currency",
+    displayCurrency: "Display Currency",
     language: "Language",
     priceHistory: "Price History",
   },
 };
 
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
+const EXCHANGE_RATE_API_KEY = "61a8a12c18b1b14a645ebc37";
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
@@ -233,6 +247,8 @@ export default function App() {
   const [totalInvestment, setTotalInvestment] = useState(0);
   const [soldItems, setSoldItems] = useState([]);
   const [lang, setLang] = useState('uk');
+  const [displayCurrency, setDisplayCurrency] = useState('EUR');
+  const [currencyRates, setCurrencyRates] = useState({});
   const [autocompleteLoading, setAutocompleteLoading] = useState(false);
   const [itemOptions, setItemOptions] = useState([]);
   const abortControllerRef = useRef(null);
@@ -244,23 +260,87 @@ export default function App() {
     if (savedInvestments) {
       setInvestments(JSON.parse(savedInvestments));
     }
+    const savedLang = localStorage.getItem("lang");
+    if (savedLang) {
+        setLang(savedLang);
+    }
+    const savedDisplayCurrency = localStorage.getItem("displayCurrency");
+    if (savedDisplayCurrency) {
+        setDisplayCurrency(savedDisplayCurrency);
+    }
+
+    fetchCurrencyRates(savedDisplayCurrency || 'EUR');
   }, []);
 
   useEffect(() => {
     localStorage.setItem("investments", JSON.stringify(investments));
     updateAnalytics();
-  }, [investments]);
+  }, [investments, displayCurrency, currencyRates]);
+
+  useEffect(() => {
+    localStorage.setItem("lang", lang);
+  }, [lang]);
+
+  useEffect(() => {
+    localStorage.setItem("displayCurrency", displayCurrency);
+    fetchCurrencyRates(displayCurrency);
+  }, [displayCurrency]);
+
+  const fetchCurrencyRates = async (baseCurrency) => {
+    if (!EXCHANGE_RATE_API_KEY) {
+        console.error("Exchange Rate API Key is missing.");
+        return;
+    }
+    try {
+        const response = await fetch(`https://v6.exchangerate-api.com/v6/${EXCHANGE_RATE_API_KEY}/latest/${baseCurrency}`);
+        const data = await response.json();
+        if (data.result === 'success') {
+            setCurrencyRates(data.conversion_rates);
+        } else {
+            console.error("Error fetching currency rates:", data['error-type']);
+        }
+    } catch (error) {
+        console.error("Failed to fetch currency rates:", error);
+    }
+  };
+
+  const convertCurrency = (amount, fromCurrency, toCurrency) => {
+    if (fromCurrency === toCurrency) {
+      return amount;
+    }
+    if (!currencyRates[fromCurrency] || !currencyRates[toCurrency]) {
+        console.error(`Missing conversion rate for ${fromCurrency} or ${toCurrency}.`);
+        return amount;
+    }
+    const rateToDisplay = currencyRates[fromCurrency] / currencyRates[toCurrency];
+    return amount * rateToDisplay;
+  };
 
   const updateAnalytics = () => {
     const sold = investments.filter(item => item.sold);
     setSoldItems(sold);
-    const totalInvest = sold.reduce((sum, item) => sum + item.buyPrice * item.count, 0);
-    const totalProfitAmount = sold.reduce((sum, item) => sum + (item.sellPrice - item.buyPrice) * item.count, 0);
+    
+    const totalInvest = investments.reduce((sum, item) => {
+        const convertedPrice = convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency);
+        return sum + convertedPrice;
+    }, 0);
+
+    const totalProfitAmount = sold.reduce((sum, item) => {
+        const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency, displayCurrency);
+        const convertedSellPrice = convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency); //Assuming sell price is in the same currency as buy price
+        return sum + (convertedSellPrice - convertedBuyPrice) * item.count;
+    }, 0);
+
     setTotalInvestment(totalInvest);
     setTotalProfit(totalProfitAmount);
 
     const profitData = sold
-      .map(item => ({ date: item.sellDate, profit: (item.sellPrice - item.buyPrice) * item.count, }))
+      .map(item => {
+          const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency, displayCurrency);
+          const convertedSellPrice = convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency);
+          const profit = (convertedSellPrice - convertedBuyPrice) * item.count;
+          return { date: item.sellDate, profit };
+      })
       .sort((a, b) => new Date(a.date) - new Date(b.date));
 
     const aggregatedProfit = profitData.reduce((acc, curr) => {
@@ -413,25 +493,37 @@ export default function App() {
   const profit = totalProfit;
   const percentageProfit = totalInvestment > 0 ? (profit / totalInvestment) * 100 : 0;
   const profitColor = profit >= 0 ? '#28A745' : '#DC3545';
+  const displaySymbol = CURRENCY_SYMBOLS[displayCurrency];
 
   return (
     <ThemeProvider theme={theme}>
-      <Container maxWidth="lg" sx={{ pt: 4, pb: 8, backgroundColor: theme.palette.background.default, minHeight: '100vh' }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-          <GradientText variant="h4" component="h1">
+      <AppBar position="static" color="transparent" elevation={0} sx={{ py: 1, borderBottom: '1px solid #e0e0e0' }}>
+        <Toolbar sx={{ justifyContent: 'space-between' }}>
+          <GradientText variant="h6" component="div">
             {t.portfolio}
           </GradientText>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
-                <InputLabel id="language-select-label">{t.language}</InputLabel>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+            <FormControl variant="outlined" size="small" sx={{ minWidth: 100 }}>
+                <InputLabel>{t.language}</InputLabel>
                 <Select
-                  labelId="language-select-label"
                   value={lang}
                   onChange={(e) => setLang(e.target.value)}
                   label={t.language}
                 >
                   <MenuItem value="uk">Українська</MenuItem>
                   <MenuItem value="en">English</MenuItem>
+                </Select>
+            </FormControl>
+            <FormControl variant="outlined" size="small" sx={{ minWidth: 100 }}>
+                <InputLabel>{t.displayCurrency}</InputLabel>
+                <Select
+                  value={displayCurrency}
+                  onChange={(e) => setDisplayCurrency(e.target.value)}
+                  label={t.displayCurrency}
+                >
+                  {CURRENCIES.map((currency) => (
+                      <MenuItem key={currency} value={currency}>{currency}</MenuItem>
+                  ))}
                 </Select>
             </FormControl>
             <Button variant="outlined" startIcon={<BarChart />} onClick={handleAnalyticsOpen}>
@@ -441,27 +533,29 @@ export default function App() {
               {t.addItem}
             </Button>
           </Box>
-        </Box>
+        </Toolbar>
+      </AppBar>
+      <Container maxWidth="lg" sx={{ pt: 4, pb: 8, backgroundColor: theme.palette.background.default, minHeight: 'calc(100vh - 64px)' }}>
         <Grid container spacing={3} mb={4}>
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={4}>
             <StyledCard>
               <CardContent>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.totalInvestment}</Typography>
-                <Typography variant="h5" fontWeight="bold">{totalInvestment.toFixed(2)}€</Typography>
+                <Typography variant="h5" fontWeight="bold">{totalInvestment.toFixed(2)}{displaySymbol}</Typography>
               </CardContent>
             </StyledCard>
           </Grid>
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={4}>
             <StyledCard>
               <CardContent>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.profit}</Typography>
                 <Typography variant="h5" fontWeight="bold" sx={{ color: profitColor }}>
-                  {profit.toFixed(2)}€
+                  {profit.toFixed(2)}{displaySymbol}
                 </Typography>
               </CardContent>
             </StyledCard>
           </Grid>
-          <Grid item xs={12} sm={6} md={4}>
+          <Grid item xs={12} sm={4}>
             <StyledCard>
               <CardContent>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.percentageProfit}</Typography>
@@ -497,49 +591,64 @@ export default function App() {
                 <TableRow>
                   <TableCell colSpan={7} align="center">
                     <Typography variant="body1" color="text.secondary">
-                      Немає інвестицій у цій категорії.
+                      {t.noInvestments}
                     </Typography>
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredInvestments.map((item) => (
-                  <TableRow key={item.id} hover>
-                    <StyledTableCell>{item.name}</StyledTableCell>
-                    <StyledTableCell>{item.game}</StyledTableCell>
-                    <StyledTableCell>{item.count}</StyledTableCell>
-                    <StyledTableCell>{item.buyPrice}{CURRENCY_SYMBOLS[item.buyCurrency]}</StyledTableCell>
-                    <StyledTableCell>{item.boughtDate}</StyledTableCell>
-                    <StyledTableCell>
-                      <Chip
-                        label={
-                          item.sold
-                            ? `${((item.sellPrice - item.buyPrice) * item.count).toFixed(2)}${CURRENCY_SYMBOLS[item.buyCurrency]}`
-                            : "---"
-                        }
-                        color={
-                          item.sold && (item.sellPrice - item.buyPrice) * item.count >= 0
-                            ? 'success'
-                            : item.sold ? 'error' : 'default'
-                        }
-                        variant={item.sold ? 'filled' : 'outlined'}
-                      />
-                    </StyledTableCell>
-                    <StyledTableCell>
-                      {!item.sold && (
-                        <Tooltip title={t.markAsSold}>
-                          <IconButton onClick={() => { setItemToSell(item); setSellDialog(true); }}>
-                            <Check color="success" />
+                filteredInvestments.map((item) => {
+                  const buyPriceInDisplayCurrency = convertCurrency(item.buyPrice, item.buyCurrency, displayCurrency);
+                  const sellPriceInDisplayCurrency = item.sold ? convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency) : 0;
+                  const itemProfit = item.sold ? ((sellPriceInDisplayCurrency - buyPriceInDisplayCurrency) * item.count) : 0;
+                  const itemProfitColor = itemProfit >= 0 ? 'success' : 'error';
+
+                  return (
+                    <TableRow key={item.id} hover>
+                      <StyledTableCell>
+                        <Tooltip title={item.name}>
+                          <Typography noWrap sx={{ maxWidth: 200 }}>
+                            {item.name}
+                          </Typography>
+                        </Tooltip>
+                      </StyledTableCell>
+                      <StyledTableCell>{item.game}</StyledTableCell>
+                      <StyledTableCell>{item.count}</StyledTableCell>
+                      <StyledTableCell>
+                        <Tooltip title={`${item.buyPrice}${CURRENCY_SYMBOLS[item.buyCurrency]}`}>
+                          <Typography noWrap>
+                            {buyPriceInDisplayCurrency.toFixed(2)}{displaySymbol}
+                          </Typography>
+                        </Tooltip>
+                      </StyledTableCell>
+                      <StyledTableCell>{item.boughtDate}</StyledTableCell>
+                      <StyledTableCell>
+                        <Chip
+                          label={
+                            item.sold
+                              ? `${itemProfit.toFixed(2)}${displaySymbol}`
+                              : "---"
+                          }
+                          color={item.sold ? itemProfitColor : 'default'}
+                          variant={item.sold ? 'filled' : 'outlined'}
+                        />
+                      </StyledTableCell>
+                      <StyledTableCell>
+                        {!item.sold && (
+                          <Tooltip title={t.markAsSold}>
+                            <IconButton onClick={() => { setItemToSell(item); setSellDialog(true); }}>
+                              <Check color="success" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        <Tooltip title={t.delete}>
+                          <IconButton onClick={() => confirmDelete(item)}>
+                            <Delete color="error" />
                           </IconButton>
                         </Tooltip>
-                      )}
-                      <Tooltip title={t.delete}>
-                        <IconButton onClick={() => confirmDelete(item)}>
-                          <Delete color="error" />
-                        </IconButton>
-                      </Tooltip>
-                    </StyledTableCell>
-                  </TableRow>
-                ))
+                      </StyledTableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
@@ -720,8 +829,8 @@ export default function App() {
         <Dialog open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} maxWidth="md" fullWidth>
           <DialogTitle>{t.analytics}</DialogTitle>
           <DialogContent>
-            <Typography variant="h6" mb={1}>{t.totalInvestment} ({t.sold}): {totalInvestment.toFixed(2)}€</Typography>
-            <Typography variant="h6" mb={1}>{t.profit} ({t.sold}): {totalProfit.toFixed(2)}€</Typography>
+            <Typography variant="h6" mb={1}>{t.totalInvestment} ({t.sold}): {totalInvestment.toFixed(2)}{displaySymbol}</Typography>
+            <Typography variant="h6" mb={1}>{t.profit} ({t.sold}): {totalProfit.toFixed(2)}{displaySymbol}</Typography>
             <Box mt={4}>
               <Typography variant="h6" mb={2}>{t.priceHistory}</Typography>
             </Box>
