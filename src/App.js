@@ -32,14 +32,8 @@ import {
   Tooltip,
 } from "@mui/material";
 
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import AnalyticsIcon from "@mui/icons-material/Analytics";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import InfoIcon from "@mui/icons-material/Info";
-
+import { TrendingUp, Delete, Edit, BarChart, Info } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
-
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 
 // Примітка: Ключ API для валют все ще потрібен, якщо ви хочете реальні курси
@@ -142,24 +136,24 @@ const theme = createTheme({
   palette: {
     mode: "dark",
     primary: {
-      main: "#9c27b0",
+      main: "#4ade80", // Неоново-зелений
     },
     secondary: {
-      main: "#f50057",
+      main: "#a855f7", // Фіолетовий
     },
     background: {
-      default: "#121212",
+      default: "#0a0a0a",
       paper: "#1e1e1e",
     },
     text: {
-      primary: "#ffffff",
-      secondary: "#b0b0b0",
+      primary: "#e5e7eb",
+      secondary: "#9ca3af",
     },
     success: {
-      main: '#4caf50',
+      main: '#22c55e',
     },
     error: {
-      main: '#f44336',
+      main: '#ef4444',
     },
   },
   typography: {
@@ -212,16 +206,17 @@ const theme = createTheme({
   },
 });
 
-const GradientButton = styled(Button)(({ theme }) => ({
-  background: 'linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)',
+const NeonButton = styled(Button)(({ theme }) => ({
+  background: 'linear-gradient(45deg, #a855f7 30%, #ec4899 90%)',
   border: 0,
   borderRadius: 8,
   color: 'white',
   padding: '0 30px',
-  boxShadow: '0 3px 5px 2px rgba(255, 105, 135, .3)',
-  height: '100%',
+  boxShadow: '0 3px 5px 2px rgba(168, 85, 247, .3)',
+  transition: 'all 0.3s ease-in-out',
   '&:hover': {
-    boxShadow: '0 5px 10px 5px rgba(255, 105, 135, .3)',
+    boxShadow: '0 5px 15px 5px rgba(168, 85, 247, .5)',
+    transform: 'scale(1.05)',
   },
 }));
 
@@ -302,7 +297,7 @@ export default function App() {
 
     setIsSuggestionsLoading(true);
     // Звертаємося до нашого локального проксі-сервера
-    const proxyUrl = `${process.env.REACT_APP_API_URL}/api/steam-items?game=${gameName}&query=${encodeURIComponent(query)}`;
+    const proxyUrl = `http://localhost:3001/api/steam-items?game=${gameName}&query=${encodeURIComponent(query)}`;
 
     try {
       const response = await fetch(proxyUrl);
@@ -541,10 +536,11 @@ export default function App() {
           bgcolor: "background.default",
           minHeight: "100vh",
           py: 4,
-          background: "radial-gradient(circle at top left, #2f2759 0%, #0a0a0a 100%)",
+          fontFamily: theme.typography.fontFamily,
+          background: "radial-gradient(circle at top left, #1a0a33 0%, #0a0a0a 100%)",
         }}
       >
-        <Container maxWidth="lg" sx={{ fontFamily: "'Inter', sans-serif", color: "text.primary" }}>
+        <Container maxWidth="lg">
           <Box
             sx={{
               display: "flex",
@@ -555,9 +551,39 @@ export default function App() {
               gap: 2,
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <AccountBalanceWalletIcon color="primary" sx={{ fontSize: 40 }} />
-              <Typography variant="h4" fontWeight={700}>
+            {/* Оновлений, більш футуристичний блок заголовка */}
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              p: 2,
+              borderRadius: 3,
+              background: 'linear-gradient(90deg, rgba(26,10,51,0.5) 0%, rgba(10,10,10,0.5) 100%)',
+              border: '1px solid #4a148c',
+              boxShadow: '0 0 20px rgba(168, 85, 247, 0.2)',
+              transition: 'all 0.3s ease-in-out',
+              '&:hover': {
+                boxShadow: '0 0 30px rgba(168, 85, 247, 0.4)',
+              }
+            }}>
+              <TrendingUp size={48} color={theme.palette.secondary.main} strokeWidth={1.5} />
+              <Typography
+                variant="h4"
+                sx={{
+                  fontFamily: theme.typography.h4.fontFamily,
+                  background: 'linear-gradient(90deg, #4ade80 0%, #a855f7 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  fontSize: { xs: '2rem', md: '3.5rem' },
+                  letterSpacing: '5px',
+                  fontWeight: 900, // Жирний шрифт
+                  textShadow: '0 0 10px rgba(168, 85, 247, 0.5)',
+                  transition: 'text-shadow 0.3s ease-in-out',
+                  '&:hover': {
+                    textShadow: '0 0 20px rgba(168, 85, 247, 0.8)',
+                  }
+                }}
+              >
                 {t.portfolio}
               </Typography>
             </Box>
@@ -589,12 +615,21 @@ export default function App() {
                 </Select>
               </FormControl>
               <IconButton
-                color="primary"
+                color="secondary"
                 onClick={() => setAnalyticsOpen(true)}
                 aria-label={t.analytics}
                 size="large"
+                sx={{
+                  border: '1px solid',
+                  borderColor: theme.palette.secondary.main,
+                  transition: 'all 0.3s ease-in-out',
+                  '&:hover': {
+                    boxShadow: '0 0 15px rgba(168, 85, 247, 0.6)',
+                    bgcolor: 'rgba(168, 85, 247, 0.1)',
+                  }
+                }}
               >
-                <AnalyticsIcon />
+                <BarChart />
               </IconButton>
             </Box>
           </Box>
@@ -741,9 +776,9 @@ export default function App() {
                     />
                   </>
                 )}
-                <GradientButton variant="contained" type="submit" sx={{ flex: '0 0 100px' }}>
+                <NeonButton variant="contained" type="submit" sx={{ flex: '0 0 100px' }}>
                   {t.add}
-                </GradientButton>
+                </NeonButton>
               </Box>
             </CardContent>
           </Card>
@@ -803,7 +838,7 @@ export default function App() {
                           onClick={() => openEdit(item)}
                           sx={{ mr: 1 }}
                         >
-                          <EditIcon />
+                          <Edit size={18} />
                         </IconButton>
                         <IconButton
                           aria-label="delete"
@@ -811,7 +846,7 @@ export default function App() {
                           color="error"
                           onClick={() => confirmDelete(item)}
                         >
-                          <DeleteIcon />
+                          <Delete size={18} />
                         </IconButton>
                       </TableCell>
                     </TableRow>
@@ -952,7 +987,7 @@ export default function App() {
                   <Grid item xs={12} sm={6}>
                     <Box
                       component="img"
-                      src={selectedItem.photoUrl || "https://placehold.co/300x200/2f2759/ffffff?text=No+Image"}
+                      src={selectedItem.photoUrl || "https://placehold.co/300x200/1e1e1e/9ca3af?text=No+Image"}
                       alt={selectedItem.name}
                       sx={{
                         width: "100%",
@@ -1029,7 +1064,7 @@ export default function App() {
                     <Line
                       type="monotone"
                       dataKey="profit"
-                      stroke="#9c27b0"
+                      stroke="#4ade80"
                       activeDot={{ r: 8 }}
                       name={t.profit}
                     />
