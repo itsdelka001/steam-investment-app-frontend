@@ -201,7 +201,7 @@ export default function App() {
   const [autocompleteLoading, setAutocompleteLoading] = useState(false);
   const [itemOptions, setItemOptions] = useState([]);
   const abortControllerRef = useRef(null);
-  const [value, setValue] = useState(null); // State for Autocomplete selected value
+  const [autocompleteValue, setAutocompleteValue] = useState(null); // State for Autocomplete selected value
 
   // Load investments from localStorage on initial render
   useEffect(() => {
@@ -233,16 +233,10 @@ export default function App() {
   };
   
   // Handle autocomplete input changes and fetch suggestions
-  const handleItemNameChange = async (event, newValue, reason) => {
-    if (reason === 'clear') {
-      setName('');
-      setItemOptions([]);
-      return;
-    }
-    
-    setName(newValue || "");
+  const handleItemNameChange = async (event, newInputValue) => {
+    setName(newInputValue);
 
-    if (newValue && newValue.length > 2) {
+    if (newInputValue && newInputValue.length > 2) {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -251,12 +245,14 @@ export default function App() {
       setAutocompleteLoading(true);
       
       try {
-        const response = await fetch(`${PROXY_SERVER_URL}/search?query=${encodeURIComponent(newValue)}&game=${encodeURIComponent(game)}`, { signal });
+        const response = await fetch(`${PROXY_SERVER_URL}/search?query=${encodeURIComponent(newInputValue)}&game=${encodeURIComponent(game)}`, { signal });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
-        setItemOptions(data);
+        // The API returns an array of strings. We need to format it for Autocomplete.
+        const formattedOptions = data.map(item => ({ label: item, value: item }));
+        setItemOptions(formattedOptions);
       } catch (error) {
         if (error.name === 'AbortError') {
           console.log('Fetch aborted');
@@ -319,7 +315,7 @@ export default function App() {
     setSold(item.sold);
     setSellPrice(item.sellPrice || 0);
     setSellDate(item.sellDate || new Date().toISOString().split('T')[0]);
-    setValue({ label: item.name, value: item.name }); // Set value for Autocomplete
+    setAutocompleteValue({ label: item.name, value: item.name }); // Set value for Autocomplete
   };
 
   // Open the delete confirmation dialog
@@ -348,7 +344,7 @@ export default function App() {
     setSellDate(new Date().toISOString().split('T')[0]);
     setSold(false);
     setEditingItem(null);
-    setValue(null);
+    setAutocompleteValue(null);
     setItemOptions([]);
   };
 
@@ -493,11 +489,11 @@ export default function App() {
                 {editingItem ? t.editItem : t.add_item}
               </Typography>
               <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={6} md={3}>
                   <Autocomplete
-                    value={value}
+                    value={autocompleteValue}
                     onChange={(event, newValue) => {
-                      setValue(newValue);
+                      setAutocompleteValue(newValue);
                       if (newValue) {
                           setName(newValue.label);
                       } else {
@@ -510,18 +506,6 @@ export default function App() {
                     options={itemOptions}
                     getOptionLabel={(option) => option.label || ''}
                     isOptionEqualToValue={(option, value) => option.value === value.value}
-                    renderOption={(props, option) => (
-                      <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-                        <img
-                          loading="lazy"
-                          width="40"
-                          src={`https://community.akamai.steamstatic.com/economy/image/${option.image}`}
-                          srcSet={`https://community.akamai.steamstatic.com/economy/image/${option.image}`}
-                          alt=""
-                        />
-                        {option.label}
-                      </Box>
-                    )}
                     renderInput={(params) => (
                       <TextField
                         {...params}
@@ -541,7 +525,7 @@ export default function App() {
                     )}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} md={2}>
+                <Grid item xs={12} sm={6} md={1}>
                   <TextField
                     label={t.count}
                     type="number"
