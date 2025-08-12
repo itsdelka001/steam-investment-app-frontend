@@ -36,7 +36,6 @@ import { TrendingUp, Delete, Check, BarChart, Plus, Language } from 'lucide-reac
 import { LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 
-// Визначення теми з покращеними стилями
 const theme = createTheme({
   palette: {
     mode: 'light',
@@ -111,7 +110,6 @@ const theme = createTheme({
   },
 });
 
-// Стилізовані компоненти
 const GradientText = styled(Typography)(({ theme }) => ({
   background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
   WebkitBackgroundClip: 'text',
@@ -147,7 +145,6 @@ const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
   padding: theme.spacing(2),
   borderRadius: '16px 16px 0 0',
 }));
-
 
 const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
 const CURRENCIES = ["EUR", "USD", "UAH"];
@@ -333,7 +330,6 @@ export default function App() {
 
         const data = await response.json();
         const formattedOptions = data.map(item => {
-          // Використовуємо більш надійний спосіб для формування URL зображення
           const imageUrl = item.icon_url.startsWith('https://')
             ? item.icon_url
             : `${STEAM_CDN_URL}${item.icon_url}`;
@@ -595,7 +591,7 @@ export default function App() {
           <DialogContent sx={{ p: 4, overflowY: 'visible' }}>
             <Grid container spacing={4}>
               <Grid item xs={12} md={6}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: 2 }}>
                   <Autocomplete
                     fullWidth
                     freeSolo
@@ -613,9 +609,23 @@ export default function App() {
                         placeholder="Введіть назву предмета або скіна..."
                         variant="outlined"
                         required
-                        InputLabelProps={{ shrink: autocompleteValue !== null || name !== '' }}
+                        sx={{ mb: 2 }}
+                        InputLabelProps={{ 
+                          shrink: autocompleteValue !== null || name !== '',
+                          sx: { 
+                            backgroundColor: theme.palette.background.paper,
+                            px: 1,
+                            transform: 'translate(14px, -9px) scale(0.75)'
+                          } 
+                        }}
                         InputProps={{
                           ...params.InputProps,
+                          sx: {
+                            borderRadius: '12px',
+                            '&:before, &:after': {
+                              display: 'none'
+                            }
+                          },
                           endAdornment: (
                             <React.Fragment>
                               {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
