@@ -181,6 +181,7 @@ const LANGUAGES = {
     displayCurrency: "Валюта відображення",
     language: "Мова",
     priceHistory: "Історія ціни",
+    loadingData: "Завантаження даних...",
   },
   en: {
     portfolio: "Investment Portfolio",
@@ -218,6 +219,7 @@ const LANGUAGES = {
     displayCurrency: "Display Currency",
     language: "Language",
     priceHistory: "Price History",
+    loadingData: "Loading data...",
   },
 };
 
@@ -248,11 +250,12 @@ export default function App() {
   const [soldItems, setSoldItems] = useState([]);
   const [lang, setLang] = useState('uk');
   const [displayCurrency, setDisplayCurrency] = useState('EUR');
-  const [currencyRates, setCurrencyRates] = useState({});
+  const [currencyRates, setCurrencyRates] = useState(null);
   const [autocompleteLoading, setAutocompleteLoading] = useState(false);
   const [itemOptions, setItemOptions] = useState([]);
   const abortControllerRef = useRef(null);
   const [autocompleteValue, setAutocompleteValue] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const t = LANGUAGES[lang];
 
   useEffect(() => {
@@ -273,8 +276,10 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("investments", JSON.stringify(investments));
-    updateAnalytics();
+    if (currencyRates) {
+      localStorage.setItem("investments", JSON.stringify(investments));
+      updateAnalytics();
+    }
   }, [investments, displayCurrency, currencyRates]);
 
   useEffect(() => {
@@ -282,15 +287,19 @@ export default function App() {
   }, [lang]);
 
   useEffect(() => {
-    localStorage.setItem("displayCurrency", displayCurrency);
-    fetchCurrencyRates(displayCurrency);
+    if (displayCurrency) {
+      localStorage.setItem("displayCurrency", displayCurrency);
+      fetchCurrencyRates(displayCurrency);
+    }
   }, [displayCurrency]);
 
   const fetchCurrencyRates = async (baseCurrency) => {
     if (!EXCHANGE_RATE_API_KEY) {
         console.error("Exchange Rate API Key is missing.");
+        setIsLoading(false);
         return;
     }
+    setIsLoading(true);
     try {
         const response = await fetch(`https://v6.exchangerate-api.com/v6/${EXCHANGE_RATE_API_KEY}/latest/${baseCurrency}`);
         const data = await response.json();
@@ -298,21 +307,24 @@ export default function App() {
             setCurrencyRates(data.conversion_rates);
         } else {
             console.error("Error fetching currency rates:", data['error-type']);
+            showSnackbar(t.fetchError, "error");
         }
     } catch (error) {
         console.error("Failed to fetch currency rates:", error);
+        showSnackbar(t.fetchError, "error");
+    } finally {
+        setIsLoading(false);
     }
   };
 
   const convertCurrency = (amount, fromCurrency, toCurrency) => {
+    if (!currencyRates || !currencyRates[fromCurrency] || !currencyRates[toCurrency]) {
+      return amount; // Fallback to original amount if rates are not available
+    }
     if (fromCurrency === toCurrency) {
       return amount;
     }
-    if (!currencyRates[fromCurrency] || !currencyRates[toCurrency]) {
-        console.error(`Missing conversion rate for ${fromCurrency} or ${toCurrency}.`);
-        return amount;
-    }
-    const rateToDisplay = currencyRates[fromCurrency] / currencyRates[toCurrency];
+    const rateToDisplay = currencyRates[toCurrency] / currencyRates[fromCurrency];
     return amount * rateToDisplay;
   };
 
@@ -320,6 +332,13 @@ export default function App() {
     const sold = investments.filter(item => item.sold);
     setSoldItems(sold);
     
+    if (!currencyRates) {
+      setTotalInvestment(0);
+      setTotalProfit(0);
+      setProfitByDate([]);
+      return;
+    }
+
     const totalInvest = investments.reduce((sum, item) => {
         const convertedPrice = convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency);
         return sum + convertedPrice;
@@ -327,7 +346,7 @@ export default function App() {
 
     const totalProfitAmount = sold.reduce((sum, item) => {
         const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency, displayCurrency);
-        const convertedSellPrice = convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency); //Assuming sell price is in the same currency as buy price
+        const convertedSellPrice = convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency);
         return sum + (convertedSellPrice - convertedBuyPrice) * item.count;
     }, 0);
 
@@ -494,6 +513,28 @@ export default function App() {
   const percentageProfit = totalInvestment > 0 ? (profit / totalInvestment) * 100 : 0;
   const profitColor = profit >= 0 ? '#28A745' : '#DC3545';
   const displaySymbol = CURRENCY_SYMBOLS[displayCurrency];
+
+  if (isLoading) {
+    return (
+      <ThemeProvider theme={theme}>
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            height: '100vh', 
+            flexDirection: 'column',
+            gap: 2
+          }}
+        >
+          <CircularProgress color="primary" />
+          <Typography variant="h6" color="text.secondary">
+            {t.loadingData}
+          </Typography>
+        </Box>
+      </ThemeProvider>
+    );
+  }
 
   return (
     <ThemeProvider theme={theme}>
