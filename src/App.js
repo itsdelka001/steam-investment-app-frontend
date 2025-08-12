@@ -714,7 +714,7 @@ export default function App() {
                           e.target.onerror = null;
                           e.target.src = 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image';
                         }}
-                        crossOrigin="anonymous" // Додано атрибут crossOrigin
+                        crossOrigin="anonymous"
                       />
                       <Typography variant="h6" align="center" mb={2}>{selectedItemDetails.label}</Typography>
                       <Grid container spacing={2}>
