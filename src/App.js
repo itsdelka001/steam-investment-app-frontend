@@ -170,6 +170,10 @@ const LANGUAGES = {
     currency: "Валюта",
     language: "Мова",
     priceHistory: "Історія ціни",
+    noInvestmentsInCategory: "Немає інвестицій у цій категорії.",
+    floatValue: "Float Value",
+    stickers: "Наклейки (введіть через кому)",
+    selectedItem: "Вибраний предмет",
   },
   en: {
     portfolio: "Investment Portfolio",
@@ -205,10 +209,20 @@ const LANGUAGES = {
     currency: "Currency",
     language: "Language",
     priceHistory: "Price History",
+    noInvestmentsInCategory: "No investments in this category.",
+    floatValue: "Float Value",
+    stickers: "Stickers (comma-separated)",
+    selectedItem: "Selected Item",
   },
 };
 
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
+
+// Заглушка для інформації про предмет
+const dummyItemInfo = {
+  image: "https://community.cloudflare.steamstatic.com/economy/image/-9a81dl2Pr2_uI9vV_LdEwWb4fL2J0S4gVp6d2v_tK1i7994_gK91f1Q9-mG_gWj7w55f5P_XW0-8u6tq8_x8jO20_5L74c8C-Q",
+  floatValue: "0.25",
+};
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
@@ -497,7 +511,7 @@ export default function App() {
                 <TableRow>
                   <TableCell colSpan={7} align="center">
                     <Typography variant="body1" color="text.secondary">
-                      Немає інвестицій у цій категорії.
+                      {t.noInvestmentsInCategory}
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -546,11 +560,11 @@ export default function App() {
         </Box>
 
         {/* Dialog для додавання інвестиції */}
-        <Dialog open={addDialog} onClose={() => { setAddDialog(false); resetForm(); }} maxWidth="sm" fullWidth>
+        <Dialog open={addDialog} onClose={() => { setAddDialog(false); resetForm(); }} maxWidth="md" fullWidth>
           <DialogTitle>{t.addInvestment}</DialogTitle>
           <DialogContent>
             <Grid container spacing={2}>
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <Autocomplete
                   freeSolo
                   options={itemOptions}
@@ -578,7 +592,7 @@ export default function App() {
                 />
               </Grid>
               {tabValue === 0 && (
-                <Grid item xs={12}>
+                <Grid item xs={12} md={6}>
                   <FormControl variant="outlined" fullWidth required>
                     <InputLabel>{t.game}</InputLabel>
                     <Select
@@ -595,55 +609,90 @@ export default function App() {
                   </FormControl>
                 </Grid>
               )}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t.count}
-                  type="number"
-                  variant="outlined"
-                  fullWidth
-                  value={count}
-                  onChange={(e) => setCount(Number(e.target.value))}
-                  required
-                  inputProps={{ min: 1 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <Box display="flex" alignItems="center">
-                  <TextField
-                    label={t.buyPrice}
-                    type="number"
-                    variant="outlined"
-                    fullWidth
-                    value={buyPrice}
-                    onChange={(e) => setBuyPrice(Number(e.target.value))}
-                    required
-                    inputProps={{ min: 0 }}
-                  />
-                  <FormControl variant="outlined" sx={{ minWidth: 80, ml: 1 }}>
-                      <InputLabel>{t.currency}</InputLabel>
-                      <Select
-                        value={buyCurrency}
-                        onChange={(e) => setBuyCurrency(e.target.value)}
-                        label={t.currency}
-                      >
-                        {CURRENCIES.map((currency) => (
-                            <MenuItem key={currency} value={currency}>{currency}</MenuItem>
-                        ))}
-                      </Select>
-                  </FormControl>
-                </Box>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label={t.boughtDate}
-                  type="date"
-                  variant="outlined"
-                  fullWidth
-                  value={boughtDate}
-                  onChange={(e) => setBoughtDate(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  required
-                />
+              {autocompleteValue && (
+                <Grid item xs={12} md={6}>
+                  <Card variant="outlined">
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>{t.selectedItem}</Typography>
+                      <Box display="flex" flexDirection="column" alignItems="center">
+                        <img src={dummyItemInfo.image} alt={autocompleteValue.label} style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px' }} />
+                        <Typography variant="body1" align="center">{autocompleteValue.label}</Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              )}
+              <Grid item xs={12} md={6}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      label={t.count}
+                      type="number"
+                      variant="outlined"
+                      fullWidth
+                      value={count}
+                      onChange={(e) => setCount(Number(e.target.value))}
+                      required
+                      inputProps={{ min: 1 }}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Box display="flex" alignItems="center">
+                      <TextField
+                        label={t.buyPrice}
+                        type="number"
+                        variant="outlined"
+                        fullWidth
+                        value={buyPrice}
+                        onChange={(e) => setBuyPrice(Number(e.target.value))}
+                        required
+                        inputProps={{ min: 0 }}
+                      />
+                      <FormControl variant="outlined" sx={{ minWidth: 80, ml: 1 }}>
+                        <InputLabel>{t.currency}</InputLabel>
+                        <Select
+                          value={buyCurrency}
+                          onChange={(e) => setBuyCurrency(e.target.value)}
+                          label={t.currency}
+                        >
+                          {CURRENCIES.map((currency) => (
+                              <MenuItem key={currency} value={currency}>{currency}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label={t.boughtDate}
+                      type="date"
+                      variant="outlined"
+                      fullWidth
+                      value={boughtDate}
+                      onChange={(e) => setBoughtDate(e.target.value)}
+                      InputLabelProps={{ shrink: true }}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label={t.floatValue}
+                      type="number"
+                      variant="outlined"
+                      fullWidth
+                      value={dummyItemInfo.floatValue}
+                      disabled
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label={t.stickers}
+                      variant="outlined"
+                      fullWidth
+                      placeholder="Назва, Назва2, Назва3"
+                    />
+                  </Grid>
+                </Grid>
               </Grid>
             </Grid>
           </DialogContent>
