@@ -56,6 +56,9 @@ const theme = createTheme({
   },
   typography: {
     fontFamily: ['Poppins', 'Inter', 'sans-serif'].join(','),
+    h2: {
+      fontWeight: 700,
+    },
     h4: {
       fontWeight: 700,
     },
@@ -132,7 +135,7 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 }));
 
 const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
-  paddingTop: theme.spacing(4), // Додаємо відступ зверху для діалогового вікна
+  padding: theme.spacing(4),
 }));
 
 const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
@@ -144,7 +147,7 @@ const LANGUAGES = {
     portfolio: "Портфель інвестицій",
     name: "Назва предмета",
     count: "Кількість",
-    buyPrice: "Ціна купівлі (за шт.)",
+    buyPrice: "Ціна купівлі",
     game: "Гра",
     boughtDate: "Дата купівлі",
     action: "Дії",
@@ -154,7 +157,7 @@ const LANGUAGES = {
     sold: "Продано",
     yes: "Так",
     no: "Ні",
-    sellPrice: "Ціна продажу (за шт.)",
+    sellPrice: "Ціна продажу",
     sellDate: "Дата продажу",
     editItem: "Редагувати предмет",
     deleteConfirmation: "Ви впевнені, що хочете видалити цей предмет?",
@@ -184,7 +187,7 @@ const LANGUAGES = {
     portfolio: "Investment Portfolio",
     name: "Item Name",
     count: "Count",
-    buyPrice: "Buy Price (per item)",
+    buyPrice: "Buy Price",
     game: "Game",
     boughtDate: "Purchase Date",
     action: "Actions",
@@ -194,7 +197,7 @@ const LANGUAGES = {
     sold: "Sold",
     yes: "Yes",
     no: "No",
-    sellPrice: "Sell Price (per item)",
+    sellPrice: "Sell Price",
     sellDate: "Sell Date",
     editItem: "Edit Item",
     deleteConfirmation: "Are you sure you want to delete this item?",
@@ -224,18 +227,12 @@ const LANGUAGES = {
 
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
 
-// Заглушка для інформації про предмет
-const dummyItemInfo = {
-  image: "https://community.cloudflare.steamstatic.com/economy/image/-9a81dl2Pr2_uI9vV_LdEwWb4fL2J0S4gVp6d2v_tK1i7994_gK91f1Q9-mG_gWj7w55f5P_XW0-8u6tq8_x8jO20_5L74c8C-Q",
-  floatValue: "0.25",
-};
-
 export default function App() {
   const [investments, setInvestments] = useState([]);
   const [name, setName] = useState("");
   const [count, setCount] = useState(1);
   const [buyPrice, setBuyPrice] = useState(0);
-  const [buyCurrency, setBuyCurrency] = useState(CURRENCIES[0]);
+  const [buyCurrency, setBuyCurrency] = useState(CURRENCIES[2]); // Змінено на UAH за замовчуванням
   const [game, setGame] = useState(GAMES[1]);
   const [boughtDate, setBoughtDate] = useState(new Date().toISOString().split('T')[0]);
   const [tabValue, setTabValue] = useState(0);
@@ -257,6 +254,7 @@ export default function App() {
   const [itemOptions, setItemOptions] = useState([]);
   const abortControllerRef = useRef(null);
   const [autocompleteValue, setAutocompleteValue] = useState(null);
+  const [selectedItemDetails, setSelectedItemDetails] = useState(null);
   const t = LANGUAGES[lang];
 
   useEffect(() => {
@@ -311,19 +309,20 @@ export default function App() {
       abortControllerRef.current = new AbortController();
       const signal = abortControllerRef.current.signal;
       setAutocompleteLoading(true);
-      
+
       try {
         const selectedGame = tabValue === 0 ? game : GAMES[tabValue];
         const url = `${PROXY_SERVER_URL}/search?query=${encodeURIComponent(newInputValue)}&game=${encodeURIComponent(selectedGame)}`;
         const response = await fetch(url, { signal });
-        
+
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        
+
         const data = await response.json();
-        const formattedOptions = data.map(item => ({ label: item.name, value: item.name }));
-        
+        // Тепер зберігаємо повний об'єкт, а не тільки ім'я
+        const formattedOptions = data.map(item => ({ label: item.name, image: item.image, float: item.float }));
+
         setItemOptions(formattedOptions);
       } catch (error) {
         if (error.name === 'AbortError') {
@@ -344,9 +343,11 @@ export default function App() {
   const handleAutocompleteChange = (event, newValue) => {
     setAutocompleteValue(newValue);
     if (newValue) {
-        setName(newValue.label);
+      setName(newValue.label);
+      setSelectedItemDetails(newValue); // Зберігаємо повні дані про вибраний предмет
     } else {
-        setName('');
+      setName('');
+      setSelectedItemDetails(null);
     }
   };
 
@@ -367,6 +368,9 @@ export default function App() {
       sold: false,
       sellPrice: 0,
       sellDate: null,
+      // Додаємо зображення та float до об'єкта інвестиції
+      image: selectedItemDetails?.image || null,
+      floatValue: selectedItemDetails?.float || null,
     };
 
     setInvestments([...investments, newItem]);
@@ -415,6 +419,7 @@ export default function App() {
     setSellDate(new Date().toISOString().split('T')[0]);
     setAutocompleteValue(null);
     setItemOptions([]);
+    setSelectedItemDetails(null);
   };
 
   const showSnackbar = (message, severity) => {
@@ -467,7 +472,7 @@ export default function App() {
             <StyledCard>
               <CardContent>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.totalInvestment}</Typography>
-                <Typography variant="h4" fontWeight="bold">{totalInvestment.toFixed(2)}€</Typography>
+                <Typography variant="h2" fontWeight="bold">{totalInvestment.toFixed(2)}€</Typography>
               </CardContent>
             </StyledCard>
           </Grid>
@@ -475,7 +480,7 @@ export default function App() {
             <StyledCard>
               <CardContent>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.profit}</Typography>
-                <Typography variant="h4" fontWeight="bold" sx={{ color: profitColor }}>
+                <Typography variant="h2" fontWeight="bold" sx={{ color: profitColor }}>
                   {profit.toFixed(2)}€
                 </Typography>
               </CardContent>
@@ -485,7 +490,7 @@ export default function App() {
             <StyledCard>
               <CardContent>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.percentageProfit}</Typography>
-                <Typography variant="h4" fontWeight="bold" sx={{ color: profitColor }}>
+                <Typography variant="h2" fontWeight="bold" sx={{ color: profitColor }}>
                   {percentageProfit.toFixed(2)}%
                 </Typography>
               </CardContent>
@@ -566,118 +571,117 @@ export default function App() {
         </Box>
 
         {/* Dialog для додавання інвестиції */}
-        <Dialog open={addDialog} onClose={() => { setAddDialog(false); resetForm(); }} maxWidth="lg" fullWidth>
-          <DialogTitle sx={{paddingTop: theme.spacing(4)}}>{t.addInvestment}</DialogTitle>
+        <Dialog open={addDialog} onClose={() => { setAddDialog(false); resetForm(); }} maxWidth="md" fullWidth>
+          <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem', py: 2 }}>
+            <GradientText variant="h6">{t.addInvestment}</GradientText>
+          </DialogTitle>
           <StyledDialogContent dividers>
-            <Grid container spacing={4} sx={{paddingTop: theme.spacing(2)}}>
+            <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
-                <Grid container spacing={2}>
-                  <Grid item xs={12}>
-                    <Autocomplete
-                      freeSolo
-                      options={itemOptions}
-                      loading={autocompleteLoading}
-                      value={autocompleteValue}
-                      onChange={handleAutocompleteChange}
-                      onInputChange={handleItemNameChange}
-                      renderInput={(params) => (
-                        <TextField
-                          {...params}
-                          label={t.name}
-                          variant="outlined"
-                          required
-                          InputProps={{
-                            ...params.InputProps,
-                            endAdornment: (
-                              <React.Fragment>
-                                {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
-                                {params.InputProps.endAdornment}
-                              </React.Fragment>
-                            ),
-                          }}
-                        />
-                      )}
+                 <Autocomplete
+                  fullWidth
+                  freeSolo
+                  options={itemOptions}
+                  loading={autocompleteLoading}
+                  value={autocompleteValue}
+                  onChange={handleAutocompleteChange}
+                  onInputChange={handleItemNameChange}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label={t.name}
+                      placeholder="Введіть назву предмета або скіна..."
+                      variant="outlined"
+                      required
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <React.Fragment>
+                            {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                            {params.InputProps.endAdornment}
+                          </React.Fragment>
+                        ),
+                      }}
                     />
-                  </Grid>
-                  {tabValue === 0 && (
-                    <Grid item xs={12}>
-                      <FormControl variant="outlined" fullWidth required>
-                        <InputLabel>{t.game}</InputLabel>
-                        <Select
-                          value={game}
-                          onChange={(e) => setGame(e.target.value)}
-                          label={t.game}
-                        >
-                          {GAMES.slice(1).map((gameOption) => (
-                            <MenuItem key={gameOption} value={gameOption}>
-                              {gameOption}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Grid>
                   )}
-                  <Grid item xs={12}>
-                    <TextField
-                      label={t.count}
-                      type="number"
-                      variant="outlined"
-                      fullWidth
-                      value={count}
-                      onChange={(e) => setCount(Number(e.target.value))}
-                      required
-                      inputProps={{ min: 1 }}
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Box display="flex" alignItems="center">
-                      <TextField
-                        label={t.buyPrice}
-                        type="number"
-                        variant="outlined"
-                        fullWidth
-                        value={buyPrice}
-                        onChange={(e) => setBuyPrice(Number(e.target.value))}
-                        required
-                        inputProps={{ min: 0 }}
-                      />
-                      <FormControl variant="outlined" sx={{ minWidth: 80, ml: 1 }}>
-                        <InputLabel>{t.currency}</InputLabel>
-                        <Select
-                          value={buyCurrency}
-                          onChange={(e) => setBuyCurrency(e.target.value)}
-                          label={t.currency}
-                        >
-                          {CURRENCIES.map((currency) => (
-                              <MenuItem key={currency} value={currency}>{currency}</MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      label={t.boughtDate}
-                      type="date"
-                      variant="outlined"
-                      fullWidth
-                      value={boughtDate}
-                      onChange={(e) => setBoughtDate(e.target.value)}
-                      InputLabelProps={{ shrink: true }}
-                      required
-                    />
-                  </Grid>
-                </Grid>
+                  sx={{ mb: 2 }}
+                />
+                <Box display="flex" gap={2} mb={2}>
+                  {tabValue === 0 && (
+                    <FormControl variant="outlined" sx={{ flexGrow: 1 }} required>
+                      <InputLabel>{t.game}</InputLabel>
+                      <Select
+                        value={game}
+                        onChange={(e) => setGame(e.target.value)}
+                        label={t.game}
+                      >
+                        {GAMES.slice(1).map((gameOption) => (
+                          <MenuItem key={gameOption} value={gameOption}>
+                            {gameOption}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                  <TextField
+                    label={t.count}
+                    type="number"
+                    variant="outlined"
+                    sx={{ flexGrow: 1 }}
+                    value={count}
+                    onChange={(e) => setCount(Number(e.target.value))}
+                    required
+                    inputProps={{ min: 1 }}
+                  />
+                  <TextField
+                    label={t.buyPrice}
+                    type="number"
+                    variant="outlined"
+                    sx={{ flexGrow: 1 }}
+                    value={buyPrice}
+                    onChange={(e) => setBuyPrice(Number(e.target.value))}
+                    required
+                    inputProps={{ min: 0 }}
+                    // Додано суфікс для валюти
+                    InputProps={{
+                      endAdornment: (
+                        <InputLabel>{CURRENCY_SYMBOLS[buyCurrency]}</InputLabel>
+                      )
+                    }}
+                  />
+                </Box>
+                {/* <FormControl variant="outlined" sx={{ minWidth: 80, ml: 1 }}>
+                  <InputLabel>{t.currency}</InputLabel>
+                  <Select
+                    value={buyCurrency}
+                    onChange={(e) => setBuyCurrency(e.target.value)}
+                    label={t.currency}
+                  >
+                    {CURRENCIES.map((currency) => (
+                      <MenuItem key={currency} value={currency}>{currency}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl> */}
+                <TextField
+                  label={t.boughtDate}
+                  type="date"
+                  variant="outlined"
+                  fullWidth
+                  value={boughtDate}
+                  onChange={(e) => setBoughtDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  required
+                />
               </Grid>
 
               <Grid item xs={12} md={6}>
-                {autocompleteValue ? (
+                {selectedItemDetails ? (
                   <StyledCard>
                     <CardContent>
                       <Typography variant="h6" gutterBottom align="center">{t.itemDetails}</Typography>
                       <Box display="flex" flexDirection="column" alignItems="center">
-                        <img src={dummyItemInfo.image} alt={autocompleteValue.label} style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px' }} />
-                        <Typography variant="h6" align="center" mb={2}>{autocompleteValue.label}</Typography>
+                        <img src={selectedItemDetails.image} alt={selectedItemDetails.label} style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px' }} />
+                        <Typography variant="h6" align="center" mb={2}>{selectedItemDetails.label}</Typography>
                         <Grid container spacing={2}>
                            <Grid item xs={12} sm={6}>
                               <TextField
@@ -685,7 +689,7 @@ export default function App() {
                                 type="number"
                                 variant="outlined"
                                 fullWidth
-                                value={dummyItemInfo.floatValue}
+                                value={selectedItemDetails.float}
                                 disabled
                               />
                             </Grid>
@@ -710,7 +714,7 @@ export default function App() {
               </Grid>
             </Grid>
           </StyledDialogContent>
-          <DialogActions>
+          <DialogActions sx={{ padding: '16px 24px', justifyContent: 'space-between' }}>
             <Button onClick={() => { setAddDialog(false); resetForm(); }}>{t.cancel}</Button>
             <Button onClick={addItem} color="primary" variant="contained">{t.addItem}</Button>
           </DialogActions>
