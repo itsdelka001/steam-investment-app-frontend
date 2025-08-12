@@ -234,9 +234,11 @@ export default function App() {
   
   // Handle autocomplete input changes and fetch suggestions
   const handleItemNameChange = async (event, newInputValue) => {
+    console.log("Autocomplete input changed:", newInputValue); // Log 1
     setName(newInputValue);
 
     if (newInputValue && newInputValue.length > 2) {
+      console.log("Input length > 2, fetching options..."); // Log 2
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -245,13 +247,22 @@ export default function App() {
       setAutocompleteLoading(true);
       
       try {
-        const response = await fetch(`${PROXY_SERVER_URL}/search?query=${encodeURIComponent(newInputValue)}&game=${encodeURIComponent(game)}`, { signal });
+        const url = `${PROXY_SERVER_URL}/search?query=${encodeURIComponent(newInputValue)}&game=${encodeURIComponent(game)}`;
+        console.log("Fetching URL:", url); // Log 3
+        const response = await fetch(url, { signal });
+        
         if (!response.ok) {
+          console.error("Network response was not ok:", response.status); // Log 4
           throw new Error('Network response was not ok');
         }
+        
         const data = await response.json();
+        console.log("Received data from API:", data); // Log 5
+        
         // The API now returns an array of objects, we need to extract the 'name' property
         const formattedOptions = data.map(item => ({ label: item.name, value: item.name }));
+        console.log("Formatted options:", formattedOptions); // Log 6
+        
         setItemOptions(formattedOptions);
       } catch (error) {
         if (error.name === 'AbortError') {
@@ -264,10 +275,21 @@ export default function App() {
         setAutocompleteLoading(false);
       }
     } else {
+      console.log("Input length <= 2, clearing options."); // Log 7
       setItemOptions([]);
       setAutocompleteLoading(false);
     }
   };
+  
+  const handleAutocompleteChange = (event, newValue) => {
+    console.log("Autocomplete selected value:", newValue); // Log 8
+    setAutocompleteValue(newValue);
+    if (newValue) {
+        setName(newValue.label);
+    } else {
+        setName('');
+    }
+  }
 
   // Add a new item or update an existing one
   const addItem = async () => {
@@ -492,14 +514,7 @@ export default function App() {
                 <Grid item xs={12} sm={6} md={3}>
                   <Autocomplete
                     value={autocompleteValue}
-                    onChange={(event, newValue) => {
-                      setAutocompleteValue(newValue);
-                      if (newValue) {
-                          setName(newValue.label);
-                      } else {
-                          setName('');
-                      }
-                    }}
+                    onChange={handleAutocompleteChange}
                     inputValue={name}
                     onInputChange={handleItemNameChange}
                     id="autocomplete-item-name"
