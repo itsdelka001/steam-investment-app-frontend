@@ -158,8 +158,6 @@ const t = LANGUAGES.uk;
 // ====================================================================================
 // ========================= Налаштування API =========================================
 // ====================================================================================
-// УВАГА: Замініть цю URL-адресу на URL вашого розгорнутого проксі-сервера.
-// Якщо ви тестуєте локально, залиште `http://localhost:3001`.
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
 // ====================================================================================
 // ====================================================================================
@@ -200,32 +198,39 @@ export default function App() {
   // ====================================================================================
   // ========================= Функції для роботи з API =================================
   // ====================================================================================
+  
   // Ця функція робить запит до проксі-сервера для отримання поточної ціни
   const fetchCurrentPrice = async (itemName, gameName) => {
-    setAutocompleteLoading(true);
     try {
-      // Використовуємо наш проксі-сервер для запиту ціни
       const response = await fetch(`${PROXY_SERVER_URL}/price?item_name=${encodeURIComponent(itemName)}&game=${encodeURIComponent(gameName)}`);
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
       const data = await response.json();
-      // Тут ми припускаємо, що проксі-сервер повертає об'єкт з полем `price`
       return data.price || 0;
     } catch (error) {
       console.error('Error fetching current price:', error);
       showSnackbar(t.fetchError, "error");
       return 0;
-    } finally {
-      setAutocompleteLoading(false);
     }
   };
   
-  // Ця функція робить запит до проксі-сервера для автозаповнення назв предметів
-  const handleItemNameChange = async (event, newValue) => {
+  // ====================================================================================
+  // [ЗМІНА] - Оновлено handleItemNameChange для використання `game`
+  // ====================================================================================
+  const handleItemNameChange = async (event, newValue, reason) => {
+    // Якщо користувач очищає поле, скидаємо опції
+    if (reason === 'clear') {
+      setName('');
+      setItemOptions([]);
+      return;
+    }
+    
+    // Встановлюємо значення, яке ввів користувач
     setName(newValue || "");
+
+    // Робимо запит, тільки якщо довжина запиту більша за 2 символи
     if (newValue && newValue.length > 2) {
-      // Скасовуємо попередній запит, якщо такий є
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -234,13 +239,13 @@ export default function App() {
       setAutocompleteLoading(true);
       
       try {
-        // Використовуємо наш проксі-сервер для автозаповнення
-        const response = await fetch(`${PROXY_SERVER_URL}/search?query=${encodeURIComponent(newValue)}`, { signal });
+        // Використовуємо наш проксі-сервер для автозаповнення, передаючи гру
+        const response = await fetch(`${PROXY_SERVER_URL}/search?query=${encodeURIComponent(newValue)}&game=${encodeURIComponent(game)}`, { signal });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
-        // Припускаємо, що сервер повертає масив об'єктів { label: "...", value: "..." }
+        // Припускаємо, що сервер повертає масив об'єктів { label: "...", value: "...", image: "..." }
         setItemOptions(data);
       } catch (error) {
         if (error.name === 'AbortError') {
@@ -266,7 +271,6 @@ export default function App() {
       showSnackbar("Будь ласка, заповніть всі обов'язкові поля.", "error");
       return;
     }
-    // Отримуємо поточну ціну з API перед додаванням
     const currentPriceFromApi = await fetchCurrentPrice(name, game);
     const newItem = {
       id: editingItem ? editingItem.id : Date.now(),
@@ -469,7 +473,6 @@ export default function App() {
             </Typography>
             
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
-              {/* "Назва предмета" - займає більше місця */}
               <Box sx={{ flexGrow: 1, minWidth: 200, maxWidth: { xs: '100%', sm: '300px', lg: '400px' } }}>
                 <Autocomplete
                   freeSolo
@@ -478,7 +481,13 @@ export default function App() {
                   loading={autocompleteLoading}
                   value={name}
                   onInputChange={handleItemNameChange}
-                  onChange={(event, newValue) => setName(newValue || "")}
+                  onChange={(event, newValue) => {
+                    if (newValue && newValue.label) {
+                      setName(newValue.label);
+                    } else {
+                      setName(newValue);
+                    }
+                  }}
                   renderInput={(params) => (
                     <TextField
                       {...params}
@@ -496,10 +505,26 @@ export default function App() {
                       }}
                     />
                   )}
+                  // ====================================================================
+                  // [ЗМІНА] - Оновлено renderOption для відображення зображень
+                  // ====================================================================
+                  renderOption={(props, option) => (
+                    <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
+                      {option.image && (
+                        <img
+                          loading="lazy"
+                          width="20"
+                          src={`https://community.cloudflare.steamstatic.com/economy/image/${option.image}`}
+                          alt=""
+                        />
+                      )}
+                      {option.label}
+                    </Box>
+                  )}
+                  // ====================================================================
                 />
               </Box>
 
-              {/* "Кількість" - невелике поле */}
               <Box sx={{ width: 100, flexShrink: 0 }}>
                 <TextField
                   label={t.count}
@@ -512,7 +537,6 @@ export default function App() {
                 />
               </Box>
 
-              {/* "Ціна купівлі" - середнє поле */}
               <Box sx={{ width: 120, flexShrink: 0 }}>
                 <TextField
                   label={t.buyPrice}
@@ -524,7 +548,6 @@ export default function App() {
                 />
               </Box>
 
-              {/* "Гра" */}
               <Box sx={{ flexShrink: 0, minWidth: 120 }}>
                 <FormControl variant="outlined" fullWidth>
                   <InputLabel>{t.game}</InputLabel>
@@ -542,7 +565,6 @@ export default function App() {
                 </FormControl>
               </Box>
 
-              {/* "Дата купівлі" */}
               <Box sx={{ flexShrink: 0, minWidth: 150 }}>
                 <TextField
                   label={t.boughtDate}
@@ -555,9 +577,7 @@ export default function App() {
                 />
               </Box>
               
-              {/* Поля для продажу */}
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, width: '100%', mt: 2, alignItems: 'center' }}>
-                {/* "Продано" - розширене поле */}
                 <Box sx={{ flexShrink: 0, minWidth: 120 }}>
                   <FormControl variant="outlined" fullWidth>
                     <InputLabel>{t.sold}</InputLabel>
@@ -598,7 +618,6 @@ export default function App() {
                 )}
               </Box>
 
-              {/* Кнопки додавання/збереження та скасування */}
               <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 1 }}>
                 {editingItem && (
                   <Button variant="text" onClick={resetForm}>
