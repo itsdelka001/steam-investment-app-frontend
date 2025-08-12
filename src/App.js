@@ -138,6 +138,16 @@ const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
   padding: theme.spacing(4),
 }));
 
+const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
+  background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
+  color: theme.palette.common.white,
+  textAlign: 'center',
+  fontWeight: 'bold',
+  padding: theme.spacing(2),
+  borderRadius: '16px 16px 0 0',
+}));
+
+
 const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
 const CURRENCIES = ["EUR", "USD", "UAH"];
 const CURRENCY_SYMBOLS = { "EUR": "€", "USD": "$", "UAH": "₴" };
@@ -320,8 +330,7 @@ export default function App() {
         }
 
         const data = await response.json();
-        // Тепер зберігаємо повний об'єкт, а не тільки ім'я
-        const formattedOptions = data.map(item => ({ label: item.name, image: item.image, float: item.float }));
+        const formattedOptions = data.map(item => ({ label: item.name, image: item.icon_url, float: item.float })); // FIX: змінено item.image на item.icon_url
 
         setItemOptions(formattedOptions);
       } catch (error) {
@@ -368,7 +377,6 @@ export default function App() {
       sold: false,
       sellPrice: 0,
       sellDate: null,
-      // Додаємо зображення та float до об'єкта інвестиції
       image: selectedItemDetails?.image || null,
       floatValue: selectedItemDetails?.float || null,
     };
@@ -571,116 +579,117 @@ export default function App() {
         </Box>
 
         {/* Dialog для додавання інвестиції */}
-        <Dialog open={addDialog} onClose={() => { setAddDialog(false); resetForm(); }} maxWidth="md" fullWidth>
-          <DialogTitle sx={{ textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem', py: 2 }}>
-            <GradientText variant="h6">{t.addInvestment}</GradientText>
-          </DialogTitle>
-          <StyledDialogContent dividers>
-            <Grid container spacing={3}>
+        <Dialog open={addDialog} onClose={() => { setAddDialog(false); resetForm(); }} maxWidth="lg" fullWidth PaperProps={{ style: { overflowY: 'visible' } }}>
+          <StyledDialogTitle>{t.addInvestment}</StyledDialogTitle>
+          <DialogContent sx={{ position: 'relative', overflowY: 'visible', p: 4 }}>
+            <Grid container spacing={4} alignItems="flex-start" sx={{ justifyContent: 'center' }}>
               <Grid item xs={12} md={6}>
-                 <Autocomplete
-                  fullWidth
-                  freeSolo
-                  options={itemOptions}
-                  loading={autocompleteLoading}
-                  value={autocompleteValue}
-                  onChange={handleAutocompleteChange}
-                  onInputChange={handleItemNameChange}
-                  renderInput={(params) => (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Autocomplete
+                    fullWidth
+                    freeSolo
+                    options={itemOptions}
+                    loading={autocompleteLoading}
+                    value={autocompleteValue}
+                    onChange={handleAutocompleteChange}
+                    onInputChange={handleItemNameChange}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={<GradientText variant="subtitle1">{t.name}</GradientText>}
+                        placeholder="Введіть назву предмета або скіна..."
+                        variant="outlined"
+                        required
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <React.Fragment>
+                              {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                              {params.InputProps.endAdornment}
+                            </React.Fragment>
+                          ),
+                        }}
+                      />
+                    )}
+                  />
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                    {tabValue === 0 && (
+                      <FormControl variant="outlined" sx={{ flexGrow: 1 }} required>
+                        <InputLabel>{t.game}</InputLabel>
+                        <Select
+                          value={game}
+                          onChange={(e) => setGame(e.target.value)}
+                          label={t.game}
+                        >
+                          {GAMES.slice(1).map((gameOption) => (
+                            <MenuItem key={gameOption} value={gameOption}>
+                              {gameOption}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    )}
                     <TextField
-                      {...params}
-                      label={t.name}
-                      placeholder="Введіть назву предмета або скіна..."
+                      label={t.count}
+                      type="number"
                       variant="outlined"
+                      sx={{ width: '30%' }}
+                      value={count}
+                      onChange={(e) => setCount(Number(e.target.value))}
                       required
+                      inputProps={{ min: 1 }}
+                    />
+                    <TextField
+                      label={t.buyPrice}
+                      type="number"
+                      variant="outlined"
+                      sx={{ flexGrow: 1 }}
+                      value={buyPrice}
+                      onChange={(e) => setBuyPrice(Number(e.target.value))}
+                      required
+                      inputProps={{ min: 0 }}
                       InputProps={{
-                        ...params.InputProps,
                         endAdornment: (
-                          <React.Fragment>
-                            {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
-                            {params.InputProps.endAdornment}
-                          </React.Fragment>
-                        ),
+                          <InputLabel>{CURRENCY_SYMBOLS[buyCurrency]}</InputLabel>
+                        )
                       }}
                     />
-                  )}
-                  sx={{ mb: 2 }}
-                />
-                <Box display="flex" gap={2} mb={2}>
-                  {tabValue === 0 && (
-                    <FormControl variant="outlined" sx={{ flexGrow: 1 }} required>
-                      <InputLabel>{t.game}</InputLabel>
-                      <Select
-                        value={game}
-                        onChange={(e) => setGame(e.target.value)}
-                        label={t.game}
-                      >
-                        {GAMES.slice(1).map((gameOption) => (
-                          <MenuItem key={gameOption} value={gameOption}>
-                            {gameOption}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                  )}
+                  </Box>
                   <TextField
-                    label={t.count}
-                    type="number"
+                    label={t.boughtDate}
+                    type="date"
                     variant="outlined"
-                    sx={{ flexGrow: 1 }}
-                    value={count}
-                    onChange={(e) => setCount(Number(e.target.value))}
+                    fullWidth
+                    value={boughtDate}
+                    onChange={(e) => setBoughtDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
                     required
-                    inputProps={{ min: 1 }}
-                  />
-                  <TextField
-                    label={t.buyPrice}
-                    type="number"
-                    variant="outlined"
-                    sx={{ flexGrow: 1 }}
-                    value={buyPrice}
-                    onChange={(e) => setBuyPrice(Number(e.target.value))}
-                    required
-                    inputProps={{ min: 0 }}
-                    // Додано суфікс для валюти
-                    InputProps={{
-                      endAdornment: (
-                        <InputLabel>{CURRENCY_SYMBOLS[buyCurrency]}</InputLabel>
-                      )
-                    }}
                   />
                 </Box>
-                {/* <FormControl variant="outlined" sx={{ minWidth: 80, ml: 1 }}>
-                  <InputLabel>{t.currency}</InputLabel>
-                  <Select
-                    value={buyCurrency}
-                    onChange={(e) => setBuyCurrency(e.target.value)}
-                    label={t.currency}
-                  >
-                    {CURRENCIES.map((currency) => (
-                      <MenuItem key={currency} value={currency}>{currency}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl> */}
-                <TextField
-                  label={t.boughtDate}
-                  type="date"
-                  variant="outlined"
-                  fullWidth
-                  value={boughtDate}
-                  onChange={(e) => setBoughtDate(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  required
-                />
               </Grid>
 
               <Grid item xs={12} md={6}>
-                {selectedItemDetails ? (
-                  <StyledCard>
-                    <CardContent>
-                      <Typography variant="h6" gutterBottom align="center">{t.itemDetails}</Typography>
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    minHeight: '250px',
+                    backgroundColor: 'rgba(255,255,255,0.7)',
+                    borderRadius: '16px',
+                    p: 3,
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                  }}
+                >
+                  {selectedItemDetails ? (
+                    <Box sx={{ width: '100%' }}>
+                      <Typography variant="h6" gutterBottom align="center">
+                        <GradientText variant="h6">{t.itemDetails}</GradientText>
+                      </Typography>
                       <Box display="flex" flexDirection="column" alignItems="center">
-                        <img src={selectedItemDetails.image} alt={selectedItemDetails.label} style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px' }} />
+                        <img src={selectedItemDetails.image} alt={selectedItemDetails.label} style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px', borderRadius: '8px' }} />
                         <Typography variant="h6" align="center" mb={2}>{selectedItemDetails.label}</Typography>
                         <Grid container spacing={2}>
                            <Grid item xs={12} sm={6}>
@@ -691,6 +700,14 @@ export default function App() {
                                 fullWidth
                                 value={selectedItemDetails.float}
                                 disabled
+                                sx={{
+                                  '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'rgba(74,20,140,0.5) !important',
+                                  },
+                                  '& .MuiInputBase-input.Mui-disabled': {
+                                    WebkitTextFillColor: '#4A148C',
+                                  }
+                                }}
                               />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -699,22 +716,27 @@ export default function App() {
                                 variant="outlined"
                                 fullWidth
                                 placeholder="Назва, Назва2, Назва3"
+                                sx={{
+                                  '& .MuiOutlinedInput-notchedOutline': {
+                                    borderColor: 'rgba(74,20,140,0.5) !important',
+                                  },
+                                }}
                               />
                             </Grid>
                         </Grid>
                       </Box>
-                    </CardContent>
-                  </StyledCard>
-                ) : (
-                  <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100%">
-                    <Typography variant="h6" color="text.secondary">{t.selectedItem}</Typography>
-                    <Typography variant="body2" color="text.secondary">Виберіть предмет, щоб побачити деталі</Typography>
-                  </Box>
-                )}
+                    </Box>
+                  ) : (
+                    <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center">
+                      <Typography variant="h6" color="text.secondary">{t.selectedItem}</Typography>
+                      <Typography variant="body2" color="text.secondary">Виберіть предмет, щоб побачити деталі</Typography>
+                    </Box>
+                  )}
+                </Box>
               </Grid>
             </Grid>
-          </StyledDialogContent>
-          <DialogActions sx={{ padding: '16px 24px', justifyContent: 'space-between' }}>
+          </DialogContent>
+          <DialogActions sx={{ padding: '16px 24px', justifyContent: 'space-between', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
             <Button onClick={() => { setAddDialog(false); resetForm(); }}>{t.cancel}</Button>
             <Button onClick={addItem} color="primary" variant="contained">{t.addItem}</Button>
           </DialogActions>
