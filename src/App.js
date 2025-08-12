@@ -234,7 +234,6 @@ const LANGUAGES = {
 };
 
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
-// const STEAM_CDN_URL = "https://community.akamai.steamstatic.com/economy/image/"; // Ця змінна більше не потрібна
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
@@ -330,11 +329,9 @@ export default function App() {
 
         const data = await response.json();
         const formattedOptions = data.map(item => {
-          // Коректно використовуємо URL, що вже повністю сформований на бекенді
           return {
             label: item.name,
             image: item.icon_url,
-            // float: item.float - дані про float не повертаються, тому це поле слід видалити або додати на бекенд
           };
         });
         setItemOptions(formattedOptions);
@@ -608,13 +605,13 @@ export default function App() {
                         variant="outlined"
                         required
                         sx={{ mb: 2 }}
-                        InputLabelProps={{ 
+                        InputLabelProps={{
                           shrink: autocompleteValue !== null || name !== '',
-                          sx: { 
+                          sx: {
                             backgroundColor: theme.palette.background.paper,
                             px: 1,
                             transform: 'translate(14px, -9px) scale(0.75)'
-                          } 
+                          }
                         }}
                         InputProps={{
                           ...params.InputProps,
@@ -706,7 +703,8 @@ export default function App() {
                         <GradientText variant="h6">{t.itemDetails}</GradientText>
                       </Typography>
                       <img
-                        src={selectedItemDetails.image}
+                        // *** Зміни тут: додано перевірку на існування selectedItemDetails.image ***
+                        src={selectedItemDetails.image ? selectedItemDetails.image : 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image'}
                         alt={selectedItemDetails.label}
                         style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px', borderRadius: '8px' }}
                         onError={(e) => {
