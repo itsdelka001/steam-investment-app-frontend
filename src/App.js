@@ -35,23 +35,22 @@ import { TrendingUp, Delete, Edit, BarChart, Info } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 
-// Оновлені налаштування теми для мінімалістичного, світлого дизайну
 const theme = createTheme({
   palette: {
-    mode: 'light', // Встановлюємо світлий режим
+    mode: 'light',
     primary: {
-      main: '#6F42C1', // Пастельний фіолетовий для акцентів
+      main: '#6F42C1',
     },
     secondary: {
-      main: '#007BFF', // Світло-синій
+      main: '#007BFF',
     },
     background: {
-      default: '#F8F9FA', // М'який білий для фону
-      paper: '#FFFFFF', // Чистий білий для карток і діалогів
+      default: '#F8F9FA',
+      paper: '#FFFFFF',
     },
     text: {
-      primary: '#212529', // Темний, майже чорний, текст
-      secondary: '#6C757D', // Сірий для допоміжного тексту
+      primary: '#212529',
+      secondary: '#6C757D',
     },
   },
   typography: {
@@ -76,10 +75,10 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)', // Легка тінь
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
           transition: 'transform 0.2s, box-shadow 0.2s',
           '&:hover': {
-            transform: 'translateY(-2px)', // Легкий підйом при наведенні
+            transform: 'translateY(-2px)',
             boxShadow: '0 6px 12px rgba(0, 0, 0, 0.1)',
           },
         },
@@ -95,7 +94,6 @@ const theme = createTheme({
   },
 });
 
-// Стилізований заголовок з градієнтом
 const GradientText = styled(Typography)(({ theme }) => ({
   background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
   WebkitBackgroundClip: 'text',
@@ -103,7 +101,6 @@ const GradientText = styled(Typography)(({ theme }) => ({
   fontWeight: 700,
 }));
 
-// Стилізовані компоненти для мінімалістичного дизайну
 const StyledContainer = styled(Container)(({ theme }) => ({
   paddingTop: theme.spacing(4),
   paddingBottom: theme.spacing(4),
@@ -152,10 +149,20 @@ const LANGUAGES = {
     itemAdded: "Предмет успішно додано!",
     itemUpdated: "Предмет успішно оновлено!",
     itemDeleted: "Предмет успішно видалено!",
+    fetchError: "Помилка при отриманні даних з API.",
   },
 };
 
 const t = LANGUAGES.uk;
+
+// ====================================================================================
+// ========================= Налаштування API =========================================
+// ====================================================================================
+// УВАГА: Замініть цю URL-адресу на URL вашого розгорнутого проксі-сервера.
+// Якщо ви тестуєте локально, залиште `http://localhost:3001`.
+const PROXY_SERVER_URL = "http://localhost:3001";
+// ====================================================================================
+// ====================================================================================
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
@@ -179,7 +186,6 @@ export default function App() {
   const [itemOptions, setItemOptions] = useState([]);
   const abortControllerRef = useRef(null);
 
-  // Завантаження даних з Local Storage при завантаженні
   useEffect(() => {
     const savedInvestments = localStorage.getItem("investments");
     if (savedInvestments) {
@@ -187,25 +193,39 @@ export default function App() {
     }
   }, []);
 
-  // Збереження даних в Local Storage при зміні
   useEffect(() => {
     localStorage.setItem("investments", JSON.stringify(investments));
   }, [investments]);
 
-  // Функція для отримання поточних цін (зараз фіксована, для демонстрації)
+  // ====================================================================================
+  // ========================= Функції для роботи з API =================================
+  // ====================================================================================
+  // Ця функція робить запит до проксі-сервера для отримання поточної ціни
   const fetchCurrentPrice = async (itemName, gameName) => {
-    // В реальному додатку тут був би виклик API, наприклад, Steam API, Buff163
     setAutocompleteLoading(true);
-    // Імітація затримки API
-    await new Promise(resolve => setTimeout(resolve, 500));
-    setAutocompleteLoading(false);
-    return Math.random() * 1000 + 10; // Повертає випадкову ціну
+    try {
+      // Використовуємо наш проксі-сервер для запиту ціни
+      const response = await fetch(`${PROXY_SERVER_URL}/price?item_name=${encodeURIComponent(itemName)}&game=${encodeURIComponent(gameName)}`);
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      // Тут ми припускаємо, що проксі-сервер повертає об'єкт з полем `price`
+      return data.price || 0;
+    } catch (error) {
+      console.error('Error fetching current price:', error);
+      showSnackbar(t.fetchError, "error");
+      return 0;
+    } finally {
+      setAutocompleteLoading(false);
+    }
   };
   
-  // Обробник для Autocomplete
+  // Ця функція робить запит до проксі-сервера для автозаповнення назв предметів
   const handleItemNameChange = async (event, newValue) => {
     setName(newValue || "");
     if (newValue && newValue.length > 2) {
+      // Скасовуємо попередній запит, якщо такий є
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -214,28 +234,20 @@ export default function App() {
       setAutocompleteLoading(true);
       
       try {
-        // Імітація виклику API для пошуку предметів
-        const response = await new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            const mockData = [
-              { label: `${newValue} (skin)` },
-              { label: `${newValue} (case)` },
-              { label: `${newValue} (sticker)` },
-            ];
-            resolve(mockData);
-          }, 500);
-
-          signal.addEventListener('abort', () => {
-            clearTimeout(timeout);
-            reject(new Error('Aborted'));
-          });
-        });
-        setItemOptions(response);
+        // Використовуємо наш проксі-сервер для автозаповнення
+        const response = await fetch(`${PROXY_SERVER_URL}/search?query=${encodeURIComponent(newValue)}`, { signal });
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        // Припускаємо, що сервер повертає масив об'єктів { label: "...", value: "..." }
+        setItemOptions(data);
       } catch (error) {
         if (error.name === 'AbortError') {
           console.log('Fetch aborted');
         } else {
           console.error('Error fetching autocomplete options:', error);
+          showSnackbar(t.fetchError, "error");
         }
       } finally {
         setAutocompleteLoading(false);
@@ -245,12 +257,16 @@ export default function App() {
       setAutocompleteLoading(false);
     }
   };
+  // ====================================================================================
+  // ==================== Кінець функцій для роботи з API ================================
+  // ====================================================================================
 
   const addItem = async () => {
     if (!name || !count || !buyPrice || !boughtDate || !game) {
       showSnackbar("Будь ласка, заповніть всі обов'язкові поля.", "error");
       return;
     }
+    // Отримуємо поточну ціну з API перед додаванням
     const currentPriceFromApi = await fetchCurrentPrice(name, game);
     const newItem = {
       id: editingItem ? editingItem.id : Date.now(),
@@ -325,7 +341,6 @@ export default function App() {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  // Розрахунки для аналітики
   const calculateTotalInvestment = (items) => items.reduce((sum, item) => sum + item.buyPrice * item.count, 0);
   const calculateCurrentValue = (items) => items.reduce((sum, item) => {
     if (item.sold) {
@@ -355,7 +370,6 @@ export default function App() {
       }))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
       
-    // Агрегація прибутку по датах
     const aggregatedProfit = profitData.reduce((acc, curr) => {
       const existing = acc.find(p => p.date === curr.date);
       if (existing) {
@@ -370,18 +384,16 @@ export default function App() {
     setAnalyticsOpen(true);
   };
 
-  // Фільтрація за грою
   const filteredInvestments = investments.filter((item) =>
     tabValue === 0 ? true : item.game === GAMES[tabValue - 1]
   );
   
-  // Розрахунки для відображення в шапці
   const totalInvestment = calculateTotalInvestment(filteredInvestments);
   const currentValue = calculateCurrentValue(filteredInvestments);
   const profit = calculateProfit(filteredInvestments);
   const percentageProfit = calculatePercentageProfit(filteredInvestments);
 
-  const profitColor = profit >= 0 ? '#28A745' : '#DC3545'; // Зелений для прибутку, червоний для збитку
+  const profitColor = profit >= 0 ? '#28A745' : '#DC3545';
 
   return (
     <ThemeProvider theme={theme}>
@@ -400,7 +412,6 @@ export default function App() {
             </Button>
           </Box>
 
-          {/* Панель з основними показниками */}
           <Grid container spacing={3} mb={4}>
             <Grid item xs={12} sm={6} md={3}>
               <StyledCard>
@@ -452,13 +463,14 @@ export default function App() {
             </Grid>
           </Grid>
           
-          {/* Форма для додавання/редагування */}
           <StyledCard>
             <Typography variant="h6" mb={2}>
               {editingItem ? t.editItem : t.add_item}
             </Typography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} md={4}>
+            
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+              {/* "Назва предмета" - займає більше місця */}
+              <Box sx={{ flexGrow: 1, minWidth: 200, maxWidth: { xs: '100%', sm: '300px', lg: '400px' } }}>
                 <Autocomplete
                   freeSolo
                   options={itemOptions}
@@ -485,8 +497,10 @@ export default function App() {
                     />
                   )}
                 />
-              </Grid>
-              <Grid item xs={12} md={2}>
+              </Box>
+
+              {/* "Кількість" - невелике поле */}
+              <Box sx={{ width: 100, flexShrink: 0 }}>
                 <TextField
                   label={t.count}
                   type="number"
@@ -494,9 +508,12 @@ export default function App() {
                   onChange={(e) => setCount(Number(e.target.value))}
                   variant="outlined"
                   fullWidth
+                  inputProps={{ style: { textAlign: 'center' } }}
                 />
-              </Grid>
-              <Grid item xs={12} md={2}>
+              </Box>
+
+              {/* "Ціна купівлі" - середнє поле */}
+              <Box sx={{ width: 120, flexShrink: 0 }}>
                 <TextField
                   label={t.buyPrice}
                   type="number"
@@ -505,8 +522,10 @@ export default function App() {
                   variant="outlined"
                   fullWidth
                 />
-              </Grid>
-              <Grid item xs={12} md={4}>
+              </Box>
+
+              {/* "Гра" */}
+              <Box sx={{ flexShrink: 0, minWidth: 120 }}>
                 <FormControl variant="outlined" fullWidth>
                   <InputLabel>{t.game}</InputLabel>
                   <Select
@@ -521,8 +540,10 @@ export default function App() {
                     ))}
                   </Select>
                 </FormControl>
-              </Grid>
-              <Grid item xs={12} md={4}>
+              </Box>
+
+              {/* "Дата купівлі" */}
+              <Box sx={{ flexShrink: 0, minWidth: 150 }}>
                 <TextField
                   label={t.boughtDate}
                   type="date"
@@ -532,63 +553,65 @@ export default function App() {
                   fullWidth
                   InputLabelProps={{ shrink: true }}
                 />
-              </Grid>
-              <Grid item xs={12} md={2}>
-                <FormControl variant="outlined" fullWidth>
-                  <InputLabel>{t.sold}</InputLabel>
-                  <Select
-                    value={sold}
-                    onChange={(e) => setSold(e.target.value)}
-                    label={t.sold}
-                  >
-                    <MenuItem value={true}>{t.yes}</MenuItem>
-                    <MenuItem value={false}>{t.no}</MenuItem>
-                  </Select>
-                </FormControl>
-              </Grid>
-              {sold && (
-                <>
-                  <Grid item xs={12} md={3}>
-                    <TextField
-                      label={t.sellPrice}
-                      type="number"
-                      value={sellPrice}
-                      onChange={(e) => setSellPrice(Number(e.target.value))}
-                      variant="outlined"
-                      fullWidth
-                    />
-                  </Grid>
-                  <Grid item xs={12} md={3}>
-                    <TextField
-                      label={t.sellDate}
-                      type="date"
-                      value={sellDate}
-                      onChange={(e) => setSellDate(e.target.value)}
-                      variant="outlined"
-                      fullWidth
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                </>
-              )}
-              <Grid item xs={12}>
-                <Button variant="contained" color="primary" onClick={addItem}>
-                  {editingItem ? t.save : t.add}
-                </Button>
+              </Box>
+              
+              {/* Поля для продажу */}
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, width: '100%', mt: 2, alignItems: 'center' }}>
+                {/* "Продано" - розширене поле */}
+                <Box sx={{ flexShrink: 0, minWidth: 120 }}>
+                  <FormControl variant="outlined" fullWidth>
+                    <InputLabel>{t.sold}</InputLabel>
+                    <Select
+                      value={sold}
+                      onChange={(e) => setSold(e.target.value)}
+                      label={t.sold}
+                    >
+                      <MenuItem value={true}>{t.yes}</MenuItem>
+                      <MenuItem value={false}>{t.no}</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+                {sold && (
+                  <>
+                    <Box sx={{ flexShrink: 0, minWidth: 150 }}>
+                      <TextField
+                        label={t.sellPrice}
+                        type="number"
+                        value={sellPrice}
+                        onChange={(e) => setSellPrice(Number(e.target.value))}
+                        variant="outlined"
+                        fullWidth
+                      />
+                    </Box>
+                    <Box sx={{ flexShrink: 0, minWidth: 150 }}>
+                      <TextField
+                        label={t.sellDate}
+                        type="date"
+                        value={sellDate}
+                        onChange={(e) => setSellDate(e.target.value)}
+                        variant="outlined"
+                        fullWidth
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Box>
+                  </>
+                )}
+              </Box>
+
+              {/* Кнопки додавання/збереження та скасування */}
+              <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 1 }}>
                 {editingItem && (
-                  <Button
-                    variant="text"
-                    onClick={resetForm}
-                    sx={{ ml: 1 }}
-                  >
+                  <Button variant="text" onClick={resetForm}>
                     {t.cancel}
                   </Button>
                 )}
-              </Grid>
-            </Grid>
+                <Button variant="contained" color="primary" onClick={addItem}>
+                  {editingItem ? t.save : t.add}
+                </Button>
+              </Box>
+            </Box>
           </StyledCard>
 
-          {/* Фільтрація по іграх */}
           <Box mb={2}>
             <Tabs
               value={tabValue}
@@ -604,7 +627,6 @@ export default function App() {
             </Tabs>
           </Box>
 
-          {/* Таблиця з інвестиціями */}
           <StyledCard>
             <Table>
               <TableHead>
@@ -671,7 +693,6 @@ export default function App() {
             </Table>
           </StyledCard>
 
-          {/* Діалог для підтвердження видалення */}
           <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
             <DialogTitle>{t.delete}</DialogTitle>
             <DialogContent>
@@ -685,7 +706,6 @@ export default function App() {
             </DialogActions>
           </Dialog>
 
-          {/* Діалог для аналітики */}
           <Dialog
             open={analyticsOpen}
             onClose={() => setAnalyticsOpen(false)}
@@ -712,7 +732,7 @@ export default function App() {
                     <Line
                       type="monotone"
                       dataKey="profit"
-                      stroke="#6F42C1" // Використовуємо акцентний колір
+                      stroke="#6F42C1"
                       activeDot={{ r: 8 }}
                       name={t.profit}
                     />
