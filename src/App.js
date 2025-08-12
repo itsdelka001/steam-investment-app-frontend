@@ -36,6 +36,7 @@ import { TrendingUp, Delete, Check, BarChart, Plus, Language } from 'lucide-reac
 import { LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 
+// Визначення теми з покращеними стилями
 const theme = createTheme({
   palette: {
     mode: 'light',
@@ -330,7 +331,7 @@ export default function App() {
         }
 
         const data = await response.json();
-        const formattedOptions = data.map(item => ({ label: item.name, image: item.icon_url, float: item.float })); // FIX: змінено item.image на item.icon_url
+        const formattedOptions = data.map(item => ({ label: item.name, image: item.icon_url, float: item.float }));
 
         setItemOptions(formattedOptions);
       } catch (error) {
@@ -353,7 +354,7 @@ export default function App() {
     setAutocompleteValue(newValue);
     if (newValue) {
       setName(newValue.label);
-      setSelectedItemDetails(newValue); // Зберігаємо повні дані про вибраний предмет
+      setSelectedItemDetails({ ...newValue, image: newValue.image });
     } else {
       setName('');
       setSelectedItemDetails(null);
@@ -581,10 +582,10 @@ export default function App() {
         {/* Dialog для додавання інвестиції */}
         <Dialog open={addDialog} onClose={() => { setAddDialog(false); resetForm(); }} maxWidth="lg" fullWidth PaperProps={{ style: { overflowY: 'visible' } }}>
           <StyledDialogTitle>{t.addInvestment}</StyledDialogTitle>
-          <DialogContent sx={{ position: 'relative', overflowY: 'visible', p: 4 }}>
-            <Grid container spacing={4} alignItems="flex-start" sx={{ justifyContent: 'center' }}>
+          <DialogContent sx={{ p: 4, overflowY: 'visible' }}>
+            <Grid container spacing={4}>
               <Grid item xs={12} md={6}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                   <Autocomplete
                     fullWidth
                     freeSolo
@@ -593,6 +594,8 @@ export default function App() {
                     value={autocompleteValue}
                     onChange={handleAutocompleteChange}
                     onInputChange={handleItemNameChange}
+                    getOptionLabel={(option) => option.label || ''}
+                    isOptionEqualToValue={(option, value) => option.label === value.label}
                     renderInput={(params) => (
                       <TextField
                         {...params}
@@ -612,7 +615,7 @@ export default function App() {
                       />
                     )}
                   />
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                     {tabValue === 0 && (
                       <FormControl variant="outlined" sx={{ flexGrow: 1 }} required>
                         <InputLabel>{t.game}</InputLabel>
@@ -639,22 +642,22 @@ export default function App() {
                       required
                       inputProps={{ min: 1 }}
                     />
-                    <TextField
-                      label={t.buyPrice}
-                      type="number"
-                      variant="outlined"
-                      sx={{ flexGrow: 1 }}
-                      value={buyPrice}
-                      onChange={(e) => setBuyPrice(Number(e.target.value))}
-                      required
-                      inputProps={{ min: 0 }}
-                      InputProps={{
-                        endAdornment: (
-                          <InputLabel>{CURRENCY_SYMBOLS[buyCurrency]}</InputLabel>
-                        )
-                      }}
-                    />
                   </Box>
+                  <TextField
+                    label={t.buyPrice}
+                    type="number"
+                    variant="outlined"
+                    fullWidth
+                    value={buyPrice}
+                    onChange={(e) => setBuyPrice(Number(e.target.value))}
+                    required
+                    inputProps={{ min: 0 }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputLabel>{CURRENCY_SYMBOLS[buyCurrency]}</InputLabel>
+                      )
+                    }}
+                  />
                   <TextField
                     label={t.boughtDate}
                     type="date"
@@ -683,7 +686,7 @@ export default function App() {
                     boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
                   }}
                 >
-                  {selectedItemDetails ? (
+                  {selectedItemDetails?.image ? (
                     <Box sx={{ width: '100%' }}>
                       <Typography variant="h6" gutterBottom align="center">
                         <GradientText variant="h6">{t.itemDetails}</GradientText>
@@ -727,7 +730,7 @@ export default function App() {
                       </Box>
                     </Box>
                   ) : (
-                    <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center">
+                    <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100%">
                       <Typography variant="h6" color="text.secondary">{t.selectedItem}</Typography>
                       <Typography variant="body2" color="text.secondary">Виберіть предмет, щоб побачити деталі</Typography>
                     </Box>
