@@ -174,6 +174,7 @@ const LANGUAGES = {
     floatValue: "Float Value",
     stickers: "Наклейки (введіть через кому)",
     selectedItem: "Вибраний предмет",
+    itemDetails: "Інформація про предмет",
   },
   en: {
     portfolio: "Investment Portfolio",
@@ -213,6 +214,7 @@ const LANGUAGES = {
     floatValue: "Float Value",
     stickers: "Stickers (comma-separated)",
     selectedItem: "Selected Item",
+    itemDetails: "Item Details",
   },
 };
 
@@ -560,70 +562,57 @@ export default function App() {
         </Box>
 
         {/* Dialog для додавання інвестиції */}
-        <Dialog open={addDialog} onClose={() => { setAddDialog(false); resetForm(); }} maxWidth="md" fullWidth>
+        <Dialog open={addDialog} onClose={() => { setAddDialog(false); resetForm(); }} maxWidth="lg" fullWidth>
           <DialogTitle>{t.addInvestment}</DialogTitle>
           <DialogContent>
             <Grid container spacing={2}>
               <Grid item xs={12} md={6}>
-                <Autocomplete
-                  freeSolo
-                  options={itemOptions}
-                  loading={autocompleteLoading}
-                  value={autocompleteValue}
-                  onChange={handleAutocompleteChange}
-                  onInputChange={handleItemNameChange}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label={t.name}
-                      variant="outlined"
-                      required
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <React.Fragment>
-                            {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
-                            {params.InputProps.endAdornment}
-                          </React.Fragment>
-                        ),
-                      }}
-                    />
-                  )}
-                />
-              </Grid>
-              {tabValue === 0 && (
-                <Grid item xs={12} md={6}>
-                  <FormControl variant="outlined" fullWidth required>
-                    <InputLabel>{t.game}</InputLabel>
-                    <Select
-                      value={game}
-                      onChange={(e) => setGame(e.target.value)}
-                      label={t.game}
-                    >
-                      {GAMES.slice(1).map((gameOption) => (
-                        <MenuItem key={gameOption} value={gameOption}>
-                          {gameOption}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-              )}
-              {autocompleteValue && (
-                <Grid item xs={12} md={6}>
-                  <Card variant="outlined">
-                    <CardContent>
-                      <Typography variant="h6" gutterBottom>{t.selectedItem}</Typography>
-                      <Box display="flex" flexDirection="column" alignItems="center">
-                        <img src={dummyItemInfo.image} alt={autocompleteValue.label} style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px' }} />
-                        <Typography variant="body1" align="center">{autocompleteValue.label}</Typography>
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              )}
-              <Grid item xs={12} md={6}>
                 <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <Autocomplete
+                      freeSolo
+                      options={itemOptions}
+                      loading={autocompleteLoading}
+                      value={autocompleteValue}
+                      onChange={handleAutocompleteChange}
+                      onInputChange={handleItemNameChange}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          label={t.name}
+                          variant="outlined"
+                          required
+                          InputProps={{
+                            ...params.InputProps,
+                            endAdornment: (
+                              <React.Fragment>
+                                {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                                {params.InputProps.endAdornment}
+                              </React.Fragment>
+                            ),
+                          }}
+                        />
+                      )}
+                    />
+                  </Grid>
+                  {tabValue === 0 && (
+                    <Grid item xs={12}>
+                      <FormControl variant="outlined" fullWidth required>
+                        <InputLabel>{t.game}</InputLabel>
+                        <Select
+                          value={game}
+                          onChange={(e) => setGame(e.target.value)}
+                          label={t.game}
+                        >
+                          {GAMES.slice(1).map((gameOption) => (
+                            <MenuItem key={gameOption} value={gameOption}>
+                              {gameOption}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                  )}
                   <Grid item xs={12}>
                     <TextField
                       label={t.count}
@@ -674,25 +663,46 @@ export default function App() {
                       required
                     />
                   </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      label={t.floatValue}
-                      type="number"
-                      variant="outlined"
-                      fullWidth
-                      value={dummyItemInfo.floatValue}
-                      disabled
-                    />
-                  </Grid>
-                  <Grid item xs={12}>
-                    <TextField
-                      label={t.stickers}
-                      variant="outlined"
-                      fullWidth
-                      placeholder="Назва, Назва2, Назва3"
-                    />
-                  </Grid>
                 </Grid>
+              </Grid>
+
+              <Grid item xs={12} md={6}>
+                {autocompleteValue ? (
+                  <StyledCard>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>{t.itemDetails}</Typography>
+                      <Box display="flex" flexDirection="column" alignItems="center">
+                        <img src={dummyItemInfo.image} alt={autocompleteValue.label} style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px' }} />
+                        <Typography variant="h6" align="center" mb={2}>{autocompleteValue.label}</Typography>
+                        <Grid container spacing={2}>
+                           <Grid item xs={12} sm={6}>
+                              <TextField
+                                label={t.floatValue}
+                                type="number"
+                                variant="outlined"
+                                fullWidth
+                                value={dummyItemInfo.floatValue}
+                                disabled
+                              />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                              <TextField
+                                label={t.stickers}
+                                variant="outlined"
+                                fullWidth
+                                placeholder="Назва, Назва2, Назва3"
+                              />
+                            </Grid>
+                        </Grid>
+                      </Box>
+                    </CardContent>
+                  </StyledCard>
+                ) : (
+                  <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100%">
+                    <Typography variant="h6" color="text.secondary">{t.selectedItem}</Typography>
+                    <Typography variant="body2" color="text.secondary">Виберіть предмет, щоб побачити деталі</Typography>
+                  </Box>
+                )}
               </Grid>
             </Grid>
           </DialogContent>
