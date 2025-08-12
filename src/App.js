@@ -234,7 +234,7 @@ const LANGUAGES = {
 };
 
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
-const STEAM_CDN_URL = "https://community.akamai.steamstatic.com/economy/image/";
+// const STEAM_CDN_URL = "https://community.akamai.steamstatic.com/economy/image/"; // Ця змінна більше не потрібна
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
@@ -330,13 +330,11 @@ export default function App() {
 
         const data = await response.json();
         const formattedOptions = data.map(item => {
-          const imageUrl = item.icon_url.startsWith('https://')
-            ? item.icon_url
-            : `${STEAM_CDN_URL}${item.icon_url}`;
+          // Коректно використовуємо URL, що вже повністю сформований на бекенді
           return {
             label: item.name,
-            image: imageUrl,
-            float: item.float
+            image: item.icon_url,
+            // float: item.float - дані про float не повертаються, тому це поле слід видалити або додати на бекенд
           };
         });
         setItemOptions(formattedOptions);
