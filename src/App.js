@@ -32,7 +32,7 @@ import {
   CircularProgress,
   Divider,
 } from "@mui/material";
-import { TrendingUp, Delete, Check, BarChart, Plus, Language } from 'lucide-react';
+import { TrendingUp, Delete, Check, BarChart, Plus, Language, X, ArrowUp } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 
@@ -140,6 +140,16 @@ const StyledDialogTitle = styled(DialogTitle)(({ theme }) => ({
   fontWeight: 'bold',
   padding: theme.spacing(2),
   borderRadius: '16px 16px 0 0',
+}));
+
+// Новий стиль для сучасного діалогового вікна
+const ModernDialogTitle = styled(DialogTitle)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: theme.spacing(2, 3),
+  background: `linear-gradient(135deg, #e0eafc, #cfdef3)`,
+  borderBottom: `1px solid ${theme.palette.divider}`,
 }));
 
 const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
@@ -328,7 +338,6 @@ export default function App() {
           return {
             label: item.name,
             image: item.icon_url,
-            // Додаємо float з бекенду в опції
             float: item.float
           };
         });
@@ -350,12 +359,10 @@ export default function App() {
   };
 
   const handleAutocompleteChange = (event, newValue) => {
-    console.log("[App.js] Autocomplete newValue:", newValue); // <-- Додано логування
     setAutocompleteValue(newValue);
     if (newValue && typeof newValue === 'object') {
       setName(newValue.label);
-      // Додаємо float до selectedItemDetails
-      setSelectedItemDetails({ ...newValue, image: newValue.image, float: newValue.float });
+      setSelectedItemDetails({ ...newValue, image: newValue.image });
     } else {
       setName(newValue || '');
       setSelectedItemDetails(null);
@@ -380,7 +387,6 @@ export default function App() {
       sellPrice: 0,
       sellDate: null,
       image: selectedItemDetails?.image || null,
-      floatValue: selectedItemDetails?.float || null,
     };
 
     setInvestments([...investments, newItem]);
@@ -445,6 +451,7 @@ export default function App() {
   };
 
   const filteredInvestments = tabValue === 0 ? investments : investments.filter((item) => item.game === GAMES[tabValue]);
+
   const profit = totalProfit;
   const percentageProfit = totalInvestment > 0 ? (profit / totalInvestment) * 100 : 0;
   const profitColor = profit >= 0 ? '#28A745' : '#DC3545';
@@ -458,16 +465,16 @@ export default function App() {
           </GradientText>
           <Box sx={{ display: 'flex', gap: 2 }}>
             <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
-                <InputLabel id="language-select-label">{t.language}</InputLabel>
-                <Select
-                  labelId="language-select-label"
-                  value={lang}
-                  onChange={(e) => setLang(e.target.value)}
-                  label={t.language}
-                >
-                  <MenuItem value="uk">Українська</MenuItem>
-                  <MenuItem value="en">English</MenuItem>
-                </Select>
+              <InputLabel id="language-select-label">{t.language}</InputLabel>
+              <Select
+                labelId="language-select-label"
+                value={lang}
+                onChange={(e) => setLang(e.target.value)}
+                label={t.language}
+              >
+                <MenuItem value="uk">Українська</MenuItem>
+                <MenuItem value="en">English</MenuItem>
+              </Select>
             </FormControl>
             <Button variant="outlined" startIcon={<BarChart />} onClick={handleAnalyticsOpen}>
               {t.analytics}
@@ -477,6 +484,7 @@ export default function App() {
             </Button>
           </Box>
         </Box>
+
         <Grid container spacing={3} mb={4}>
           <Grid item xs={12} sm={6} md={4}>
             <StyledCard>
@@ -507,6 +515,7 @@ export default function App() {
             </StyledCard>
           </Grid>
         </Grid>
+
         <Box mb={4}>
           <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} aria-label="game tabs">
             {GAMES.map((gameName, index) => (
@@ -514,6 +523,7 @@ export default function App() {
             ))}
           </Tabs>
         </Box>
+
         <Box sx={{ overflowX: 'auto' }}>
           <Table>
             <TableHead>
@@ -531,302 +541,299 @@ export default function App() {
               {filteredInvestments.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} align="center">
-                    <Typography variant="body1" color="text.secondary">
-                      {t.noInvestmentsInCategory}
-                    </Typography>
+                    {t.noInvestmentsInCategory}
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredInvestments.map((item) => (
-                  <TableRow key={item.id} hover>
-                    <StyledTableCell>{item.name}</StyledTableCell>
-                    <StyledTableCell>{item.game}</StyledTableCell>
-                    <StyledTableCell>{item.count}</StyledTableCell>
-                    <StyledTableCell>{item.buyPrice}{CURRENCY_SYMBOLS[item.buyCurrency]}</StyledTableCell>
-                    <StyledTableCell>{item.boughtDate}</StyledTableCell>
-                    <StyledTableCell>
-                      <Chip
-                        label={
-                          item.sold
-                            ? `${((item.sellPrice - item.buyPrice) * item.count).toFixed(2)}${CURRENCY_SYMBOLS[item.buyCurrency]}`
-                            : "---"
-                        }
-                        color={
-                          item.sold && (item.sellPrice - item.buyPrice) * item.count >= 0
-                            ? 'success'
-                            : item.sold ? 'error' : 'default'
-                        }
-                        variant={item.sold ? 'filled' : 'outlined'}
-                      />
-                    </StyledTableCell>
-                    <StyledTableCell>
-                      {!item.sold && (
+                filteredInvestments.map((item) => {
+                  const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : 0;
+                  const itemProfitColor = itemProfit >= 0 ? '#28A745' : '#DC3545';
+                  return (
+                    <TableRow key={item.id}>
+                      <StyledTableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          {item.image && (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover' }}
+                            />
+                          )}
+                          <Box>
+                            <Typography variant="subtitle1" fontWeight="medium">{item.name}</Typography>
+                            {item.sold && (
+                              <Chip label={t.sold} size="small" color="success" sx={{ mt: 0.5 }} />
+                            )}
+                          </Box>
+                        </Box>
+                      </StyledTableCell>
+                      <StyledTableCell>{item.game}</StyledTableCell>
+                      <StyledTableCell>{item.count}</StyledTableCell>
+                      <StyledTableCell>{item.buyPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}</StyledTableCell>
+                      <StyledTableCell>{item.boughtDate}</StyledTableCell>
+                      <StyledTableCell>
+                        <Typography color={itemProfitColor}>
+                          {item.sold ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+                        </Typography>
+                      </StyledTableCell>
+                      <StyledTableCell>
                         <Tooltip title={t.markAsSold}>
-                          <IconButton onClick={() => { setItemToSell(item); setSellDialog(true); }}>
-                            <Check color="success" />
+                          <IconButton
+                            color="success"
+                            onClick={() => {
+                              setItemToSell(item);
+                              setSellPrice(item.buyPrice);
+                              setSellDialog(true);
+                            }}
+                            disabled={item.sold}
+                          >
+                            <TrendingUp size={20} />
                           </IconButton>
                         </Tooltip>
-                      )}
-                      <Tooltip title={t.delete}>
-                        <IconButton onClick={() => confirmDelete(item)}>
-                          <Delete color="error" />
-                        </IconButton>
-                      </Tooltip>
-                    </StyledTableCell>
-                  </TableRow>
-                ))
+                        <Tooltip title={t.delete}>
+                          <IconButton color="error" onClick={() => confirmDelete(item)}>
+                            <Delete size={20} />
+                          </IconButton>
+                        </Tooltip>
+                      </StyledTableCell>
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
         </Box>
 
         {/* Dialog для додавання інвестиції */}
-        <Dialog open={addDialog} onClose={() => { setAddDialog(false); resetForm(); }} maxWidth="lg" fullWidth PaperProps={{ style: { overflowY: 'visible' } }}>
-          <StyledDialogTitle>{t.addInvestment}</StyledDialogTitle>
-          <DialogContent sx={{ p: 4, overflowY: 'visible' }}>
-            <Grid container spacing={4}>
-              <Grid item xs={12} md={6}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: 2 }}>
-                  <Autocomplete
-                    fullWidth
-                    freeSolo
-                    options={itemOptions}
-                    loading={autocompleteLoading}
-                    value={autocompleteValue}
-                    onChange={handleAutocompleteChange}
-                    onInputChange={handleItemNameChange}
-                    getOptionLabel={(option) => option.label || ''}
-                    isOptionEqualToValue={(option, value) => option.label === value.label}
-                    renderInput={(params) => (
+        <Dialog
+          open={addDialog}
+          onClose={() => setAddDialog(false)}
+          PaperProps={{
+            style: { borderRadius: 20, maxWidth: 'md', width: '90%', margin: 0, padding: 0 }
+          }}
+          TransitionComponent={({ children, ...props }) => (
+            <Box
+              {...props}
+              sx={{
+                '@keyframes dialog-slide-in': {
+                  '0%': { transform: 'translateY(100%)' },
+                  '100%': { transform: 'translateY(0)' },
+                },
+                animation: 'dialog-slide-in 0.3s ease-out forwards',
+              }}
+            >
+              {children}
+            </Box>
+          )}
+        >
+          <ModernDialogTitle>
+            <Typography variant="h6" fontWeight="bold" sx={{ color: theme.palette.text.primary, letterSpacing: 1 }}>
+              {t.addInvestment}
+            </Typography>
+            <IconButton onClick={() => setAddDialog(false)} sx={{ color: theme.palette.text.secondary }}>
+              <X />
+            </IconButton>
+          </ModernDialogTitle>
+          <DialogContent dividers sx={{ p: 3, m: 0 }}>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={selectedItemDetails ? 6 : 12}>
+                <Autocomplete
+                  options={itemOptions}
+                  getOptionLabel={(option) => option.label || ""}
+                  value={autocompleteValue}
+                  onInputChange={handleItemNameChange}
+                  onChange={handleAutocompleteChange}
+                  loading={autocompleteLoading}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label={t.name}
+                      variant="outlined"
+                      fullWidth
+                      required
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <React.Fragment>
+                            {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                            {params.InputProps.endAdornment}
+                          </React.Fragment>
+                        ),
+                      }}
+                    />
+                  )}
+                  renderOption={(props, option) => (
+                    <Box component="li" {...props} sx={{ '& > img': { mr: 2, flexShrink: 0 } }}>
+                      {option.image && (
+                        <img
+                          loading="lazy"
+                          width="30"
+                          src={option.image}
+                          alt={option.label}
+                        />
+                      )}
+                      {option.label}
+                    </Box>
+                  )}
+                />
+                <Box mt={2}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={6}>
                       <TextField
-                        {...params}
-                        label={t.name}
-                        placeholder="Введіть назву предмета або скіна..."
-                        variant="outlined"
+                        label={t.count}
+                        type="number"
+                        value={count}
+                        onChange={(e) => setCount(e.target.value)}
+                        fullWidth
                         required
-                        InputLabelProps={{ shrink: true }}
-                        sx={{
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: 3,
-                          },
-                          mb: 2,
-                        }}
-                        InputProps={{
-                          ...params.InputProps,
-                          endAdornment: (
-                            <React.Fragment>
-                              {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
-                              {params.InputProps.endAdornment}
-                            </React.Fragment>
-                          ),
-                        }}
+                        InputProps={{ inputProps: { min: 1 } }}
                       />
-                    )}
-                  />
-                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    {tabValue === 0 && (
-                      <FormControl variant="outlined" sx={{ flexGrow: 1 }} required>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth required>
                         <InputLabel>{t.game}</InputLabel>
                         <Select
                           value={game}
-                          onChange={(e) => setGame(e.target.value)}
                           label={t.game}
+                          onChange={(e) => setGame(e.target.value)}
                         >
-                          {GAMES.slice(1).map((gameOption) => (
-                            <MenuItem key={gameOption} value={gameOption}>
-                              {gameOption}
-                            </MenuItem>
+                          {GAMES.slice(1).map((gameName, index) => (
+                            <MenuItem key={index} value={gameName}>{gameName}</MenuItem>
                           ))}
                         </Select>
                       </FormControl>
-                    )}
-                    <TextField
-                      label={t.count}
-                      type="number"
-                      variant="outlined"
-                      sx={{ width: '30%' }}
-                      value={count}
-                      onChange={(e) => setCount(Number(e.target.value))}
-                      required
-                      inputProps={{ min: 1 }}
-                    />
-                  </Box>
-                  <TextField
-                    label={`${t.buyPrice} ${CURRENCY_SYMBOLS[buyCurrency]}`}
-                    type="number"
-                    variant="outlined"
-                    fullWidth
-                    value={buyPrice}
-                    onChange={(e) => setBuyPrice(Number(e.target.value))}
-                    required
-                    inputProps={{ min: 0 }}
-                  />
-                  <TextField
-                    label={t.boughtDate}
-                    type="date"
-                    variant="outlined"
-                    fullWidth
-                    value={boughtDate}
-                    onChange={(e) => setBoughtDate(e.target.value)}
-                    InputLabelProps={{ shrink: true }}
-                    required
-                  />
-                </Box>
-              </Grid>
-
-              <Grid item xs={12} md={6}>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    minHeight: '250px',
-                    backgroundColor: 'rgba(255,255,255,0.7)',
-                    borderRadius: '16px',
-                    p: 3,
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-                  }}
-                >
-                  {selectedItemDetails ? (
-                    <Box sx={{ width: '100%', textAlign: 'center' }}>
-                      <Typography variant="h6" gutterBottom>
-                        <GradientText variant="h6">{t.itemDetails}</GradientText>
-                      </Typography>
-                      {console.log("[App.js] Image src value before render:", selectedItemDetails.image)}
-                      <img
-                        src={selectedItemDetails.image || 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image'}
-                        alt={selectedItemDetails.label || 'Item image'}
-                        style={{ maxWidth: '100%', height: 'auto', maxHeight: '150px', marginBottom: '16px', borderRadius: '8px' }}
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image';
-                        }}
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField
+                        label={t.buyPrice}
+                        type="number"
+                        value={buyPrice}
+                        onChange={(e) => setBuyPrice(e.target.value)}
+                        fullWidth
+                        required
+                        InputProps={{ inputProps: { min: 0 } }}
                       />
-                      <Typography variant="h6" align="center" mb={2}>{selectedItemDetails.label}</Typography>
-                      <Grid container spacing={2}>
-                           <Grid item xs={12} sm={6}>
-                              <TextField
-                                label={t.floatValue}
-                                type="number"
-                                variant="outlined"
-                                fullWidth
-                                value={selectedItemDetails.float}
-                                disabled
-                                sx={{
-                                  '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: 'rgba(74,20,140,0.5) !important',
-                                  },
-                                  '& .MuiInputBase-input.Mui-disabled': {
-                                    WebkitTextFillColor: '#4A148C',
-                                  }
-                                }}
-                              />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                              <TextField
-                                label={t.stickers}
-                                variant="outlined"
-                                fullWidth
-                                placeholder="Назва, Назва2, Назва3"
-                                sx={{
-                                  '& .MuiOutlinedInput-notchedOutline': {
-                                    borderColor: 'rgba(74,20,140,0.5) !important',
-                                  },
-                                }}
-                              />
-                            </Grid>
-                        </Grid>
-                    </Box>
-                  ) : (
-                    <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100%">
-                      <Typography variant="h6" color="text.secondary">{t.selectedItem}</Typography>
-                      <Typography variant="body2" color="text.secondary">Виберіть предмет, щоб побачити деталі</Typography>
-                    </Box>
-                  )}
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <FormControl fullWidth required>
+                        <InputLabel>{t.currency}</InputLabel>
+                        <Select
+                          value={buyCurrency}
+                          label={t.currency}
+                          onChange={(e) => setBuyCurrency(e.target.value)}
+                        >
+                          {CURRENCIES.map((currency, index) => (
+                            <MenuItem key={index} value={currency}>{CURRENCY_SYMBOLS[currency]}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField
+                        label={t.boughtDate}
+                        type="date"
+                        value={boughtDate}
+                        onChange={(e) => setBoughtDate(e.target.value)}
+                        fullWidth
+                        required
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </Grid>
+                  </Grid>
                 </Box>
               </Grid>
+              {selectedItemDetails && (
+                <Grid item xs={12} md={6}>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      p: 3,
+                      borderRadius: 16,
+                      backgroundColor: 'rgba(0,0,0,0.02)',
+                      height: '100%',
+                      boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)',
+                    }}
+                  >
+                    <Typography variant="h6" mb={2}>{t.selectedItem}</Typography>
+                    <img
+                      src={selectedItemDetails.image}
+                      alt={selectedItemDetails.label}
+                      style={{
+                        width: 'auto',
+                        maxHeight: '150px',
+                        borderRadius: 12,
+                        objectFit: 'contain',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                      }}
+                    />
+                    <Box mt={2} textAlign="center">
+                      <Typography variant="h6" fontWeight="bold">{selectedItemDetails.label}</Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+              )}
             </Grid>
           </DialogContent>
-          <DialogActions sx={{ padding: '16px 24px', justifyContent: 'space-between', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-            <Button onClick={() => { setAddDialog(false); resetForm(); }}>{t.cancel}</Button>
-            <Button onClick={addItem} color="primary" variant="contained">{t.addItem}</Button>
+          <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
+            <Button onClick={() => setAddDialog(false)} color="secondary" variant="outlined">
+              {t.cancel}
+            </Button>
+            <Button onClick={addItem} color="primary" variant="contained" endIcon={<ArrowUp />}>
+              {t.save}
+            </Button>
           </DialogActions>
         </Dialog>
 
-        {/* Dialog для відмітки "Продано" */}
-        <Dialog open={sellDialog} onClose={() => { setSellDialog(false); resetForm(); }} maxWidth="sm" fullWidth>
-          <DialogTitle>{t.markAsSold}</DialogTitle>
+        {/* Dialog для відмічення як продано */}
+        <Dialog open={sellDialog} onClose={() => setSellDialog(false)} PaperProps={{ style: { borderRadius: 20 } }}>
+          <StyledDialogTitle>{t.markAsSold}</StyledDialogTitle>
           <DialogContent>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <Typography variant="h6">Предмет: {itemToSell?.name}</Typography>
-                <Typography variant="body1" color="text.secondary">
-                  Ціна купівлі: {itemToSell?.buyPrice}{CURRENCY_SYMBOLS[itemToSell?.buyCurrency]}
-                </Typography>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={`${t.sellPrice} ${CURRENCY_SYMBOLS[itemToSell?.buyCurrency]}`}
-                  type="number"
-                  variant="outlined"
-                  fullWidth
-                  value={sellPrice}
-                  onChange={(e) => setSellPrice(Number(e.target.value))}
-                  required
-                  inputProps={{ min: 0 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label={t.sellDate}
-                  type="date"
-                  variant="outlined"
-                  fullWidth
-                  value={sellDate}
-                  onChange={(e) => setSellDate(e.target.value)}
-                  InputLabelProps={{ shrink: true }}
-                  required
-                />
-              </Grid>
-            </Grid>
+            <TextField
+              autoFocus
+              margin="dense"
+              label={t.sellPrice}
+              type="number"
+              fullWidth
+              value={sellPrice}
+              onChange={(e) => setSellPrice(e.target.value)}
+              InputProps={{ inputProps: { min: 0 } }}
+            />
+            <TextField
+              margin="dense"
+              label={t.sellDate}
+              type="date"
+              fullWidth
+              value={sellDate}
+              onChange={(e) => setSellDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+            />
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => { setSellDialog(false); resetForm(); }}>{t.cancel}</Button>
-            <Button onClick={markAsSold} color="success" variant="contained">{t.save}</Button>
+            <Button onClick={() => setSellDialog(false)}>{t.cancel}</Button>
+            <Button onClick={markAsSold} color="primary">{t.save}</Button>
           </DialogActions>
         </Dialog>
 
         {/* Dialog для підтвердження видалення */}
-        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
+        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} PaperProps={{ style: { borderRadius: 20 } }}>
           <DialogTitle>{t.deleteConfirmation}</DialogTitle>
           <DialogContent>
-            <Typography variant="body1" mb={2}>
-              Ви дійсно хочете видалити інвестицію "{itemToDelete?.name}"?
+            <Typography>
+              {t.deleteConfirmation}
             </Typography>
-            <Divider />
-            <Box mt={2}>
-              <Typography variant="body2" color="text.secondary">
-                Ця дія незворотня.
-              </Typography>
-            </Box>
           </DialogContent>
           <DialogActions>
-            <Button onClick={() => setDeleteDialogOpen(false)}>{t.cancel}</Button>
-            <Button onClick={deleteItem} color="error" variant="contained">{t.delete}</Button>
+            <Button onClick={() => setDeleteDialogOpen(false)}>{t.no}</Button>
+            <Button onClick={deleteItem} color="error">{t.yes}</Button>
           </DialogActions>
         </Dialog>
 
         {/* Dialog для аналітики */}
-        <Dialog open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} maxWidth="md" fullWidth>
-          <DialogTitle>{t.analytics}</DialogTitle>
-          <DialogContent>
-            <Typography variant="h6" mb={1}>{t.totalInvestment} ({t.sold}): {totalInvestment.toFixed(2)}€</Typography>
-            <Typography variant="h6" mb={1}>{t.profit} ({t.sold}): {totalProfit.toFixed(2)}€</Typography>
-            <Box mt={4}>
-              <Typography variant="h6" mb={2}>{t.priceHistory}</Typography>
-            </Box>
+        <Dialog open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 20 } }}>
+          <StyledDialogTitle>{t.analytics}</StyledDialogTitle>
+          <DialogContent dividers>
             {profitByDate.length === 0 ? (
               <Typography variant="body1" align="center" color="text.secondary">
                 {t.noData}
