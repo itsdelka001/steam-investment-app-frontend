@@ -61,6 +61,9 @@ const theme = createTheme({
     h6: {
       fontWeight: 600,
     },
+    body1: {
+      fontSize: '1rem',
+    },
   },
   components: {
     MuiButton: {
@@ -68,6 +71,22 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
           textTransform: 'none',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 8,
+          },
         },
       },
     },
@@ -84,13 +103,6 @@ const theme = createTheme({
         },
       },
     },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-        },
-      },
-    },
   },
 });
 
@@ -102,22 +114,31 @@ const GradientText = styled(Typography)(({ theme }) => ({
 }));
 
 const StyledContainer = styled(Container)(({ theme }) => ({
-  paddingTop: theme.spacing(4),
-  paddingBottom: theme.spacing(4),
+  marginTop: theme.spacing(4),
+  marginBottom: theme.spacing(4),
 }));
 
 const StyledCard = styled(Card)(({ theme }) => ({
-  backgroundColor: theme.palette.background.paper,
-  padding: theme.spacing(3),
-  marginBottom: theme.spacing(3),
+  borderRadius: 16,
+  boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
 }));
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
 }));
 
+const CenteredBox = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minHeight: '80vh',
+});
+
+// Hardcoded games list for the Select component
 const GAMES = ["CS2", "Dota 2", "PUBG", "Інші"];
 
+// Localization object for Ukrainian language
 const LANGUAGES = {
   uk: {
     portfolio: "Портфель інвестицій",
@@ -157,7 +178,9 @@ const t = LANGUAGES.uk;
 
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
 
+// Main App component
 export default function App() {
+  // State variables
   const [investments, setInvestments] = useState([]);
   const [name, setName] = useState("");
   const [count, setCount] = useState(1);
@@ -178,7 +201,9 @@ export default function App() {
   const [autocompleteLoading, setAutocompleteLoading] = useState(false);
   const [itemOptions, setItemOptions] = useState([]);
   const abortControllerRef = useRef(null);
+  const [value, setValue] = useState(null); // State for Autocomplete selected value
 
+  // Load investments from localStorage on initial render
   useEffect(() => {
     const savedInvestments = localStorage.getItem("investments");
     if (savedInvestments) {
@@ -186,10 +211,12 @@ export default function App() {
     }
   }, []);
 
+  // Save investments to localStorage whenever the investments state changes
   useEffect(() => {
     localStorage.setItem("investments", JSON.stringify(investments));
   }, [investments]);
 
+  // Function to fetch the current price from the proxy server
   const fetchCurrentPrice = async (itemName, gameName) => {
     try {
       const response = await fetch(`${PROXY_SERVER_URL}/price?item_name=${encodeURIComponent(itemName)}&game=${encodeURIComponent(gameName)}`);
@@ -205,6 +232,7 @@ export default function App() {
     }
   };
   
+  // Handle autocomplete input changes and fetch suggestions
   const handleItemNameChange = async (event, newValue, reason) => {
     if (reason === 'clear') {
       setName('');
@@ -212,7 +240,6 @@ export default function App() {
       return;
     }
     
-    // Тут ми просто встановлюємо текст, який ввів користувач
     setName(newValue || "");
 
     if (newValue && newValue.length > 2) {
@@ -229,7 +256,6 @@ export default function App() {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
-        // Server now returns array of objects with { label, value, image }
         setItemOptions(data);
       } catch (error) {
         if (error.name === 'AbortError') {
@@ -247,6 +273,7 @@ export default function App() {
     }
   };
 
+  // Add a new item or update an existing one
   const addItem = async () => {
     if (!name || !count || !buyPrice || !boughtDate || !game) {
       showSnackbar("Будь ласка, заповніть всі обов'язкові поля.", "error");
@@ -280,6 +307,7 @@ export default function App() {
     resetForm();
   };
 
+  // Populate the form with item data for editing
   const editItem = (item) => {
     setEditingItem(item);
     setName(item.name);
@@ -291,13 +319,16 @@ export default function App() {
     setSold(item.sold);
     setSellPrice(item.sellPrice || 0);
     setSellDate(item.sellDate || new Date().toISOString().split('T')[0]);
+    setValue({ label: item.name, value: item.name }); // Set value for Autocomplete
   };
 
+  // Open the delete confirmation dialog
   const confirmDelete = (item) => {
     setItemToDelete(item);
     setDeleteDialogOpen(true);
   };
 
+  // Delete an item from the investments list
   const deleteItem = () => {
     setInvestments(investments.filter((item) => item.id !== itemToDelete.id));
     setDeleteDialogOpen(false);
@@ -305,6 +336,7 @@ export default function App() {
     showSnackbar(t.itemDeleted, "success");
   };
 
+  // Reset the form fields to their default values
   const resetForm = () => {
     setName("");
     setCount(1);
@@ -316,16 +348,21 @@ export default function App() {
     setSellDate(new Date().toISOString().split('T')[0]);
     setSold(false);
     setEditingItem(null);
+    setValue(null);
+    setItemOptions([]);
   };
 
+  // Show a snackbar message
   const showSnackbar = (message, severity) => {
     setSnackbar({ open: true, message, severity });
   };
 
+  // Close the snackbar
   const closeSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  // Calculation functions
   const calculateTotalInvestment = (items) => items.reduce((sum, item) => sum + item.buyPrice * item.count, 0);
   const calculateCurrentValue = (items) => items.reduce((sum, item) => {
     if (item.sold) {
@@ -333,28 +370,25 @@ export default function App() {
     }
     return sum + item.currentPrice * item.count;
   }, 0);
-  
   const calculateProfit = (items) => {
     const totalInvest = calculateTotalInvestment(items);
     const totalValue = calculateCurrentValue(items);
     return totalValue - totalInvest;
   };
-  
   const calculatePercentageProfit = (items) => {
     const totalInvest = calculateTotalInvestment(items);
     if (totalInvest === 0) return 0;
     return (calculateProfit(items) / totalInvest) * 100;
   };
-  
+
+  // Handle opening the analytics dialog and prepare data for the chart
   const handleAnalyticsOpen = () => {
     const profitData = investments
       .filter(item => item.sold)
-      .map(item => ({
-        date: item.sellDate,
-        profit: (item.sellPrice - item.buyPrice) * item.count,
-      }))
+      .map(item => ({ date: item.sellDate, profit: (item.sellPrice - item.buyPrice) * item.count, }))
       .sort((a, b) => new Date(a.date) - new Date(b.date));
-      
+
+    // Aggregate profit by date
     const aggregatedProfit = profitData.reduce((acc, curr) => {
       const existing = acc.find(p => p.date === curr.date);
       if (existing) {
@@ -364,39 +398,43 @@ export default function App() {
       }
       return acc;
     }, []);
-    
-    setProfitByDate(aggregatedProfit);
+
+    // Create a running total for the chart
+    let runningTotal = 0;
+    const cumulativeProfit = aggregatedProfit.map(p => {
+      runningTotal += p.profit;
+      return { ...p, profit: runningTotal };
+    });
+
+    setProfitByDate(cumulativeProfit);
     setAnalyticsOpen(true);
   };
-
-  const filteredInvestments = investments.filter((item) =>
-    tabValue === 0 ? true : item.game === GAMES[tabValue - 1]
-  );
   
+  // Filter investments based on the selected tab
+  const filteredInvestments = investments.filter((item) => tabValue === 0 ? true : item.game === GAMES[tabValue - 1] );
+  
+  // Calculate summary stats for the filtered investments
   const totalInvestment = calculateTotalInvestment(filteredInvestments);
   const currentValue = calculateCurrentValue(filteredInvestments);
   const profit = calculateProfit(filteredInvestments);
   const percentageProfit = calculatePercentageProfit(filteredInvestments);
-
   const profitColor = profit >= 0 ? '#28A745' : '#DC3545';
-
+  
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ minHeight: '100vh', backgroundColor: theme.palette.background.default }}>
         <StyledContainer maxWidth="lg">
+          {/* Header section with title and analytics button */}
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
             <GradientText variant="h4" component="h1">
               {t.portfolio}
             </GradientText>
-            <Button
-              variant="outlined"
-              startIcon={<BarChart />}
-              onClick={handleAnalyticsOpen}
-            >
+            <Button variant="outlined" startIcon={<BarChart />} onClick={handleAnalyticsOpen} >
               {t.analytics}
             </Button>
           </Box>
-
+          
+          {/* Summary cards section */}
           <Grid container spacing={3} mb={4}>
             <Grid item xs={12} sm={6} md={3}>
               <StyledCard>
@@ -428,7 +466,7 @@ export default function App() {
                   <Typography variant="h6" color="text.secondary" gutterBottom>
                     {t.profit}
                   </Typography>
-                  <Typography variant="h5" component="div" sx={{ color: profitColor }} fontWeight={600}>
+                  <Typography variant="h5" component="div" fontWeight={600} sx={{ color: profitColor }}>
                     ${profit.toFixed(2)}
                   </Typography>
                 </CardContent>
@@ -440,129 +478,124 @@ export default function App() {
                   <Typography variant="h6" color="text.secondary" gutterBottom>
                     {t.percentageProfit}
                   </Typography>
-                  <Typography variant="h5" component="div" sx={{ color: profitColor }} fontWeight={600}>
+                  <Typography variant="h5" component="div" fontWeight={600} sx={{ color: profitColor }}>
                     {percentageProfit.toFixed(2)}%
                   </Typography>
                 </CardContent>
               </StyledCard>
             </Grid>
           </Grid>
-          
+
+          {/* Form to add or edit an item */}
           <StyledCard>
-            <Typography variant="h6" mb={2}>
-              {editingItem ? t.editItem : t.add_item}
-            </Typography>
-            
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
-              <Box sx={{ flexGrow: 1, minWidth: 200, maxWidth: { xs: '100%', sm: '300px', lg: '400px' } }}>
-                <Autocomplete
-                  freeSolo
-                  options={itemOptions}
-                  getOptionLabel={(option) => option.label || option}
-                  loading={autocompleteLoading}
-                  value={name}
-                  onInputChange={handleItemNameChange}
-                  // ====================================================================
-                  // [ВИПРАВЛЕНО] - Встановлюємо значення, коли користувач обирає зі списку
-                  // ====================================================================
-                  onChange={(event, newValue) => {
-                    if (newValue) {
-                      setName(newValue.label || newValue);
-                    } else {
-                      setName("");
-                    }
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label={t.name}
-                      variant="outlined"
-                      fullWidth
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <React.Fragment>
-                            {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
-                            {params.InputProps.endAdornment}
-                          </React.Fragment>
-                        ),
-                      }}
-                    />
-                  )}
-                  renderOption={(props, option) => (
-                    <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
-                      {option.image && (
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                {editingItem ? t.editItem : t.add_item}
+              </Typography>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} sm={6}>
+                  <Autocomplete
+                    value={value}
+                    onChange={(event, newValue) => {
+                      setValue(newValue);
+                      if (newValue) {
+                          setName(newValue.label);
+                      } else {
+                          setName('');
+                      }
+                    }}
+                    inputValue={name}
+                    onInputChange={handleItemNameChange}
+                    id="autocomplete-item-name"
+                    options={itemOptions}
+                    getOptionLabel={(option) => option.label || ''}
+                    isOptionEqualToValue={(option, value) => option.value === value.value}
+                    renderOption={(props, option) => (
+                      <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
                         <img
                           loading="lazy"
-                          width="20"
-                          // Використовуємо інший хост для швидшого завантаження зображень
-                          src={`https://community.steamstatic.com/economy/image/${option.image}`}
+                          width="40"
+                          src={`https://community.akamai.steamstatic.com/economy/image/${option.image}`}
+                          srcSet={`https://community.akamai.steamstatic.com/economy/image/${option.image}`}
                           alt=""
                         />
-                      )}
-                      {option.label}
-                    </Box>
-                  )}
-                />
-              </Box>
-
-              <Box sx={{ width: 100, flexShrink: 0 }}>
-                <TextField
-                  label={t.count}
-                  type="number"
-                  value={count}
-                  onChange={(e) => setCount(Number(e.target.value))}
-                  variant="outlined"
-                  fullWidth
-                  inputProps={{ style: { textAlign: 'center' } }}
-                />
-              </Box>
-
-              <Box sx={{ width: 120, flexShrink: 0 }}>
-                <TextField
-                  label={t.buyPrice}
-                  type="number"
-                  value={buyPrice}
-                  onChange={(e) => setBuyPrice(Number(e.target.value))}
-                  variant="outlined"
-                  fullWidth
-                />
-              </Box>
-
-              <Box sx={{ flexShrink: 0, minWidth: 120 }}>
-                <FormControl variant="outlined" fullWidth>
-                  <InputLabel>{t.game}</InputLabel>
-                  <Select
-                    value={game}
-                    onChange={(e) => setGame(e.target.value)}
-                    label={t.game}
-                  >
-                    {GAMES.map((gameName) => (
-                      <MenuItem key={gameName} value={gameName}>
-                        {gameName}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Box>
-
-              <Box sx={{ flexShrink: 0, minWidth: 150 }}>
-                <TextField
-                  label={t.boughtDate}
-                  type="date"
-                  value={boughtDate}
-                  onChange={(e) => setBoughtDate(e.target.value)}
-                  variant="outlined"
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Box>
-              
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, width: '100%', mt: 2, alignItems: 'center' }}>
-                <Box sx={{ flexShrink: 0, minWidth: 120 }}>
-                  <FormControl variant="outlined" fullWidth>
-                    <InputLabel>{t.sold}</InputLabel>
+                        {option.label}
+                      </Box>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={t.name}
+                        variant="outlined"
+                        fullWidth
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <React.Fragment>
+                              {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                              {params.InputProps.endAdornment}
+                            </React.Fragment>
+                          ),
+                        }}
+                      />
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={2}>
+                  <TextField
+                    label={t.count}
+                    type="number"
+                    variant="outlined"
+                    fullWidth
+                    value={count}
+                    onChange={(e) => setCount(e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={2}>
+                  <TextField
+                    label={t.buyPrice}
+                    type="number"
+                    variant="outlined"
+                    fullWidth
+                    value={buyPrice}
+                    onChange={(e) => setBuyPrice(e.target.value)}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={2}>
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel id="game-select-label">{t.game}</InputLabel>
                     <Select
+                      labelId="game-select-label"
+                      value={game}
+                      onChange={(e) => setGame(e.target.value)}
+                      label={t.game}
+                    >
+                      {GAMES.map((gameOption) => (
+                        <MenuItem key={gameOption} value={gameOption}>
+                          {gameOption}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={2}>
+                  <TextField
+                    label={t.boughtDate}
+                    type="date"
+                    variant="outlined"
+                    fullWidth
+                    value={boughtDate}
+                    onChange={(e) => setBoughtDate(e.target.value)}
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={2}>
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel id="sold-select-label">{t.sold}</InputLabel>
+                    <Select
+                      labelId="sold-select-label"
                       value={sold}
                       onChange={(e) => setSold(e.target.value)}
                       label={t.sold}
@@ -571,141 +604,139 @@ export default function App() {
                       <MenuItem value={false}>{t.no}</MenuItem>
                     </Select>
                   </FormControl>
-                </Box>
+                </Grid>
                 {sold && (
                   <>
-                    <Box sx={{ flexShrink: 0, minWidth: 150 }}>
+                    <Grid item xs={12} sm={6} md={2}>
                       <TextField
                         label={t.sellPrice}
                         type="number"
-                        value={sellPrice}
-                        onChange={(e) => setSellPrice(Number(e.target.value))}
                         variant="outlined"
                         fullWidth
+                        value={sellPrice}
+                        onChange={(e) => setSellPrice(e.target.value)}
                       />
-                    </Box>
-                    <Box sx={{ flexShrink: 0, minWidth: 150 }}>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={2}>
                       <TextField
                         label={t.sellDate}
                         type="date"
-                        value={sellDate}
-                        onChange={(e) => setSellDate(e.target.value)}
                         variant="outlined"
                         fullWidth
-                        InputLabelProps={{ shrink: true }}
+                        value={sellDate}
+                        onChange={(e) => setSellDate(e.target.value)}
+                        InputLabelProps={{
+                          shrink: true,
+                        }}
                       />
-                    </Box>
+                    </Grid>
                   </>
                 )}
-              </Box>
-
-              <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', mt: 2, gap: 1 }}>
-                {editingItem && (
-                  <Button variant="text" onClick={resetForm}>
-                    {t.cancel}
+                <Grid item xs={12}>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={addItem}
+                    startIcon={<TrendingUp />}
+                    fullWidth
+                  >
+                    {editingItem ? t.save : t.add}
                   </Button>
-                )}
-                <Button variant="contained" color="primary" onClick={addItem}>
-                  {editingItem ? t.save : t.add}
-                </Button>
-              </Box>
-            </Box>
+                </Grid>
+              </Grid>
+            </CardContent>
           </StyledCard>
 
-          <Box mb={2}>
+          {/* Tab navigation for filtering investments */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 4, mb: 2 }}>
             <Tabs
               value={tabValue}
               onChange={(e, newValue) => setTabValue(newValue)}
-              indicatorColor="primary"
-              textColor="primary"
-              centered
+              aria-label="investment tabs"
+              variant="scrollable"
+              scrollButtons="auto"
             >
-              <Tab label="Всі" />
-              {GAMES.map((gameName) => (
-                <Tab key={gameName} label={gameName} />
+              <Tab label="Усі" />
+              {GAMES.map((gameOption, index) => (
+                <Tab label={gameOption} key={index} />
               ))}
             </Tabs>
           </Box>
-
+          
+          {/* Table displaying investments */}
           <StyledCard>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <StyledTableCell>{t.name}</StyledTableCell>
-                  <StyledTableCell>{t.count}</StyledTableCell>
-                  <StyledTableCell>{t.game}</StyledTableCell>
-                  <StyledTableCell>{t.buyPrice}</StyledTableCell>
-                  <StyledTableCell>{t.currentPrice}</StyledTableCell>
-                  <StyledTableCell>{t.profit}</StyledTableCell>
-                  <StyledTableCell>{t.action}</StyledTableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredInvestments.map((item) => {
-                  const profitValue = item.sold
-                    ? (item.sellPrice - item.buyPrice) * item.count
-                    : (item.currentPrice - item.buyPrice) * item.count;
-                  return (
-                    <TableRow key={item.id}>
-                      <StyledTableCell>
-                        <Box display="flex" alignItems="center">
-                          <Typography>{item.name}</Typography>
-                          {item.sold && (
-                            <Tooltip title={`${t.sold} (${item.sellDate})`}>
-                              <Chip
-                                label={t.sold}
-                                color="success"
-                                size="small"
-                                sx={{ ml: 1, backgroundColor: theme.palette.success.light }}
-                              />
-                            </Tooltip>
-                          )}
-                        </Box>
-                      </StyledTableCell>
-                      <StyledTableCell>{item.count}</StyledTableCell>
-                      <StyledTableCell>{item.game}</StyledTableCell>
-                      <StyledTableCell>${item.buyPrice.toFixed(2)}</StyledTableCell>
-                      <StyledTableCell>${item.currentPrice.toFixed(2)}</StyledTableCell>
-                      <StyledTableCell>
-                        <Box display="flex" alignItems="center">
-                          <Typography sx={{ color: profitValue >= 0 ? '#28A745' : '#DC3545' }}>
-                            ${profitValue.toFixed(2)}
-                          </Typography>
-                          {profitValue >= 0 ? (
-                            <TrendingUp size={16} color="#28A745" style={{ marginLeft: 4 }} />
-                          ) : (
-                            <TrendingUp size={16} color="#DC3545" style={{ transform: 'rotate(180deg)', marginLeft: 4 }} />
-                          )}
-                        </Box>
-                      </StyledTableCell>
-                      <StyledTableCell>
-                        <IconButton color="primary" onClick={() => editItem(item)}>
-                          <Edit size={20} />
-                        </IconButton>
-                        <IconButton color="secondary" onClick={() => confirmDelete(item)}>
-                          <Delete size={20} />
-                        </IconButton>
-                      </StyledTableCell>
+            <CardContent>
+              <Box sx={{ overflowX: 'auto' }}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <StyledTableCell>{t.name}</StyledTableCell>
+                      <StyledTableCell align="right">{t.count}</StyledTableCell>
+                      <StyledTableCell align="right">{t.buyPrice}</StyledTableCell>
+                      <StyledTableCell align="right">{t.currentPrice}</StyledTableCell>
+                      <StyledTableCell align="right">{t.game}</StyledTableCell>
+                      <StyledTableCell align="right">{t.boughtDate}</StyledTableCell>
+                      <StyledTableCell align="right">{t.action}</StyledTableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                  </TableHead>
+                  <TableBody>
+                    {filteredInvestments.map((item) => (
+                      <TableRow key={item.id}>
+                        <StyledTableCell component="th" scope="row">
+                          <Box display="flex" alignItems="center">
+                            {/* You could add an image here if the API provided it */}
+                            <Typography>{item.name}</Typography>
+                          </Box>
+                        </StyledTableCell>
+                        <StyledTableCell align="right">{item.count}</StyledTableCell>
+                        <StyledTableCell align="right">${item.buyPrice.toFixed(2)}</StyledTableCell>
+                        <StyledTableCell align="right">
+                          <Chip label={`$${item.currentPrice.toFixed(2)}`} color={item.currentPrice > item.buyPrice ? "success" : "error"} />
+                        </StyledTableCell>
+                        <StyledTableCell align="right">{item.game}</StyledTableCell>
+                        <StyledTableCell align="right">{item.boughtDate}</StyledTableCell>
+                        <StyledTableCell align="right">
+                          <Box display="flex" justifyContent="flex-end">
+                            <Tooltip title="Редагувати">
+                              <IconButton onClick={() => editItem(item)} aria-label="edit">
+                                <Edit color="primary" />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Видалити">
+                              <IconButton onClick={() => confirmDelete(item)} aria-label="delete">
+                                <Delete color="error" />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </StyledTableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            </CardContent>
           </StyledCard>
 
-          <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-            <DialogTitle>{t.delete}</DialogTitle>
+          {/* Delete confirmation dialog */}
+          <Dialog
+            open={deleteDialogOpen}
+            onClose={() => setDeleteDialogOpen(false)}
+          >
+            <DialogTitle>{t.deleteConfirmation}</DialogTitle>
             <DialogContent>
-              <Typography>{t.deleteConfirmation}</Typography>
+              <Typography>
+                {t.deleteConfirmation}
+              </Typography>
             </DialogContent>
             <DialogActions>
               <Button onClick={() => setDeleteDialogOpen(false)}>{t.cancel}</Button>
-              <Button onClick={deleteItem} color="secondary" variant="contained">
+              <Button onClick={deleteItem} color="error" variant="contained">
                 {t.delete}
               </Button>
             </DialogActions>
           </Dialog>
 
+          {/* Analytics chart dialog */}
           <Dialog
             open={analyticsOpen}
             onClose={() => setAnalyticsOpen(false)}
@@ -713,9 +744,12 @@ export default function App() {
             fullWidth
           >
             <DialogTitle>{t.analytics}</DialogTitle>
-            <DialogContent sx={{ height: 400 }}>
+            <DialogContent style={{ height: 400 }}>
+              <Typography variant="h6" align="center" mb={2}>
+                {t.profit}
+              </Typography>
               {profitByDate.length === 0 ? (
-                <Typography variant="body1" align="center" mt={3}>
+                <Typography align="center" mt={3}>
                   {t.noData}
                 </Typography>
               ) : (
@@ -745,6 +779,7 @@ export default function App() {
             </DialogActions>
           </Dialog>
 
+          {/* Snackbar for notifications */}
           <Snackbar
             open={snackbar.open}
             autoHideDuration={3500}
