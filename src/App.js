@@ -155,12 +155,7 @@ const LANGUAGES = {
 
 const t = LANGUAGES.uk;
 
-// ====================================================================================
-// ========================= Налаштування API =========================================
-// ====================================================================================
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
-// ====================================================================================
-// ====================================================================================
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
@@ -195,11 +190,6 @@ export default function App() {
     localStorage.setItem("investments", JSON.stringify(investments));
   }, [investments]);
 
-  // ====================================================================================
-  // ========================= Функції для роботи з API =================================
-  // ====================================================================================
-  
-  // Ця функція робить запит до проксі-сервера для отримання поточної ціни
   const fetchCurrentPrice = async (itemName, gameName) => {
     try {
       const response = await fetch(`${PROXY_SERVER_URL}/price?item_name=${encodeURIComponent(itemName)}&game=${encodeURIComponent(gameName)}`);
@@ -215,21 +205,16 @@ export default function App() {
     }
   };
   
-  // ====================================================================================
-  // [ЗМІНА] - Оновлено handleItemNameChange для використання `game`
-  // ====================================================================================
   const handleItemNameChange = async (event, newValue, reason) => {
-    // Якщо користувач очищає поле, скидаємо опції
     if (reason === 'clear') {
       setName('');
       setItemOptions([]);
       return;
     }
     
-    // Встановлюємо значення, яке ввів користувач
+    // Тут ми просто встановлюємо текст, який ввів користувач
     setName(newValue || "");
 
-    // Робимо запит, тільки якщо довжина запиту більша за 2 символи
     if (newValue && newValue.length > 2) {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -239,13 +224,12 @@ export default function App() {
       setAutocompleteLoading(true);
       
       try {
-        // Використовуємо наш проксі-сервер для автозаповнення, передаючи гру
         const response = await fetch(`${PROXY_SERVER_URL}/search?query=${encodeURIComponent(newValue)}&game=${encodeURIComponent(game)}`, { signal });
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
-        // Припускаємо, що сервер повертає масив об'єктів { label: "...", value: "...", image: "..." }
+        // Server now returns array of objects with { label, value, image }
         setItemOptions(data);
       } catch (error) {
         if (error.name === 'AbortError') {
@@ -262,9 +246,6 @@ export default function App() {
       setAutocompleteLoading(false);
     }
   };
-  // ====================================================================================
-  // ==================== Кінець функцій для роботи з API ================================
-  // ====================================================================================
 
   const addItem = async () => {
     if (!name || !count || !buyPrice || !boughtDate || !game) {
@@ -481,11 +462,14 @@ export default function App() {
                   loading={autocompleteLoading}
                   value={name}
                   onInputChange={handleItemNameChange}
+                  // ====================================================================
+                  // [ВИПРАВЛЕНО] - Встановлюємо значення, коли користувач обирає зі списку
+                  // ====================================================================
                   onChange={(event, newValue) => {
-                    if (newValue && newValue.label) {
-                      setName(newValue.label);
+                    if (newValue) {
+                      setName(newValue.label || newValue);
                     } else {
-                      setName(newValue);
+                      setName("");
                     }
                   }}
                   renderInput={(params) => (
@@ -505,23 +489,20 @@ export default function App() {
                       }}
                     />
                   )}
-                  // ====================================================================
-                  // [ЗМІНА] - Оновлено renderOption для відображення зображень
-                  // ====================================================================
                   renderOption={(props, option) => (
                     <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
                       {option.image && (
                         <img
                           loading="lazy"
                           width="20"
-                          src={`https://community.cloudflare.steamstatic.com/economy/image/${option.image}`}
+                          // Використовуємо інший хост для швидшого завантаження зображень
+                          src={`https://community.steamstatic.com/economy/image/${option.image}`}
                           alt=""
                         />
                       )}
                       {option.label}
                     </Box>
                   )}
-                  // ====================================================================
                 />
               </Box>
 
