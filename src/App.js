@@ -250,8 +250,8 @@ export default function App() {
           throw new Error('Network response was not ok');
         }
         const data = await response.json();
-        // The API returns an array of strings. We need to format it for Autocomplete.
-        const formattedOptions = data.map(item => ({ label: item, value: item }));
+        // The API now returns an array of objects, we need to extract the 'name' property
+        const formattedOptions = data.map(item => ({ label: item.name, value: item.name }));
         setItemOptions(formattedOptions);
       } catch (error) {
         if (error.name === 'AbortError') {
