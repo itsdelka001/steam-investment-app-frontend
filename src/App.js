@@ -506,6 +506,8 @@ export default function App() {
                     options={itemOptions}
                     getOptionLabel={(option) => option.label || ''}
                     isOptionEqualToValue={(option, value) => option.value === value.value}
+                    // Add this prop to disable the internal filtering
+                    filterOptions={(x) => x}
                     renderInput={(params) => (
                       <TextField
                         {...params}
