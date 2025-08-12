@@ -332,6 +332,8 @@ export default function App() {
           return {
             label: item.name,
             image: item.icon_url,
+            // Додаємо float з бекенду в опції
+            float: item.float
           };
         });
         setItemOptions(formattedOptions);
@@ -353,9 +355,10 @@ export default function App() {
 
   const handleAutocompleteChange = (event, newValue) => {
     setAutocompleteValue(newValue);
-    if (newValue && typeof newValue === 'object') { // Додано перевірку на тип об'єкта
+    if (newValue && typeof newValue === 'object') {
       setName(newValue.label);
-      setSelectedItemDetails({ ...newValue, image: newValue.image });
+      // Додаємо float до selectedItemDetails
+      setSelectedItemDetails({ ...newValue, image: newValue.image, float: newValue.float });
     } else {
       setName(newValue || '');
       setSelectedItemDetails(null);
@@ -711,6 +714,7 @@ export default function App() {
                           e.target.onerror = null;
                           e.target.src = 'https://placehold.co/150x150/d3d3d3/000000?text=No+Image';
                         }}
+                        crossOrigin="anonymous" // Додано атрибут crossOrigin
                       />
                       <Typography variant="h6" align="center" mb={2}>{selectedItemDetails.label}</Typography>
                       <Grid container spacing={2}>
