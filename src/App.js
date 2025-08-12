@@ -723,7 +723,7 @@ export default function App() {
               const profitColorForCard = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
               return (
                 <Grid item xs={12} sm={6} md={4} key={item.id}>
-                  <InvestmentCard>
+                  <StyledCard>
                     <CardContent>
                       <CardHeader>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
@@ -787,7 +787,7 @@ export default function App() {
                         <IconButton color="primary" onClick={() => handleMarketAnalysis(item)}><BarChart size={20} /></IconButton>
                       </Tooltip>
                     </CardFooter>
-                  </InvestmentCard>
+                  </StyledCard>
                 </Grid>
               );
             })
