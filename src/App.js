@@ -32,90 +32,9 @@ import {
   CircularProgress,
   Divider,
 } from "@mui/material";
-import { TrendingUp, Delete, Edit, BarChart, Info, Check, Plus, Languages } from 'lucide-react';
+import { TrendingUp, Delete, Check, BarChart, Plus, Language } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
-
-// Припускаємо, що у вас є файл перекладу та хук useTranslation
-// Для прикладу, створюємо mock-функцію для перекладу
-const useTranslation = () => {
-  const [lang, setLang] = useState('uk');
-  const t = (key) => {
-    const translations = {
-      uk: {
-        inventory: "Інвентар",
-        addInvestment: "Додати інвестицію",
-        game: "Гра",
-        itemName: "Назва предмета",
-        cost: "Ціна покупки",
-        date: "Дата покупки",
-        quantity: "Кількість",
-        totalCost: "Загальна вартість",
-        price: "Поточна ціна",
-        profit: "Прибуток",
-        actions: "Дії",
-        remove: "Видалити",
-        edit: "Редагувати",
-        save: "Зберегти",
-        cancel: "Скасувати",
-        priceNotFound: "Ціну не знайдено",
-        failedToFetch: "Не вдалося отримати ціну",
-        currentInvestments: "Поточні інвестиції",
-        analytics: "Аналітика",
-        totalInvestments: "Усього інвестицій",
-        totalProfit: "Усього прибутку",
-        averageProfit: "Середній прибуток",
-        profitOverTime: "Прибуток з часом",
-        noData: "Немає даних для відображення", // Виправлений ключ для відсутності даних
-        noInvestments: "Немає інвестицій у цій категорії", // Доданий ключ для відсутності інвестицій в таблиці
-        gameOptions: ["CS2", "Dota 2", "PUBG"],
-        investmentAdded: "Інвестицію додано!",
-        investmentUpdated: "Інвестицію оновлено!",
-        investmentRemoved: "Інвестицію видалено!",
-        fetchPriceInfo: "Отримати поточну ціну предмета",
-        language: "Мова",
-      },
-      en: {
-        inventory: "Inventory",
-        addInvestment: "Add Investment",
-        game: "Game",
-        itemName: "Item Name",
-        cost: "Purchase Price",
-        date: "Purchase Date",
-        quantity: "Quantity",
-        totalCost: "Total Cost",
-        price: "Current Price",
-        profit: "Profit",
-        actions: "Actions",
-        remove: "Remove",
-        edit: "Edit",
-        save: "Save",
-        cancel: "Cancel",
-        priceNotFound: "Price not found",
-        failedToFetch: "Failed to fetch price",
-        currentInvestments: "Current Investments",
-        analytics: "Analytics",
-        totalInvestments: "Total Investments",
-        totalProfit: "Total Profit",
-        averageProfit: "Average Profit",
-        profitOverTime: "Profit over time",
-        noData: "No data to display", // Виправлений ключ для відсутності даних
-        noInvestments: "No investments in this category", // Доданий ключ для відсутності інвестицій в таблиці
-        gameOptions: ["CS2", "Dota 2", "PUBG"],
-        investmentAdded: "Investment added!",
-        investmentUpdated: "Investment updated!",
-        investmentRemoved: "Investment removed!",
-        fetchPriceInfo: "Fetch current item price",
-        language: "Language",
-      },
-    };
-    return translations[lang][key] || key;
-  };
-  const changeLanguage = () => {
-    setLang(lang === 'uk' ? 'en' : 'uk');
-  };
-  return { t, changeLanguage, lang };
-};
 
 const theme = createTheme({
   palette: {
@@ -134,119 +53,351 @@ const theme = createTheme({
       primary: '#212529',
       secondary: '#6C757D',
     },
-    success: {
-      main: '#28a745',
-    },
-    error: {
-      main: '#dc3545',
-    }
   },
   typography: {
     fontFamily: ['Poppins', 'Inter', 'sans-serif'].join(','),
     h4: {
-      fontWeight: 600,
-      fontSize: '1.8rem',
-      '@media (min-width:600px)': {
-        fontSize: '2.5rem',
-      },
+      fontWeight: 700,
     },
-    h5: {
-      fontWeight: 500,
+    h6: {
+      fontWeight: 600,
+    },
+    body1: {
+      fontSize: '1rem',
     },
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 12,
           textTransform: 'none',
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 12,
+          },
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-        },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
+          borderRadius: 16,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          '&:hover': {
+            transform: 'translateY(-4px)',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
+          },
         },
       },
     },
   },
 });
 
-const StyledContainer = styled(Container)(({ theme }) => ({
-  marginTop: theme.spacing(4),
-  marginBottom: theme.spacing(4),
+// Стилізовані компоненти
+const GradientText = styled(Typography)(({ theme }) => ({
+  background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  fontWeight: 700,
 }));
 
-// Стилізовані картки для виділення фінансових показників
-const StatCard = styled(Card)(({ theme }) => ({
+const StyledCard = styled(Card)(({ theme }) => ({
+  background: `linear-gradient(135deg, ${theme.palette.background.paper} 0%, rgba(255,255,255,0.8) 100%)`,
+  backdropFilter: 'blur(10px)',
+  border: '1px solid rgba(255,255,255,0.2)',
+  transition: 'all 0.3s ease-in-out',
   height: '100%',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
-  alignItems: 'center',
-  padding: theme.spacing(3),
-  textAlign: 'center',
-  transition: 'transform 0.2s, box-shadow 0.2s',
-  '&:hover': {
-    transform: 'translateY(-5px)',
-    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.1)',
-  },
+  padding: theme.spacing(2),
 }));
 
-// Mock API calls
-const fetchItemPrice = async (game, itemName) => {
-  console.log(`Fetching price for ${itemName} in ${game}`);
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Simulate different outcomes
-  if (itemName.toLowerCase().includes('expensive')) {
-    return { price: 150.75, success: true };
-  }
-  if (itemName.toLowerCase().includes('notfound')) {
-    return { price: null, success: false, error: 'Price not found' };
-  }
-  return { price: Math.random() * 100, success: true };
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  borderBottom: `1px solid ${theme.palette.divider}`,
+}));
+
+const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
+const CURRENCIES = ["EUR", "USD", "UAH"];
+const CURRENCY_SYMBOLS = { "EUR": "€", "USD": "$", "UAH": "₴" };
+
+const LANGUAGES = {
+  uk: {
+    portfolio: "Портфель інвестицій",
+    name: "Назва предмета",
+    count: "Кількість",
+    buyPrice: "Ціна купівлі (за шт.)",
+    game: "Гра",
+    boughtDate: "Дата купівлі",
+    action: "Дії",
+    addItem: "Додати інвестицію",
+    save: "Зберегти",
+    cancel: "Скасувати",
+    sold: "Продано",
+    yes: "Так",
+    no: "Ні",
+    sellPrice: "Ціна продажу (за шт.)",
+    sellDate: "Дата продажу",
+    editItem: "Редагувати предмет",
+    deleteConfirmation: "Ви впевнені, що хочете видалити цей предмет?",
+    delete: "Видалити",
+    totalInvestment: "Загальні інвестиції",
+    profit: "Прибуток",
+    percentageProfit: "Процентний прибуток",
+    analytics: "Аналітика",
+    noData: "Немає даних для відображення.",
+    itemAdded: "Предмет успішно додано!",
+    itemUpdated: "Предмет успішно оновлено!",
+    itemDeleted: "Предмет успішно видалено!",
+    fetchError: "Помилка при отриманні даних з API.",
+    addInvestment: "Додати нову інвестицію",
+    markAsSold: "Відмітити як продано",
+    total: "Усі",
+    currency: "Валюта",
+    language: "Мова",
+    priceHistory: "Історія ціни",
+  },
+  en: {
+    portfolio: "Investment Portfolio",
+    name: "Item Name",
+    count: "Count",
+    buyPrice: "Buy Price (per item)",
+    game: "Game",
+    boughtDate: "Purchase Date",
+    action: "Actions",
+    addItem: "Add Investment",
+    save: "Save",
+    cancel: "Cancel",
+    sold: "Sold",
+    yes: "Yes",
+    no: "No",
+    sellPrice: "Sell Price (per item)",
+    sellDate: "Sell Date",
+    editItem: "Edit Item",
+    deleteConfirmation: "Are you sure you want to delete this item?",
+    delete: "Delete",
+    totalInvestment: "Total Investments",
+    profit: "Profit",
+    percentageProfit: "Percentage Profit",
+    analytics: "Analytics",
+    noData: "No data to display.",
+    itemAdded: "Item added successfully!",
+    itemUpdated: "Item updated successfully!",
+    itemDeleted: "Item deleted successfully!",
+    fetchError: "Error fetching data from API.",
+    addInvestment: "Add New Investment",
+    markAsSold: "Mark as Sold",
+    total: "All",
+    currency: "Currency",
+    language: "Language",
+    priceHistory: "Price History",
+  },
 };
 
-function App() {
-  const { t, changeLanguage, lang } = useTranslation();
+const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
+
+export default function App() {
   const [investments, setInvestments] = useState([]);
-  const [activeTab, setActiveTab] = useState(0);
+  const [name, setName] = useState("");
+  const [count, setCount] = useState(1);
+  const [buyPrice, setBuyPrice] = useState(0);
+  const [buyCurrency, setBuyCurrency] = useState(CURRENCIES[0]);
+  const [game, setGame] = useState(GAMES[1]);
+  const [boughtDate, setBoughtDate] = useState(new Date().toISOString().split('T')[0]);
+  const [tabValue, setTabValue] = useState(0);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [profitByDate, setProfitByDate] = useState([]);
+  const [addDialog, setAddDialog] = useState(false);
+  const [sellDialog, setSellDialog] = useState(false);
+  const [itemToSell, setItemToSell] = useState(null);
+  const [sellPrice, setSellPrice] = useState(0);
+  const [sellDate, setSellDate] = useState(new Date().toISOString().split('T')[0]);
+  const [totalProfit, setTotalProfit] = useState(0);
+  const [totalInvestment, setTotalInvestment] = useState(0);
+  const [soldItems, setSoldItems] = useState([]);
+  const [lang, setLang] = useState('uk');
+  const [autocompleteLoading, setAutocompleteLoading] = useState(false);
+  const [itemOptions, setItemOptions] = useState([]);
+  const abortControllerRef = useRef(null);
+  const [autocompleteValue, setAutocompleteValue] = useState(null);
+  const t = LANGUAGES[lang];
 
-  // Form state for adding/editing investments
-  const [formState, setFormState] = useState({
-    game: 'CS2',
-    itemName: '',
-    cost: '',
-    date: new Date().toISOString().slice(0, 10),
-    quantity: 1,
-    id: null,
-  });
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [isFetchingPrice, setIsFetchingPrice] = useState(false);
+  useEffect(() => {
+    const savedInvestments = localStorage.getItem("investments");
+    if (savedInvestments) {
+      setInvestments(JSON.parse(savedInvestments));
+    }
+  }, []);
 
-  // Example data for the chart. We make sure investments is an array
-  const profitByDate = (Array.isArray(investments) ? investments : []).map(inv => {
-    const profit = (inv.price - inv.cost) * inv.quantity;
-    return {
-      date: inv.date,
-      profit: isNaN(profit) ? 0 : profit
+  useEffect(() => {
+    localStorage.setItem("investments", JSON.stringify(investments));
+    updateAnalytics();
+  }, [investments]);
+
+  const updateAnalytics = () => {
+    const sold = investments.filter(item => item.sold);
+    setSoldItems(sold);
+    const totalInvest = sold.reduce((sum, item) => sum + item.buyPrice * item.count, 0);
+    const totalProfitAmount = sold.reduce((sum, item) => sum + (item.sellPrice - item.buyPrice) * item.count, 0);
+    setTotalInvestment(totalInvest);
+    setTotalProfit(totalProfitAmount);
+
+    const profitData = sold
+      .map(item => ({ date: item.sellDate, profit: (item.sellPrice - item.buyPrice) * item.count, }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const aggregatedProfit = profitData.reduce((acc, curr) => {
+      const existing = acc.find(p => p.date === curr.date);
+      if (existing) {
+        existing.profit += curr.profit;
+      } else {
+        acc.push(curr);
+      }
+      return acc;
+    }, []);
+
+    let runningTotal = 0;
+    const cumulativeProfit = aggregatedProfit.map(p => {
+      runningTotal += p.profit;
+      return { ...p, profit: runningTotal };
+    });
+    setProfitByDate(cumulativeProfit);
+  };
+
+  const handleItemNameChange = async (event, newInputValue) => {
+    setName(newInputValue);
+
+    if (newInputValue && newInputValue.length > 2) {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+      const signal = abortControllerRef.current.signal;
+      setAutocompleteLoading(true);
+      
+      try {
+        const selectedGame = tabValue === 0 ? game : GAMES[tabValue];
+        const url = `${PROXY_SERVER_URL}/search?query=${encodeURIComponent(newInputValue)}&game=${encodeURIComponent(selectedGame)}`;
+        const response = await fetch(url, { signal });
+        
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        
+        const data = await response.json();
+        const formattedOptions = data.map(item => ({ label: item.name, value: item.name }));
+        
+        setItemOptions(formattedOptions);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Fetch aborted');
+        } else {
+          console.error('Error fetching autocomplete options:', error);
+          showSnackbar(t.fetchError, "error");
+        }
+      } finally {
+        setAutocompleteLoading(false);
+      }
+    } else {
+      setItemOptions([]);
+      setAutocompleteLoading(false);
+    }
+  };
+
+  const handleAutocompleteChange = (event, newValue) => {
+    setAutocompleteValue(newValue);
+    if (newValue) {
+        setName(newValue.label);
+    } else {
+        setName('');
+    }
+  };
+
+  const addItem = () => {
+    if (!name || count <= 0 || buyPrice <= 0 || !boughtDate) {
+      showSnackbar("Будь ласка, заповніть всі обов'язкові поля.", "error");
+      return;
+    }
+
+    const newItem = {
+      id: Date.now(),
+      name,
+      count: Number(count),
+      buyPrice: Number(buyPrice),
+      game: tabValue === 0 ? game : GAMES[tabValue],
+      boughtDate,
+      buyCurrency,
+      sold: false,
+      sellPrice: 0,
+      sellDate: null,
     };
-  }).filter(p => !isNaN(p.profit)).sort((a, b) => new Date(a.date) - new Date(b.date));
 
-  const openSnackbar = (message, severity) => {
+    setInvestments([...investments, newItem]);
+    showSnackbar(t.itemAdded, "success");
+    resetForm();
+    setAddDialog(false);
+  };
+
+  const markAsSold = () => {
+    if (!itemToSell || sellPrice <= 0 || !sellDate) {
+      showSnackbar("Будь ласка, заповніть всі поля.", "error");
+      return;
+    }
+
+    const updatedInvestments = investments.map(item =>
+      item.id === itemToSell.id
+        ? { ...item, sold: true, sellPrice: Number(sellPrice), sellDate: sellDate }
+        : item
+    );
+
+    setInvestments(updatedInvestments);
+    showSnackbar(t.itemUpdated, "success");
+    setSellDialog(false);
+    resetForm();
+  };
+  
+  const confirmDelete = (item) => {
+    setItemToDelete(item);
+    setDeleteDialogOpen(true);
+  };
+
+  const deleteItem = () => {
+    setInvestments(investments.filter((item) => item.id !== itemToDelete.id));
+    setDeleteDialogOpen(false);
+    setItemToDelete(null);
+    showSnackbar(t.itemDeleted, "success");
+  };
+
+  const resetForm = () => {
+    setName("");
+    setCount(1);
+    setBuyPrice(0);
+    setGame(GAMES[1]);
+    setBoughtDate(new Date().toISOString().split('T')[0]);
+    setSellPrice(0);
+    setSellDate(new Date().toISOString().split('T')[0]);
+    setAutocompleteValue(null);
+    setItemOptions([]);
+  };
+
+  const showSnackbar = (message, severity) => {
     setSnackbar({ open: true, message, severity });
   };
 
@@ -254,320 +405,332 @@ function App() {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  // Improved handling for both text fields and Autocomplete
-  const handleFormChange = (e) => {
-    const { name, value } = e.target;
-    setFormState(prev => ({ ...prev, [name]: value }));
-  };
-  
-  const handleAutocompleteChange = (event, value) => {
-    setFormState(prev => ({ ...prev, itemName: value || '' }));
+  const handleAnalyticsOpen = () => {
+    setAnalyticsOpen(true);
   };
 
-  const handleAddInvestment = async () => {
-    if (!formState.itemName || !formState.cost || !formState.quantity) {
-      openSnackbar("Будь ласка, заповніть усі поля", "error");
-      return;
-    }
-    
-    setIsFetchingPrice(true);
-    const result = await fetchItemPrice(formState.game, formState.itemName);
-    setIsFetchingPrice(false);
-
-    if (result.success) {
-      const newInvestment = {
-        ...formState,
-        id: isEditMode ? formState.id : Date.now(),
-        price: result.price,
-      };
-
-      if (isEditMode) {
-        setInvestments(prevInvestments => 
-          (Array.isArray(prevInvestments) ? prevInvestments : []).map(inv => inv.id === newInvestment.id ? newInvestment : inv)
-        );
-        openSnackbar(t.investmentUpdated, "success");
-      } else {
-        setInvestments(prevInvestments => 
-          (Array.isArray(prevInvestments) ? prevInvestments : []).concat(newInvestment)
-        );
-        openSnackbar(t.investmentAdded, "success");
-      }
-      
-      // Reset form
-      setFormState({
-        game: 'CS2',
-        itemName: '',
-        cost: '',
-        date: new Date().toISOString().slice(0, 10),
-        quantity: 1,
-        id: null,
-      });
-      setIsEditMode(false);
-
-    } else {
-      openSnackbar(t.failedToFetch, "error");
-    }
-  };
-
-  const handleEdit = (investment) => {
-    setFormState(investment);
-    setIsEditMode(true);
-  };
-
-  const handleDelete = (id) => {
-    setInvestments(prevInvestments => 
-      (Array.isArray(prevInvestments) ? prevInvestments : []).filter(inv => inv.id !== id)
-    );
-    openSnackbar(t.investmentRemoved, "success");
-  };
-
-  const handleCancelEdit = () => {
-    setFormState({
-      game: 'CS2',
-      itemName: '',
-      cost: '',
-      date: new Date().toISOString().slice(0, 10),
-      quantity: 1,
-      id: null,
-    });
-    setIsEditMode(false);
-  };
-
-  const investmentsArray = Array.isArray(investments) ? investments : [];
-  const totalInvestments = investmentsArray.reduce((sum, inv) => sum + (inv.cost * inv.quantity), 0);
-  const totalProfit = investmentsArray.reduce((sum, inv) => sum + (inv.price - inv.cost) * inv.quantity, 0);
-  const averageProfit = totalInvestments > 0 && !isNaN(totalProfit) ? (totalProfit / totalInvestments) * 100 : 0;
-  
-  const uniqueItems = [...new Set(investmentsArray.map(inv => inv.itemName))];
+  const filteredInvestments = tabValue === 0 ? investments : investments.filter((item) => item.game === GAMES[tabValue]);
+  const profit = totalProfit;
+  const percentageProfit = totalInvestment > 0 ? (profit / totalInvestment) * 100 : 0;
+  const profitColor = profit >= 0 ? '#28A745' : '#DC3545';
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-        <StyledContainer maxWidth="md">
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            <Typography variant="h4" component="h1" gutterBottom>
-              {t.inventory}
-            </Typography>
-            <IconButton onClick={changeLanguage} color="primary">
-                <Languages />
-            </IconButton>
+      <Container maxWidth="lg" sx={{ pt: 4, pb: 8, backgroundColor: theme.palette.background.default, minHeight: '100vh' }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+          <GradientText variant="h4" component="h1">
+            {t.portfolio}
+          </GradientText>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
+                <InputLabel id="language-select-label">{t.language}</InputLabel>
+                <Select
+                  labelId="language-select-label"
+                  value={lang}
+                  onChange={(e) => setLang(e.target.value)}
+                  label={t.language}
+                >
+                  <MenuItem value="uk">Українська</MenuItem>
+                  <MenuItem value="en">English</MenuItem>
+                </Select>
+            </FormControl>
+            <Button variant="outlined" startIcon={<BarChart />} onClick={handleAnalyticsOpen}>
+              {t.analytics}
+            </Button>
+            <Button variant="contained" color="primary" startIcon={<Plus />} onClick={() => setAddDialog(true)}>
+              {t.addItem}
+            </Button>
           </Box>
-          <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)} sx={{ mb: 4 }}>
-            <Tab label={t.currentInvestments} />
-            <Tab label={t.analytics} />
+        </Box>
+        <Grid container spacing={3} mb={4}>
+          <Grid item xs={12} sm={6} md={4}>
+            <StyledCard>
+              <CardContent>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.totalInvestment}</Typography>
+                <Typography variant="h5" fontWeight="bold">{totalInvestment.toFixed(2)}€</Typography>
+              </CardContent>
+            </StyledCard>
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <StyledCard>
+              <CardContent>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.profit}</Typography>
+                <Typography variant="h5" fontWeight="bold" sx={{ color: profitColor }}>
+                  {profit.toFixed(2)}€
+                </Typography>
+              </CardContent>
+            </StyledCard>
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <StyledCard>
+              <CardContent>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.percentageProfit}</Typography>
+                <Typography variant="h5" fontWeight="bold" sx={{ color: profitColor }}>
+                  {percentageProfit.toFixed(2)}%
+                </Typography>
+              </CardContent>
+            </StyledCard>
+          </Grid>
+        </Grid>
+        <Box mb={4}>
+          <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} aria-label="game tabs">
+            {GAMES.map((gameName, index) => (
+              <Tab key={index} label={gameName === "Усі" ? t.total : gameName} />
+            ))}
           </Tabs>
-
-          {activeTab === 0 && (
-            <Box>
-              {/* Form to add/edit investments */}
-              <Card sx={{ mb: 4 }}>
-                <CardContent>
-                  <Typography variant="h5" sx={{ mb: 2 }}>{isEditMode ? t.edit : t.addInvestment}</Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <FormControl fullWidth>
-                        <InputLabel>{t.game}</InputLabel>
-                        <Select
-                          name="game"
-                          value={formState.game}
-                          label={t.game}
-                          onChange={handleFormChange}
-                        >
-                          {t.gameOptions.map(game => (
-                            <MenuItem key={game} value={game}>{game}</MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <Autocomplete
-                        freeSolo
-                        options={uniqueItems}
-                        value={formState.itemName}
-                        onChange={handleAutocompleteChange}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            name="itemName"
-                            label={t.itemName}
-                            fullWidth
-                            value={formState.itemName}
-                            onChange={handleFormChange}
-                          />
-                        )}
+        </Box>
+        <Box sx={{ overflowX: 'auto' }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <StyledTableCell>{t.name}</StyledTableCell>
+                <StyledTableCell>{t.game}</StyledTableCell>
+                <StyledTableCell>{t.count}</StyledTableCell>
+                <StyledTableCell>{t.buyPrice}</StyledTableCell>
+                <StyledTableCell>{t.boughtDate}</StyledTableCell>
+                <StyledTableCell>{t.profit}</StyledTableCell>
+                <StyledTableCell>{t.action}</StyledTableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredInvestments.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center">
+                    <Typography variant="body1" color="text.secondary">
+                      Немає інвестицій у цій категорії.
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredInvestments.map((item) => (
+                  <TableRow key={item.id} hover>
+                    <StyledTableCell>{item.name}</StyledTableCell>
+                    <StyledTableCell>{item.game}</StyledTableCell>
+                    <StyledTableCell>{item.count}</StyledTableCell>
+                    <StyledTableCell>{item.buyPrice}{CURRENCY_SYMBOLS[item.buyCurrency]}</StyledTableCell>
+                    <StyledTableCell>{item.boughtDate}</StyledTableCell>
+                    <StyledTableCell>
+                      <Chip
+                        label={
+                          item.sold
+                            ? `${((item.sellPrice - item.buyPrice) * item.count).toFixed(2)}${CURRENCY_SYMBOLS[item.buyCurrency]}`
+                            : "---"
+                        }
+                        color={
+                          item.sold && (item.sellPrice - item.buyPrice) * item.count >= 0
+                            ? 'success'
+                            : item.sold ? 'error' : 'default'
+                        }
+                        variant={item.sold ? 'filled' : 'outlined'}
                       />
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <TextField
-                        name="cost"
-                        label={t.cost}
-                        type="number"
-                        fullWidth
-                        value={formState.cost}
-                        onChange={handleFormChange}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <TextField
-                        name="quantity"
-                        label={t.quantity}
-                        type="number"
-                        fullWidth
-                        value={formState.quantity}
-                        onChange={handleFormChange}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <TextField
-                        name="date"
-                        label={t.date}
-                        type="date"
-                        fullWidth
-                        value={formState.date}
-                        onChange={handleFormChange}
-                        InputLabelProps={{ shrink: true }}
-                      />
-                    </Grid>
-                    <Grid item xs={12} sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-                      {isEditMode && (
-                        <Button variant="outlined" color="secondary" onClick={handleCancelEdit}>
-                          {t.cancel}
-                        </Button>
-                      )}
-                      <Button variant="contained" onClick={handleAddInvestment} startIcon={isFetchingPrice ? null : (isEditMode ? <Check /> : <Plus />)} disabled={isFetchingPrice}>
-                        {isFetchingPrice ? <CircularProgress size={24} color="inherit" /> : (isEditMode ? t.save : t.addInvestment)}
-                      </Button>
-                    </Grid>
-                  </Grid>
-                </CardContent>
-              </Card>
-
-              {/* Table of investments */}
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>{t.game}</TableCell>
-                    <TableCell>{t.itemName}</TableCell>
-                    <TableCell align="right">{t.totalCost}</TableCell>
-                    <TableCell align="right">
-                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-                        {t.price}
-                        <Tooltip title={t.fetchPriceInfo}>
-                            <Info color="action" style={{ marginLeft: 4 }} />
+                    </StyledTableCell>
+                    <StyledTableCell>
+                      {!item.sold && (
+                        <Tooltip title={t.markAsSold}>
+                          <IconButton onClick={() => { setItemToSell(item); setSellDialog(true); }}>
+                            <Check color="success" />
+                          </IconButton>
                         </Tooltip>
-                      </Box>
-                    </TableCell>
-                    <TableCell align="right">{t.profit}</TableCell>
-                    <TableCell align="center">{t.actions}</TableCell>
+                      )}
+                      <Tooltip title={t.delete}>
+                        <IconButton onClick={() => confirmDelete(item)}>
+                          <Delete color="error" />
+                        </IconButton>
+                      </Tooltip>
+                    </StyledTableCell>
                   </TableRow>
-                </TableHead>
-                <TableBody>
-                {investmentsArray.length === 0 ? (
-                    <TableRow>
-                        <TableCell colSpan={6} align="center">
-                            <Typography variant="body1" color="text.secondary" sx={{ py: 2 }}>
-                                {t.noInvestments}
-                            </Typography>
-                        </TableCell>
-                    </TableRow>
-                ) : (
-                    investmentsArray.map((inv) => {
-                      const profitValue = (inv.price - inv.cost) * inv.quantity;
-                      const priceDisplay = inv.price != null && !isNaN(inv.price) ? `$${inv.price.toFixed(2)}` : t.priceNotFound;
-                      const profitDisplay = !isNaN(profitValue) ? `$${profitValue.toFixed(2)}` : t.priceNotFound;
-                      
-                      return (
-                        <TableRow key={inv.id}>
-                          <TableCell>{inv.game}</TableCell>
-                          <TableCell>{inv.itemName}</TableCell>
-                          <TableCell align="right">${(inv.cost * inv.quantity).toFixed(2)}</TableCell>
-                          <TableCell align="right">{priceDisplay}</TableCell>
-                          <TableCell align="right">
-                            <Chip
-                              label={profitDisplay}
-                              sx={{ 
-                                color: (!isNaN(profitValue) && profitValue > 0) ? theme.palette.success.main : theme.palette.error.main,
-                                borderColor: (!isNaN(profitValue) && profitValue > 0) ? theme.palette.success.main : theme.palette.error.main,
-                              }}
-                              variant="outlined"
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            <IconButton color="primary" onClick={() => handleEdit(inv)}>
-                              <Edit />
-                            </IconButton>
-                            <IconButton color="error" onClick={() => handleDelete(inv.id)}>
-                              <Delete />
-                            </IconButton>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    }))}
-                </TableBody>
-              </Table>
-            </Box>
-          )}
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </Box>
 
-          {activeTab === 1 && (
-            <Box sx={{ my: 4 }}>
-              {/* Покращені та виділені картки */}
-              <Grid container spacing={3} justifyContent="center" alignItems="stretch">
-                <Grid item xs={12} sm={4}>
-                  <StatCard>
-                    <CardContent>
-                      <Typography variant="h6" color="text.secondary">{t.totalInvestments}</Typography>
-                      <Typography variant="h4" color="primary" sx={{ mt: 1 }}>${totalInvestments.toFixed(2)}</Typography>
-                    </CardContent>
-                  </StatCard>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <StatCard>
-                    <CardContent>
-                      <Typography variant="h6" color="text.secondary">{t.totalProfit}</Typography>
-                      <Typography
-                        variant="h4"
-                        sx={{ mt: 1, color: totalProfit > 0 && !isNaN(totalProfit) ? theme.palette.success.main : theme.palette.error.main }}
-                      >
-                          {isNaN(totalProfit) ? "$0.00" : `$${totalProfit.toFixed(2)}`}
-                      </Typography>
-                    </CardContent>
-                  </StatCard>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                  <StatCard>
-                    <CardContent>
-                      <Typography variant="h6" color="text.secondary">{t.averageProfit}</Typography>
-                      <Typography 
-                        variant="h4" 
-                        sx={{ mt: 1, color: averageProfit > 0 && !isNaN(averageProfit) ? theme.palette.success.main : theme.palette.error.main }}
-                      >
-                          {isNaN(averageProfit) ? "0.00%" : `${averageProfit.toFixed(2)}%`}
-                      </Typography>
-                    </CardContent>
-                  </StatCard>
-                </Grid>
+        {/* Dialog для додавання інвестиції */}
+        <Dialog open={addDialog} onClose={() => { setAddDialog(false); resetForm(); }} maxWidth="sm" fullWidth>
+          <DialogTitle>{t.addInvestment}</DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Autocomplete
+                  freeSolo
+                  options={itemOptions}
+                  loading={autocompleteLoading}
+                  value={autocompleteValue}
+                  onChange={handleAutocompleteChange}
+                  onInputChange={handleItemNameChange}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label={t.name}
+                      variant="outlined"
+                      required
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <React.Fragment>
+                            {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                            {params.InputProps.endAdornment}
+                          </React.Fragment>
+                        ),
+                      }}
+                    />
+                  )}
+                />
               </Grid>
-              <Box sx={{ mt: 4, textAlign: 'center' }}>
-                <Button variant="contained" startIcon={<BarChart />} onClick={() => setAnalyticsOpen(true)}>
-                  {t.profitOverTime}
-                </Button>
-              </Box>
-            </Box>
-          )}
-        </StyledContainer>
+              {tabValue === 0 && (
+                <Grid item xs={12}>
+                  <FormControl variant="outlined" fullWidth required>
+                    <InputLabel>{t.game}</InputLabel>
+                    <Select
+                      value={game}
+                      onChange={(e) => setGame(e.target.value)}
+                      label={t.game}
+                    >
+                      {GAMES.slice(1).map((gameOption) => (
+                        <MenuItem key={gameOption} value={gameOption}>
+                          {gameOption}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              )}
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label={t.count}
+                  type="number"
+                  variant="outlined"
+                  fullWidth
+                  value={count}
+                  onChange={(e) => setCount(Number(e.target.value))}
+                  required
+                  inputProps={{ min: 1 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Box display="flex" alignItems="center">
+                  <TextField
+                    label={t.buyPrice}
+                    type="number"
+                    variant="outlined"
+                    fullWidth
+                    value={buyPrice}
+                    onChange={(e) => setBuyPrice(Number(e.target.value))}
+                    required
+                    inputProps={{ min: 0 }}
+                  />
+                  <FormControl variant="outlined" sx={{ minWidth: 80, ml: 1 }}>
+                      <InputLabel>{t.currency}</InputLabel>
+                      <Select
+                        value={buyCurrency}
+                        onChange={(e) => setBuyCurrency(e.target.value)}
+                        label={t.currency}
+                      >
+                        {CURRENCIES.map((currency) => (
+                            <MenuItem key={currency} value={currency}>{currency}</MenuItem>
+                        ))}
+                      </Select>
+                  </FormControl>
+                </Box>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label={t.boughtDate}
+                  type="date"
+                  variant="outlined"
+                  fullWidth
+                  value={boughtDate}
+                  onChange={(e) => setBoughtDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  required
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => { setAddDialog(false); resetForm(); }}>{t.cancel}</Button>
+            <Button onClick={addItem} color="primary" variant="contained">{t.addItem}</Button>
+          </DialogActions>
+        </Dialog>
 
-        {/* Analytics Dialog */}
-        <Dialog open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} fullWidth maxWidth="md">
-          <DialogTitle>{t.profitOverTime}</DialogTitle>
-          <Divider />
-          <DialogContent sx={{ height: 400 }}>
+        {/* Dialog для відмітки "Продано" */}
+        <Dialog open={sellDialog} onClose={() => { setSellDialog(false); resetForm(); }} maxWidth="sm" fullWidth>
+          <DialogTitle>{t.markAsSold}</DialogTitle>
+          <DialogContent>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Typography variant="h6">Предмет: {itemToSell?.name}</Typography>
+                <Typography variant="body1" color="text.secondary">
+                  Ціна купівлі: {itemToSell?.buyPrice}{CURRENCY_SYMBOLS[itemToSell?.buyCurrency]}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label={t.sellPrice}
+                  type="number"
+                  variant="outlined"
+                  fullWidth
+                  value={sellPrice}
+                  onChange={(e) => setSellPrice(Number(e.target.value))}
+                  required
+                  inputProps={{ min: 0 }}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label={t.sellDate}
+                  type="date"
+                  variant="outlined"
+                  fullWidth
+                  value={sellDate}
+                  onChange={(e) => setSellDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  required
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => { setSellDialog(false); resetForm(); }}>{t.cancel}</Button>
+            <Button onClick={markAsSold} color="success" variant="contained">{t.save}</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Dialog для підтвердження видалення */}
+        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
+          <DialogTitle>{t.deleteConfirmation}</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" mb={2}>
+              Ви дійсно хочете видалити інвестицію "{itemToDelete?.name}"?
+            </Typography>
+            <Divider />
+            <Box mt={2}>
+              <Typography variant="body2" color="text.secondary">
+                Ця дія незворотня.
+              </Typography>
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>{t.cancel}</Button>
+            <Button onClick={deleteItem} color="error" variant="contained">{t.delete}</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Dialog для аналітики */}
+        <Dialog open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} maxWidth="md" fullWidth>
+          <DialogTitle>{t.analytics}</DialogTitle>
+          <DialogContent>
+            <Typography variant="h6" mb={1}>{t.totalInvestment} ({t.sold}): {totalInvestment.toFixed(2)}€</Typography>
+            <Typography variant="h6" mb={1}>{t.profit} ({t.sold}): {totalProfit.toFixed(2)}€</Typography>
+            <Box mt={4}>
+              <Typography variant="h6" mb={2}>{t.priceHistory}</Typography>
+            </Box>
             {profitByDate.length === 0 ? (
               <Typography variant="body1" align="center" color="text.secondary">
                 {t.noData}
               </Typography>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height={300}>
                 <LineChart
                   data={profitByDate}
                   margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
@@ -604,9 +767,7 @@ function App() {
             {snackbar.message}
           </Alert>
         </Snackbar>
-      </Box>
+      </Container>
     </ThemeProvider>
   );
 }
-
-export default App;
