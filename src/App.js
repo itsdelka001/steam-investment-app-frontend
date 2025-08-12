@@ -31,14 +31,94 @@ import {
   CircularProgress,
   Tooltip,
 } from "@mui/material";
-
 import { TrendingUp, Delete, Edit, BarChart, Info } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { createTheme, ThemeProvider, styled } from "@mui/material/styles";
 
-// Примітка: Ключ API для валют все ще потрібен, якщо ви хочете реальні курси
-// Якщо ви не вводили ключ, додаток використає фіксовані курси
-const API_KEY_EXCHANGE = "5hdOphZYGTxUMPdKDA1vvVubd9KReUIQ";
+// Оновлені налаштування теми для мінімалістичного, світлого дизайну
+const theme = createTheme({
+  palette: {
+    mode: 'light', // Встановлюємо світлий режим
+    primary: {
+      main: '#6F42C1', // Пастельний фіолетовий для акцентів
+    },
+    secondary: {
+      main: '#007BFF', // Світло-синій
+    },
+    background: {
+      default: '#F8F9FA', // М'який білий для фону
+      paper: '#FFFFFF', // Чистий білий для карток і діалогів
+    },
+    text: {
+      primary: '#212529', // Темний, майже чорний, текст
+      secondary: '#6C757D', // Сірий для допоміжного тексту
+    },
+  },
+  typography: {
+    fontFamily: ['Poppins', 'Inter', 'sans-serif'].join(','),
+    h4: {
+      fontWeight: 700,
+    },
+    h6: {
+      fontWeight: 600,
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          textTransform: 'none',
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)', // Легка тінь
+          transition: 'transform 0.2s, box-shadow 0.2s',
+          '&:hover': {
+            transform: 'translateY(-2px)', // Легкий підйом при наведенні
+            boxShadow: '0 6px 12px rgba(0, 0, 0, 0.1)',
+          },
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+      },
+    },
+  },
+});
+
+// Стилізований заголовок з градієнтом
+const GradientText = styled(Typography)(({ theme }) => ({
+  background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  fontWeight: 700,
+}));
+
+// Стилізовані компоненти для мінімалістичного дизайну
+const StyledContainer = styled(Container)(({ theme }) => ({
+  paddingTop: theme.spacing(4),
+  paddingBottom: theme.spacing(4),
+}));
+
+const StyledCard = styled(Card)(({ theme }) => ({
+  backgroundColor: theme.palette.background.paper,
+  padding: theme.spacing(3),
+  marginBottom: theme.spacing(3),
+}));
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  borderBottom: `1px solid ${theme.palette.divider}`,
+}));
+
 const GAMES = ["CS2", "Dota 2", "PUBG", "Інші"];
 
 const LANGUAGES = {
@@ -47,1007 +127,575 @@ const LANGUAGES = {
     name: "Назва предмета",
     count: "Кількість",
     buyPrice: "Ціна купівлі",
-    buyDate: "Дата купівлі",
+    currentPrice: "Поточна ціна",
+    game: "Гра",
+    boughtDate: "Дата купівлі",
+    action: "Дії",
+    add: "Додати предмет",
+    add_item: "Додати предмет",
+    save: "Зберегти",
+    cancel: "Скасувати",
+    sold: "Продано",
+    yes: "Так",
+    no: "Ні",
     sellPrice: "Ціна продажу",
     sellDate: "Дата продажу",
-    sold: "Продано",
-    add: "Додати",
-    filters: "Фільтри",
-    gameFilter: "Фільтр по грі",
-    statusFilter: "Статус",
-    all: "Усі",
-    soldText: "Продано",
-    notSoldText: "Не продано",
-    noItems: "Немає предметів",
-    profit: "Прибуток по фільтру",
     editItem: "Редагувати предмет",
-    cancel: "Скасувати",
-    save: "Зберегти",
-    deleteConfirmTitle: "Видалити предмет?",
-    deleteConfirmText: "Ви впевнені, що хочете видалити цей предмет? Це не можна буде скасувати.",
+    deleteConfirmation: "Ви впевнені, що хочете видалити цей предмет?",
     delete: "Видалити",
+    totalInvestment: "Загальні інвестиції",
+    currentValue: "Поточна вартість",
+    profit: "Прибуток",
+    percentageProfit: "Процентний прибуток",
     analytics: "Аналітика",
-    currency: "Валюта",
-    language: "Мова",
-    noData: "Немає даних для графіку",
-    confirmDeleteText: "Видалити",
-    cancelDelete: "Скасувати",
-    actions: "Дії",
-    currentPrice: "Поточна ціна",
-    itemStatus: "Статус",
-    deleteItemConfirmation: (itemName) => `Ви впевнені, що хочете видалити "${itemName}"?`,
-    itemDetails: "Деталі предмета",
-    itemPhoto: "Фото предмета",
-    profitStatusText: "Прибуток",
-    lossStatusText: "Збиток",
-    neutralStatusText: "0",
-    notSoldStatusText: "Не продано",
-    fetchingItems: "Отримання предметів...",
-    errorFetchingItems: "Помилка при отриманні предметів. Переконайтеся, що сервер працює.",
-    searchPlaceholder: "Пошук предметів...",
-  },
-  en: {
-    portfolio: "Investment Portfolio",
-    name: "Item Name",
-    count: "Quantity",
-    buyPrice: "Buy Price",
-    buyDate: "Buy Date",
-    sellPrice: "Sell Price",
-    sellDate: "Sell Date",
-    sold: "Sold",
-    add: "Add",
-    filters: "Filters",
-    gameFilter: "Filter by Game",
-    statusFilter: "Status",
-    all: "All",
-    soldText: "Sold",
-    notSoldText: "Not Sold",
-    noItems: "No items",
-    profit: "Profit by filter",
-    editItem: "Edit item",
-    cancel: "Cancel",
-    save: "Save",
-    deleteConfirmTitle: "Delete item?",
-    deleteConfirmText: "Are you sure you want to delete this item? This cannot be undone.",
-    delete: "Delete",
-    analytics: "Analytics",
-    currency: "Currency",
-    language: "Language",
-    noData: "No data for chart",
-    confirmDeleteText: "Delete",
-    cancelDelete: "Cancel",
-    actions: "Actions",
-    currentPrice: "Current Price",
-    itemStatus: "Status",
-    deleteItemConfirmation: (itemName) => `Are you sure you want to delete "${itemName}"?`,
-    itemDetails: "Item Details",
-    itemPhoto: "Item Photo",
-    profitStatusText: "Profit",
-    lossStatusText: "Loss",
-    neutralStatusText: "0",
-    notSoldStatusText: "Not Sold",
-    fetchingItems: "Fetching items...",
-    errorFetchingItems: "Error fetching items. Make sure the server is running.",
-    searchPlaceholder: "Search items...",
+    noData: "Немає даних для відображення.",
+    itemAdded: "Предмет успішно додано!",
+    itemUpdated: "Предмет успішно оновлено!",
+    itemDeleted: "Предмет успішно видалено!",
   },
 };
 
-const theme = createTheme({
-  palette: {
-    mode: "dark",
-    primary: {
-      main: "#4ade80", // Неоново-зелений
-    },
-    secondary: {
-      main: "#a855f7", // Фіолетовий
-    },
-    background: {
-      default: "#0a0a0a",
-      paper: "#1e1e1e",
-    },
-    text: {
-      primary: "#e5e7eb",
-      secondary: "#9ca3af",
-    },
-    success: {
-      main: '#22c55e',
-    },
-    error: {
-      main: '#ef4444',
-    },
-  },
-  typography: {
-    fontFamily: "'Inter', sans-serif",
-    h4: {
-      fontWeight: 700,
-      fontFamily: "'Montserrat', sans-serif",
-    },
-  },
-  components: {
-    MuiTableCell: {
-      styleOverrides: {
-        root: {
-          padding: "8px",
-        },
-      },
-    },
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: "none",
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          transition: "transform 0.2s, box-shadow 0.2s",
-          "&:hover": {
-            transform: "translateY(-5px)",
-            boxShadow: "0px 10px 20px rgba(0,0,0,0.4)",
-          },
-        },
-      },
-    },
-    MuiTableRow: {
-      styleOverrides: {
-        root: {
-          cursor: "pointer",
-        },
-      },
-    },
-    MuiInputBase: {
-      styleOverrides: {
-        root: {
-          backgroundColor: '#333',
-        }
-      }
-    }
-  },
-});
-
-const NeonButton = styled(Button)(({ theme }) => ({
-  background: 'linear-gradient(45deg, #a855f7 30%, #ec4899 90%)',
-  border: 0,
-  borderRadius: 8,
-  color: 'white',
-  padding: '0 30px',
-  boxShadow: '0 3px 5px 2px rgba(168, 85, 247, .3)',
-  transition: 'all 0.3s ease-in-out',
-  '&:hover': {
-    boxShadow: '0 5px 15px 5px rgba(168, 85, 247, .5)',
-    transform: 'scale(1.05)',
-  },
-}));
+const t = LANGUAGES.uk;
 
 export default function App() {
-  const [items, setItems] = useState(() => {
-    const saved = localStorage.getItem("portfolio");
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [currency, setCurrency] = useState("UAH");
-  const [exchangeRates, setExchangeRates] = useState({ UAH: 1, USD: 1, EUR: 1 });
-  const [language, setLanguage] = useState("uk");
-  const [tabGame, setTabGame] = useState("CS2");
-  const [itemSuggestions, setItemSuggestions] = useState([]);
-  const [isSuggestionsLoading, setIsSuggestionsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const [form, setForm] = useState({
-    name: "",
-    count: 1,
-    buyPrice: "",
-    sellPrice: "",
-    buyDate: "",
-    sellDate: "",
-    sold: false,
-    game: "CS2",
-  });
-
+  const [investments, setInvestments] = useState([]);
+  const [name, setName] = useState("");
+  const [count, setCount] = useState(1);
+  const [buyPrice, setBuyPrice] = useState(0);
+  const [currentPrice, setCurrentPrice] = useState(0);
+  const [game, setGame] = useState(GAMES[0]);
+  const [boughtDate, setBoughtDate] = useState(new Date().toISOString().split('T')[0]);
+  const [sellPrice, setSellPrice] = useState(0);
+  const [sellDate, setSellDate] = useState(new Date().toISOString().split('T')[0]);
   const [editingItem, setEditingItem] = useState(null);
-  const [editForm, setEditForm] = useState({});
+  const [tabValue, setTabValue] = useState(0);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "info" });
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
+  const [sold, setSold] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [profitByDate, setProfitByDate] = useState([]);
+  const [autocompleteLoading, setAutocompleteLoading] = useState(false);
+  const [itemOptions, setItemOptions] = useState([]);
+  const abortControllerRef = useRef(null);
 
-  // Зберігаємо зміни в локальному сховищі
+  // Завантаження даних з Local Storage при завантаженні
   useEffect(() => {
-    localStorage.setItem("portfolio", JSON.stringify(items));
-  }, [items]);
-
-  // Завантаження курсів валют
-  useEffect(() => {
-    const fallbackRates = {
-      UAH: 1,
-      USD: 0.025,
-      EUR: 0.024,
-    };
-
-    if (!API_KEY_EXCHANGE || API_KEY_EXCHANGE === "5hdOphZYGTxUMPdKDA1vvVubd9KReUIQ") {
-      setExchangeRates(fallbackRates);
-      return;
+    const savedInvestments = localStorage.getItem("investments");
+    if (savedInvestments) {
+      setInvestments(JSON.parse(savedInvestments));
     }
-
-    fetch(`https://api.apilayer.com/exchangerates_data/latest?base=UAH&apikey=${API_KEY_EXCHANGE}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && data.rates) {
-          setExchangeRates({
-            UAH: 1,
-            USD: data.rates.USD || fallbackRates.USD,
-            EUR: data.rates.EUR || fallbackRates.EUR,
-          });
-          setSnackbar({ open: true, message: "Курси валют успішно завантажено.", severity: "success" });
-        } else {
-          setExchangeRates(fallbackRates);
-        }
-      })
-      .catch(() => {
-        setExchangeRates(fallbackRates);
-      });
   }, []);
 
-  const fetchItemSuggestions = async (gameName, query = "") => {
-    if (gameName === 'Інші' || !query) {
-      setItemSuggestions([]);
-      return;
-    }
-
-    setIsSuggestionsLoading(true);
-    // Звертаємося до нашого локального проксі-сервера
-    const proxyUrl = `http://localhost:3001/api/steam-items?game=${gameName}&query=${encodeURIComponent(query)}`;
-
-    try {
-      const response = await fetch(proxyUrl);
-      if (!response.ok) {
-        throw new Error('Server response was not ok');
-      }
-      const data = await response.json();
-      setItemSuggestions(data);
-    } catch (error) {
-      console.error(t.errorFetchingItems, error);
-      setSnackbar({ open: true, message: t.errorFetchingItems, severity: "error" });
-      setItemSuggestions([]);
-    } finally {
-      setIsSuggestionsLoading(false);
-    }
-  };
-
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    if (value.length > 2) { // Запит відправляємо, якщо введено 3 або більше символів
-      fetchItemSuggestions(tabGame, value);
-    } else {
-      setItemSuggestions([]);
-    }
-  };
-
-  const firstUpdate = useRef(true);
+  // Збереження даних в Local Storage при зміні
   useEffect(() => {
-    if (firstUpdate.current) {
-        firstUpdate.current = false;
-        return;
-    }
-    // Скидаємо пошук при зміні вкладки
-    setSearchQuery("");
-    setItemSuggestions([]);
-    setForm((f) => ({ ...f, name: "" }));
-  }, [tabGame]);
+    localStorage.setItem("investments", JSON.stringify(investments));
+  }, [investments]);
 
-  const convertAmountToSelectedCurrency = (amountInUAH, targetCurrency) => {
-    if (amountInUAH === "" || amountInUAH === null || amountInUAH === undefined) return "";
-    const numAmount = Number(amountInUAH);
-    if (isNaN(numAmount)) return "";
-
-    const rate =
-      exchangeRates && exchangeRates.hasOwnProperty(targetCurrency) ? exchangeRates[targetCurrency] : 1;
-
-    return (numAmount * rate).toFixed(2);
+  // Функція для отримання поточних цін (зараз фіксована, для демонстрації)
+  const fetchCurrentPrice = async (itemName, gameName) => {
+    // В реальному додатку тут був би виклик API, наприклад, Steam API, Buff163
+    setAutocompleteLoading(true);
+    // Імітація затримки API
+    await new Promise(resolve => setTimeout(resolve, 500));
+    setAutocompleteLoading(false);
+    return Math.random() * 1000 + 10; // Повертає випадкову ціну
   };
+  
+  // Обробник для Autocomplete
+  const handleItemNameChange = async (event, newValue) => {
+    setName(newValue || "");
+    if (newValue && newValue.length > 2) {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
+      const signal = abortControllerRef.current.signal;
+      setAutocompleteLoading(true);
+      
+      try {
+        // Імітація виклику API для пошуку предметів
+        const response = await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            const mockData = [
+              { label: `${newValue} (skin)` },
+              { label: `${newValue} (case)` },
+              { label: `${newValue} (sticker)` },
+            ];
+            resolve(mockData);
+          }, 500);
 
-  const getProfitLossStatus = (item) => {
-    if (!item.sold || !item.sellPrice) return null;
-    const profit = (Number(item.sellPrice) - Number(item.buyPrice)) * item.count;
-    if (profit > 0) return 'profit';
-    if (profit < 0) return 'loss';
-    return 'neutral';
-  };
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setForm((f) => ({
-      ...f,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-  const handleFormSoldChange = (e) => {
-    const isSold = e.target.value === 'Продано' || e.target.value === 'Sold';
-    setForm((f) => ({
-        ...f,
-        sold: isSold,
-        ...(isSold ? {} : { sellPrice: "", sellDate: "" })
-    }));
-  };
-
-  const handleEditChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setEditForm((f) => ({
-      ...f,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-  const handleEditSoldChange = (e) => {
-    const isSold = e.target.value === 'Продано' || e.target.value === 'Sold';
-    setEditForm((f) => ({
-        ...f,
-        sold: isSold,
-        ...(isSold ? {} : { sellPrice: "", sellDate: "" })
-    }));
-  };
-
-  const addItem = () => {
-    if (!form.name || !form.buyPrice || !form.buyDate || !form.game) {
-      setSnackbar({ open: true, message: "Будь ласка, заповніть усі обов'язкові поля", severity: "error" });
-      return;
-    }
-
-    const rate = exchangeRates[currency] || 1;
-    const buyPriceInUAH = Number(form.buyPrice) / rate;
-    const sellPriceInUAH = form.sold ? Number(form.sellPrice) / rate : "";
-
-    const selectedItemDetails = itemSuggestions.find(item => item.name === form.name);
-
-    setItems([
-      ...items,
-      {
-        ...form,
-        id: Date.now(),
-        count: Number(form.count),
-        buyPrice: buyPriceInUAH,
-        sellPrice: sellPriceInUAH,
-        photoUrl: selectedItemDetails ? selectedItemDetails.photoUrl : null,
-        currentPrice: selectedItemDetails ? selectedItemDetails.currentPriceUAH : 0,
-      },
-    ]);
-    setForm({
-      name: "",
-      count: 1,
-      buyPrice: "",
-      sellPrice: "",
-      buyDate: "",
-      sellDate: "",
-      sold: false,
-      game: tabGame,
-    });
-    setSearchQuery("");
-    setItemSuggestions([]);
-  };
-
-  const openEdit = (item) => {
-    setEditingItem(item);
-    setEditForm({
-      ...item,
-      buyPrice: convertAmountToSelectedCurrency(item.buyPrice, currency),
-      sellPrice: item.sellPrice ? convertAmountToSelectedCurrency(item.sellPrice, currency) : "",
-    });
-  };
-
-  const saveEdit = () => {
-    if (!editForm.name || !editForm.buyPrice || !editForm.buyDate || !editForm.game) {
-      setSnackbar({ open: true, message: "Будь ласка, заповніть усі обов'язкові поля", severity: "error" });
-      return;
-    }
-
-    const rate = exchangeRates[currency] || 1;
-    const buyPriceInUAH = Number(editForm.buyPrice) / rate;
-    const sellPriceInUAH = editForm.sold && editForm.sellPrice ? Number(editForm.sellPrice) / rate : "";
-
-    setItems((prev) =>
-      prev.map((item) => {
-        if (item.id === editingItem.id) {
-          return {
-            ...editForm,
-            count: Number(editForm.count),
-            buyPrice: buyPriceInUAH,
-            sellPrice: sellPriceInUAH,
-          };
+          signal.addEventListener('abort', () => {
+            clearTimeout(timeout);
+            reject(new Error('Aborted'));
+          });
+        });
+        setItemOptions(response);
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          console.log('Fetch aborted');
+        } else {
+          console.error('Error fetching autocomplete options:', error);
         }
-        return item;
-      })
-    );
-    setEditingItem(null);
-    setSnackbar({ open: true, message: "Зміни збережено", severity: "success" });
+      } finally {
+        setAutocompleteLoading(false);
+      }
+    } else {
+      setItemOptions([]);
+      setAutocompleteLoading(false);
+    }
+  };
+
+  const addItem = async () => {
+    if (!name || !count || !buyPrice || !boughtDate || !game) {
+      showSnackbar("Будь ласка, заповніть всі обов'язкові поля.", "error");
+      return;
+    }
+    const currentPriceFromApi = await fetchCurrentPrice(name, game);
+    const newItem = {
+      id: editingItem ? editingItem.id : Date.now(),
+      name,
+      count,
+      buyPrice,
+      currentPrice: currentPriceFromApi,
+      game,
+      boughtDate,
+      sold,
+      sellPrice: sold ? sellPrice : 0,
+      sellDate: sold ? sellDate : null,
+    };
+
+    if (editingItem) {
+      setInvestments(
+        investments.map((item) => (item.id === newItem.id ? newItem : item))
+      );
+      setEditingItem(null);
+      showSnackbar(t.itemUpdated, "success");
+    } else {
+      setInvestments([...investments, newItem]);
+      showSnackbar(t.itemAdded, "success");
+    }
+
+    resetForm();
+  };
+
+  const editItem = (item) => {
+    setEditingItem(item);
+    setName(item.name);
+    setCount(item.count);
+    setBuyPrice(item.buyPrice);
+    setCurrentPrice(item.currentPrice);
+    setGame(item.game);
+    setBoughtDate(item.boughtDate);
+    setSold(item.sold);
+    setSellPrice(item.sellPrice || 0);
+    setSellDate(item.sellDate || new Date().toISOString().split('T')[0]);
   };
 
   const confirmDelete = (item) => {
     setItemToDelete(item);
-  };
-
-  const cancelDelete = () => {
-    setItemToDelete(null);
+    setDeleteDialogOpen(true);
   };
 
   const deleteItem = () => {
-    if (itemToDelete) {
-      setItems((prev) => prev.filter((i) => i.id !== itemToDelete.id));
-      setSnackbar({ open: true, message: "Предмет видалено", severity: "info" });
-    }
+    setInvestments(investments.filter((item) => item.id !== itemToDelete.id));
+    setDeleteDialogOpen(false);
     setItemToDelete(null);
+    showSnackbar(t.itemDeleted, "success");
   };
 
-  const openDetails = (item) => {
-    setSelectedItem(item);
-  };
-
-  const closeDetails = () => {
-    setSelectedItem(null);
-  };
-
-  const closeEdit = () => {
+  const resetForm = () => {
+    setName("");
+    setCount(1);
+    setBuyPrice(0);
+    setCurrentPrice(0);
+    setGame(GAMES[0]);
+    setBoughtDate(new Date().toISOString().split('T')[0]);
+    setSellPrice(0);
+    setSellDate(new Date().toISOString().split('T')[0]);
+    setSold(false);
     setEditingItem(null);
   };
 
+  const showSnackbar = (message, severity) => {
+    setSnackbar({ open: true, message, severity });
+  };
+
   const closeSnackbar = () => {
-    setSnackbar({ open: false, message: "", severity: "info" });
+    setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleChangeTab = (e, newValue) => {
-    setTabGame(newValue);
-    setForm((f) => ({ ...f, game: newValue }));
-  };
-
-  const filteredItems = items.filter((item) => item.game === tabGame);
-
-  const totalProfitUAH = filteredItems.reduce((sum, item) => {
-    if (item.sold && item.sellPrice) {
-      return sum + item.count * (Number(item.sellPrice) - Number(item.buyPrice));
+  // Розрахунки для аналітики
+  const calculateTotalInvestment = (items) => items.reduce((sum, item) => sum + item.buyPrice * item.count, 0);
+  const calculateCurrentValue = (items) => items.reduce((sum, item) => {
+    if (item.sold) {
+      return sum + item.sellPrice * item.count;
     }
-    return sum;
+    return sum + item.currentPrice * item.count;
   }, 0);
+  
+  const calculateProfit = (items) => {
+    const totalInvest = calculateTotalInvestment(items);
+    const totalValue = calculateCurrentValue(items);
+    return totalValue - totalInvest;
+  };
+  
+  const calculatePercentageProfit = (items) => {
+    const totalInvest = calculateTotalInvestment(items);
+    if (totalInvest === 0) return 0;
+    return (calculateProfit(items) / totalInvest) * 100;
+  };
+  
+  const handleAnalyticsOpen = () => {
+    const profitData = investments
+      .filter(item => item.sold)
+      .map(item => ({
+        date: item.sellDate,
+        profit: (item.sellPrice - item.buyPrice) * item.count,
+      }))
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+    // Агрегація прибутку по датах
+    const aggregatedProfit = profitData.reduce((acc, curr) => {
+      const existing = acc.find(p => p.date === curr.date);
+      if (existing) {
+        existing.profit += curr.profit;
+      } else {
+        acc.push(curr);
+      }
+      return acc;
+    }, []);
+    
+    setProfitByDate(aggregatedProfit);
+    setAnalyticsOpen(true);
+  };
 
-  const totalProfit = convertAmountToSelectedCurrency(totalProfitUAH, currency);
+  // Фільтрація за грою
+  const filteredInvestments = investments.filter((item) =>
+    tabValue === 0 ? true : item.game === GAMES[tabValue - 1]
+  );
+  
+  // Розрахунки для відображення в шапці
+  const totalInvestment = calculateTotalInvestment(filteredInvestments);
+  const currentValue = calculateCurrentValue(filteredInvestments);
+  const profit = calculateProfit(filteredInvestments);
+  const percentageProfit = calculatePercentageProfit(filteredInvestments);
 
-  const profitByDateMap = {};
-  filteredItems.forEach((item) => {
-    if (item.sold && item.sellPrice && item.sellDate) {
-      if (!profitByDateMap[item.sellDate]) profitByDateMap[item.sellDate] = 0;
-      profitByDateMap[item.sellDate] +=
-        item.count * (Number(item.sellPrice) - Number(item.buyPrice));
-    }
-  });
-  const profitByDate = Object.entries(profitByDateMap)
-    .map(([date, profit]) => ({
-      date,
-      profit: convertAmountToSelectedCurrency(profit, currency),
-    }))
-    .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-  const t = LANGUAGES[language];
+  const profitColor = profit >= 0 ? '#28A745' : '#DC3545'; // Зелений для прибутку, червоний для збитку
 
   return (
     <ThemeProvider theme={theme}>
-      <Box
-        sx={{
-          bgcolor: "background.default",
-          minHeight: "100vh",
-          py: 4,
-          fontFamily: theme.typography.fontFamily,
-          background: "radial-gradient(circle at top left, #1a0a33 0%, #0a0a0a 100%)",
-        }}
-      >
-        <Container maxWidth="lg">
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              mb: 3,
-              flexWrap: "wrap",
-              gap: 2,
-            }}
-          >
-            {/* Оновлений, більш футуристичний блок заголовка */}
-            <Box sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              p: 2,
-              borderRadius: 3,
-              background: 'linear-gradient(90deg, rgba(26,10,51,0.5) 0%, rgba(10,10,10,0.5) 100%)',
-              border: '1px solid #4a148c',
-              boxShadow: '0 0 20px rgba(168, 85, 247, 0.2)',
-              transition: 'all 0.3s ease-in-out',
-              '&:hover': {
-                boxShadow: '0 0 30px rgba(168, 85, 247, 0.4)',
-              }
-            }}>
-              <TrendingUp size={48} color={theme.palette.secondary.main} strokeWidth={1.5} />
-              <Typography
-                variant="h4"
-                sx={{
-                  fontFamily: theme.typography.h4.fontFamily,
-                  background: 'linear-gradient(90deg, #4ade80 0%, #a855f7 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  fontSize: { xs: '2rem', md: '3.5rem' },
-                  letterSpacing: '5px',
-                  fontWeight: 900, // Жирний шрифт
-                  textShadow: '0 0 10px rgba(168, 85, 247, 0.5)',
-                  transition: 'text-shadow 0.3s ease-in-out',
-                  '&:hover': {
-                    textShadow: '0 0 20px rgba(168, 85, 247, 0.8)',
-                  }
-                }}
-              >
-                {t.portfolio}
-              </Typography>
-            </Box>
-
-            <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", alignItems: "center" }}>
-              <FormControl sx={{ minWidth: 100 }}>
-                <InputLabel>{t.currency}</InputLabel>
-                <Select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                  label={t.currency}
-                  size="small"
-                >
-                  <MenuItem value="UAH">₴ UAH</MenuItem>
-                  <MenuItem value="USD">$ USD</MenuItem>
-                  <MenuItem value="EUR">€ EUR</MenuItem>
-                </Select>
-              </FormControl>
-              <FormControl sx={{ minWidth: 120 }}>
-                <InputLabel>{t.language}</InputLabel>
-                <Select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  label={t.language}
-                  size="small"
-                >
-                  <MenuItem value="uk">Українська</MenuItem>
-                  <MenuItem value="en">English</MenuItem>
-                </Select>
-              </FormControl>
-              <IconButton
-                color="secondary"
-                onClick={() => setAnalyticsOpen(true)}
-                aria-label={t.analytics}
-                size="large"
-                sx={{
-                  border: '1px solid',
-                  borderColor: theme.palette.secondary.main,
-                  transition: 'all 0.3s ease-in-out',
-                  '&:hover': {
-                    boxShadow: '0 0 15px rgba(168, 85, 247, 0.6)',
-                    bgcolor: 'rgba(168, 85, 247, 0.1)',
-                  }
-                }}
-              >
-                <BarChart />
-              </IconButton>
-            </Box>
+      <Box sx={{ minHeight: '100vh', backgroundColor: theme.palette.background.default }}>
+        <StyledContainer maxWidth="lg">
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+            <GradientText variant="h4" component="h1">
+              {t.portfolio}
+            </GradientText>
+            <Button
+              variant="outlined"
+              startIcon={<BarChart />}
+              onClick={handleAnalyticsOpen}
+            >
+              {t.analytics}
+            </Button>
           </Box>
 
-          <Tabs
-            value={tabGame}
-            onChange={handleChangeTab}
-            textColor="primary"
-            indicatorColor="primary"
-            sx={{ mb: 3 }}
-            variant="scrollable"
-            scrollButtons="auto"
-          >
-            {GAMES.map((game) => (
-              <Tab key={game} label={game} value={game} />
-            ))}
-          </Tabs>
-
-          <Card sx={{ mb: 4, borderRadius: 2, boxShadow: 6, backgroundColor: 'rgba(30, 30, 30, 0.7)' }}>
-            <CardContent>
-              <Box
-                component="form"
-                noValidate
-                autoComplete="off"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  addItem();
-                }}
-                sx={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: '16px',
-                  alignItems: 'center',
-                  '& .MuiFormControl-root, & .MuiButton-root': {
-                    flexGrow: 1,
-                  }
-                }}
-              >
-                <FormControl sx={{ minWidth: 120, flex: '1 1 20%' }}>
-                  <Autocomplete
-                    id="item-name-autocomplete"
-                    options={itemSuggestions.map(item => item.name) || []}
-                    value={form.name}
-                    onChange={(event, newValue) => {
-                      const selectedItem = itemSuggestions.find(item => item.name === newValue);
-                      setForm((f) => ({
-                        ...f,
-                        name: newValue || "",
-                        buyPrice: selectedItem ? convertAmountToSelectedCurrency(selectedItem.currentPriceUAH, currency) : "",
-                      }));
-                    }}
-                    onInputChange={(event, newInputValue) => {
-                        setSearchQuery(newInputValue);
-                        if (newInputValue.length > 2) {
-                            fetchItemSuggestions(tabGame, newInputValue);
-                        } else {
-                            setItemSuggestions([]);
-                        }
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label={t.name}
-                        name="name"
-                        required
-                        fullWidth
-                        size="small"
-                        InputProps={{
-                          ...params.InputProps,
-                          endAdornment: (
-                            <React.Fragment>
-                              {isSuggestionsLoading ? <CircularProgress color="inherit" size={20} /> : null}
-                              {params.InputProps.endAdornment}
-                            </React.Fragment>
-                          ),
-                        }}
-                      />
-                    )}
-                  />
-                </FormControl>
-                <TextField
-                  label={t.count}
-                  name="count"
-                  type="number"
-                  inputProps={{ min: 1 }}
-                  value={form.count}
-                  onChange={handleChange}
-                  sx={{ flex: '1 1 10%' }}
-                  size="small"
-                />
-                <TextField
-                  label={`${t.buyPrice} (${currency})`}
-                  name="buyPrice"
-                  type="number"
-                  inputProps={{ min: 0 }}
-                  value={form.buyPrice}
-                  onChange={handleChange}
-                  sx={{ flex: '1 1 15%' }}
-                  size="small"
-                />
-                <TextField
-                  label={t.buyDate}
-                  name="buyDate"
-                  type="date"
-                  InputLabelProps={{ shrink: true }}
-                  value={form.buyDate}
-                  onChange={handleChange}
-                  sx={{ flex: '1 1 15%' }}
-                  size="small"
-                />
-                <FormControl sx={{ flex: '1 1 15%' }} size="small">
-                  <InputLabel>{t.sold}</InputLabel>
-                  <Select
-                    name="sold"
-                    value={form.sold ? t.soldText : t.notSoldText}
-                    onChange={handleFormSoldChange}
-                    label={t.sold}
-                  >
-                    <MenuItem value={t.notSoldText}>{t.notSoldText}</MenuItem>
-                    <MenuItem value={t.soldText}>{t.soldText}</MenuItem>
-                  </Select>
-                </FormControl>
-                {form.sold && (
-                  <>
-                    <TextField
-                      label={`${t.sellPrice} (${currency})`}
-                      name="sellPrice"
-                      type="number"
-                      inputProps={{ min: 0 }}
-                      value={form.sellPrice}
-                      onChange={handleChange}
-                      sx={{ flex: '1 1 15%' }}
-                      size="small"
-                    />
-                    <TextField
-                      label={t.sellDate}
-                      name="sellDate"
-                      type="date"
-                      InputLabelProps={{ shrink: true }}
-                      value={form.sellDate}
-                      onChange={handleChange}
-                      sx={{ flex: '1 1 15%' }}
-                      size="small"
-                    />
-                  </>
-                )}
-                <NeonButton variant="contained" type="submit" sx={{ flex: '0 0 100px' }}>
-                  {t.add}
-                </NeonButton>
-              </Box>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ mb: 2, borderRadius: 2, boxShadow: 6, backgroundColor: 'rgba(30, 30, 30, 0.7)' }}>
-            <Box sx={{ overflowX: "auto" }}>
-              <Table sx={{ mb: 0 }} stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>{t.name}</TableCell>
-                    <TableCell>{t.count}</TableCell>
-                    <TableCell>{t.buyPrice} ({currency})</TableCell>
-                    <TableCell>{t.currentPrice} ({currency})</TableCell>
-                    <TableCell>{t.itemStatus}</TableCell>
-                    <TableCell>{t.buyDate}</TableCell>
-                    <TableCell>{t.sold}</TableCell>
-                    <TableCell>{t.sellPrice} ({currency})</TableCell>
-                    <TableCell>{t.sellDate}</TableCell>
-                    <TableCell>{t.actions}</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {filteredItems.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={10} align="center" sx={{ py: 3 }}>
-                        {t.noItems}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {filteredItems.map((item) => (
-                    <TableRow key={item.id} hover onClick={() => openDetails(item)}>
-                      <TableCell>{item.name}</TableCell>
-                      <TableCell>{item.count}</TableCell>
-                      <TableCell>{convertAmountToSelectedCurrency(item.buyPrice, currency)}</TableCell>
-                      <TableCell>
-                        {item.sold ? "-" : (convertAmountToSelectedCurrency(item.currentPrice, currency))}
-                      </TableCell>
-                      <TableCell>
-                        {item.sold && getProfitLossStatus(item) === 'profit' && <Chip label={t.profitStatusText} color="success" size="small" />}
-                        {item.sold && getProfitLossStatus(item) === 'loss' && <Chip label={t.lossStatusText} color="error" size="small" />}
-                        {item.sold && getProfitLossStatus(item) === 'neutral' && <Chip label={t.neutralStatusText} color="primary" size="small" />}
-                        {!item.sold && '-'}
-                      </TableCell>
-                      <TableCell>{item.buyDate}</TableCell>
-                      <TableCell>{item.sold ? t.soldText : t.notSoldText}</TableCell>
-                      <TableCell>
-                        {item.sold && item.sellPrice
-                          ? convertAmountToSelectedCurrency(item.sellPrice, currency)
-                          : "-"}
-                      </TableCell>
-                      <TableCell>{item.sellDate || "-"}</TableCell>
-                      <TableCell onClick={(e) => e.stopPropagation()}>
-                        <IconButton
-                          aria-label="edit"
-                          size="small"
-                          color="primary"
-                          onClick={() => openEdit(item)}
-                          sx={{ mr: 1 }}
-                        >
-                          <Edit size={18} />
-                        </IconButton>
-                        <IconButton
-                          aria-label="delete"
-                          size="small"
-                          color="error"
-                          onClick={() => confirmDelete(item)}
-                        >
-                          <Delete size={18} />
-                        </IconButton>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Box>
-          </Card>
-
-          <Card sx={{ mt: 3, p: 2, borderRadius: 2, boxShadow: 6, backgroundColor: 'rgba(30, 30, 30, 0.7)' }}>
-            <Typography sx={{ fontWeight: 700, fontSize: "1.1rem" }}>
-              {t.profit}: {Number(totalProfit).toFixed(2)} {currency}
+          {/* Панель з основними показниками */}
+          <Grid container spacing={3} mb={4}>
+            <Grid item xs={12} sm={6} md={3}>
+              <StyledCard>
+                <CardContent>
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    {t.totalInvestment}
+                  </Typography>
+                  <Typography variant="h5" component="div" fontWeight={600}>
+                    ${totalInvestment.toFixed(2)}
+                  </Typography>
+                </CardContent>
+              </StyledCard>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StyledCard>
+                <CardContent>
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    {t.currentValue}
+                  </Typography>
+                  <Typography variant="h5" component="div" fontWeight={600}>
+                    ${currentValue.toFixed(2)}
+                  </Typography>
+                </CardContent>
+              </StyledCard>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StyledCard>
+                <CardContent>
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    {t.profit}
+                  </Typography>
+                  <Typography variant="h5" component="div" sx={{ color: profitColor }} fontWeight={600}>
+                    ${profit.toFixed(2)}
+                  </Typography>
+                </CardContent>
+              </StyledCard>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <StyledCard>
+                <CardContent>
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    {t.percentageProfit}
+                  </Typography>
+                  <Typography variant="h5" component="div" sx={{ color: profitColor }} fontWeight={600}>
+                    {percentageProfit.toFixed(2)}%
+                  </Typography>
+                </CardContent>
+              </StyledCard>
+            </Grid>
+          </Grid>
+          
+          {/* Форма для додавання/редагування */}
+          <StyledCard>
+            <Typography variant="h6" mb={2}>
+              {editingItem ? t.editItem : t.add_item}
             </Typography>
-          </Card>
-
-          {/* Модалка редагування */}
-          <Dialog open={!!editingItem} onClose={closeEdit} maxWidth="sm" fullWidth>
-            <DialogTitle>{t.editItem}</DialogTitle>
-            <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
-              <TextField
-                label={t.name}
-                name="name"
-                value={editForm.name || ""}
-                onChange={handleEditChange}
-                required
-                size="small"
-              />
-              <TextField
-                label={t.count}
-                name="count"
-                type="number"
-                inputProps={{ min: 1 }}
-                value={editForm.count || 1}
-                onChange={handleEditChange}
-                size="small"
-              />
-              <TextField
-                label={`${t.buyPrice} (${currency})`}
-                name="buyPrice"
-                type="number"
-                inputProps={{ min: 0 }}
-                value={editForm.buyPrice || ""}
-                onChange={handleEditChange}
-                size="small"
-              />
-              <TextField
-                label={t.buyDate}
-                name="buyDate"
-                type="date"
-                InputLabelProps={{ shrink: true }}
-                value={editForm.buyDate || ""}
-                onChange={handleEditChange}
-                size="small"
-              />
-              <FormControl size="small" sx={{ mt: 1 }}>
-                <InputLabel>{t.sold}</InputLabel>
-                <Select
-                  name="sold"
-                  value={editForm.sold ? t.soldText : t.notSoldText}
-                  onChange={handleEditSoldChange}
-                  label={t.sold}
-                >
-                  <MenuItem value={t.notSoldText}>{t.notSoldText}</MenuItem>
-                  <MenuItem value={t.soldText}>{t.soldText}</MenuItem>
-                </Select>
-              </FormControl>
-              {editForm.sold && (
-                <>
-                  <TextField
-                    label={`${t.sellPrice} (${currency})`}
-                    name="sellPrice"
-                    type="number"
-                    inputProps={{ min: 0 }}
-                    value={editForm.sellPrice || ""}
-                    onChange={handleEditChange}
-                    size="small"
-                  />
-                  <TextField
-                    label={t.sellDate}
-                    name="sellDate"
-                    type="date"
-                    InputLabelProps={{ shrink: true }}
-                    value={editForm.sellDate || ""}
-                    onChange={handleEditChange}
-                    size="small"
-                  />
-                </>
-              )}
-              <FormControl size="small">
-                <InputLabel>{t.gameFilter}</InputLabel>
-                <Select
-                  name="game"
-                  value={editForm.game || tabGame}
-                  onChange={handleEditChange}
-                  label={t.gameFilter}
-                >
-                  {GAMES.map((g) => (
-                    <MenuItem key={g} value={g}>
-                      {g}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={closeEdit}>{t.cancel}</Button>
-              <Button variant="contained" onClick={saveEdit}>
-                {t.save}
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Модалка підтвердження видалення */}
-          <Dialog open={!!itemToDelete} onClose={cancelDelete} maxWidth="xs" fullWidth>
-            <DialogTitle>{t.deleteConfirmTitle}</DialogTitle>
-            <DialogContent>
-              <Typography variant="body1">
-                {itemToDelete && t.deleteItemConfirmation(itemToDelete.name)}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                {t.deleteConfirmText}
-              </Typography>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={cancelDelete}>{t.cancelDelete}</Button>
-              <Button onClick={deleteItem} color="error" variant="contained">
-                {t.confirmDeleteText}
-              </Button>
-            </DialogActions>
-          </Dialog>
-
-          {/* Модалка деталей предмета */}
-          <Dialog open={!!selectedItem} onClose={closeDetails} maxWidth="sm" fullWidth>
-            <DialogTitle>{t.itemDetails}</DialogTitle>
-            <DialogContent>
-              {selectedItem && (
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Box
-                      component="img"
-                      src={selectedItem.photoUrl || "https://placehold.co/300x200/1e1e1e/9ca3af?text=No+Image"}
-                      alt={selectedItem.name}
-                      sx={{
-                        width: "100%",
-                        height: "auto",
-                        borderRadius: 2,
-                        objectFit: "cover",
-                        mb: 2,
+            <Grid container spacing={2}>
+              <Grid item xs={12} md={4}>
+                <Autocomplete
+                  freeSolo
+                  options={itemOptions}
+                  getOptionLabel={(option) => option.label || option}
+                  loading={autocompleteLoading}
+                  value={name}
+                  onInputChange={handleItemNameChange}
+                  onChange={(event, newValue) => setName(newValue || "")}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label={t.name}
+                      variant="outlined"
+                      fullWidth
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <React.Fragment>
+                            {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                            {params.InputProps.endAdornment}
+                          </React.Fragment>
+                        ),
                       }}
                     />
+                  )}
+                />
+              </Grid>
+              <Grid item xs={12} md={2}>
+                <TextField
+                  label={t.count}
+                  type="number"
+                  value={count}
+                  onChange={(e) => setCount(Number(e.target.value))}
+                  variant="outlined"
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} md={2}>
+                <TextField
+                  label={t.buyPrice}
+                  type="number"
+                  value={buyPrice}
+                  onChange={(e) => setBuyPrice(Number(e.target.value))}
+                  variant="outlined"
+                  fullWidth
+                />
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <FormControl variant="outlined" fullWidth>
+                  <InputLabel>{t.game}</InputLabel>
+                  <Select
+                    value={game}
+                    onChange={(e) => setGame(e.target.value)}
+                    label={t.game}
+                  >
+                    {GAMES.map((gameName) => (
+                      <MenuItem key={gameName} value={gameName}>
+                        {gameName}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={4}>
+                <TextField
+                  label={t.boughtDate}
+                  type="date"
+                  value={boughtDate}
+                  onChange={(e) => setBoughtDate(e.target.value)}
+                  variant="outlined"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={12} md={2}>
+                <FormControl variant="outlined" fullWidth>
+                  <InputLabel>{t.sold}</InputLabel>
+                  <Select
+                    value={sold}
+                    onChange={(e) => setSold(e.target.value)}
+                    label={t.sold}
+                  >
+                    <MenuItem value={true}>{t.yes}</MenuItem>
+                    <MenuItem value={false}>{t.no}</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              {sold && (
+                <>
+                  <Grid item xs={12} md={3}>
+                    <TextField
+                      label={t.sellPrice}
+                      type="number"
+                      value={sellPrice}
+                      onChange={(e) => setSellPrice(Number(e.target.value))}
+                      variant="outlined"
+                      fullWidth
+                    />
                   </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="h6" gutterBottom>{selectedItem.name}</Typography>
-                    <Typography variant="body1">
-                      **{t.count}:** {selectedItem.count}
-                    </Typography>
-                    <Typography variant="body1">
-                      **{t.buyPrice}:** {convertAmountToSelectedCurrency(selectedItem.buyPrice, currency)} {currency}
-                    </Typography>
-                    <Typography variant="body1">
-                      **{t.buyDate}:** {selectedItem.buyDate}
-                    </Typography>
-                    <Typography variant="body1">
-                      **{t.sold}:** {selectedItem.sold ? t.soldText : t.notSoldText}
-                    </Typography>
-                    {selectedItem.sold && (
-                      <>
-                        <Typography variant="body1">
-                          **{t.sellPrice}:** {convertAmountToSelectedCurrency(selectedItem.sellPrice, currency)} {currency}
-                        </Typography>
-                        <Typography variant="body1">
-                          **{t.sellDate}:** {selectedItem.sellDate}
-                        </Typography>
-                      </>
-                    )}
-                    <Typography variant="body1">
-                      **{t.itemStatus}:** {
-                        selectedItem.sold
-                          ? getProfitLossStatus(selectedItem) === 'profit'
-                            ? t.profitStatusText
-                            : getProfitLossStatus(selectedItem) === 'loss'
-                            ? t.lossStatusText
-                            : t.neutralStatusText
-                          : t.notSoldStatusText
-                      }
-                    </Typography>
+                  <Grid item xs={12} md={3}>
+                    <TextField
+                      label={t.sellDate}
+                      type="date"
+                      value={sellDate}
+                      onChange={(e) => setSellDate(e.target.value)}
+                      variant="outlined"
+                      fullWidth
+                      InputLabelProps={{ shrink: true }}
+                    />
                   </Grid>
-                </Grid>
+                </>
               )}
+              <Grid item xs={12}>
+                <Button variant="contained" color="primary" onClick={addItem}>
+                  {editingItem ? t.save : t.add}
+                </Button>
+                {editingItem && (
+                  <Button
+                    variant="text"
+                    onClick={resetForm}
+                    sx={{ ml: 1 }}
+                  >
+                    {t.cancel}
+                  </Button>
+                )}
+              </Grid>
+            </Grid>
+          </StyledCard>
+
+          {/* Фільтрація по іграх */}
+          <Box mb={2}>
+            <Tabs
+              value={tabValue}
+              onChange={(e, newValue) => setTabValue(newValue)}
+              indicatorColor="primary"
+              textColor="primary"
+              centered
+            >
+              <Tab label="Всі" />
+              {GAMES.map((gameName) => (
+                <Tab key={gameName} label={gameName} />
+              ))}
+            </Tabs>
+          </Box>
+
+          {/* Таблиця з інвестиціями */}
+          <StyledCard>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell>{t.name}</StyledTableCell>
+                  <StyledTableCell>{t.count}</StyledTableCell>
+                  <StyledTableCell>{t.game}</StyledTableCell>
+                  <StyledTableCell>{t.buyPrice}</StyledTableCell>
+                  <StyledTableCell>{t.currentPrice}</StyledTableCell>
+                  <StyledTableCell>{t.profit}</StyledTableCell>
+                  <StyledTableCell>{t.action}</StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredInvestments.map((item) => {
+                  const profitValue = item.sold
+                    ? (item.sellPrice - item.buyPrice) * item.count
+                    : (item.currentPrice - item.buyPrice) * item.count;
+                  return (
+                    <TableRow key={item.id}>
+                      <StyledTableCell>
+                        <Box display="flex" alignItems="center">
+                          <Typography>{item.name}</Typography>
+                          {item.sold && (
+                            <Tooltip title={`${t.sold} (${item.sellDate})`}>
+                              <Chip
+                                label={t.sold}
+                                color="success"
+                                size="small"
+                                sx={{ ml: 1, backgroundColor: theme.palette.success.light }}
+                              />
+                            </Tooltip>
+                          )}
+                        </Box>
+                      </StyledTableCell>
+                      <StyledTableCell>{item.count}</StyledTableCell>
+                      <StyledTableCell>{item.game}</StyledTableCell>
+                      <StyledTableCell>${item.buyPrice.toFixed(2)}</StyledTableCell>
+                      <StyledTableCell>${item.currentPrice.toFixed(2)}</StyledTableCell>
+                      <StyledTableCell>
+                        <Box display="flex" alignItems="center">
+                          <Typography sx={{ color: profitValue >= 0 ? '#28A745' : '#DC3545' }}>
+                            ${profitValue.toFixed(2)}
+                          </Typography>
+                          {profitValue >= 0 ? (
+                            <TrendingUp size={16} color="#28A745" style={{ marginLeft: 4 }} />
+                          ) : (
+                            <TrendingUp size={16} color="#DC3545" style={{ transform: 'rotate(180deg)', marginLeft: 4 }} />
+                          )}
+                        </Box>
+                      </StyledTableCell>
+                      <StyledTableCell>
+                        <IconButton color="primary" onClick={() => editItem(item)}>
+                          <Edit size={20} />
+                        </IconButton>
+                        <IconButton color="secondary" onClick={() => confirmDelete(item)}>
+                          <Delete size={20} />
+                        </IconButton>
+                      </StyledTableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </StyledCard>
+
+          {/* Діалог для підтвердження видалення */}
+          <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
+            <DialogTitle>{t.delete}</DialogTitle>
+            <DialogContent>
+              <Typography>{t.deleteConfirmation}</Typography>
             </DialogContent>
             <DialogActions>
-              <Button onClick={closeDetails}>{t.cancel}</Button>
+              <Button onClick={() => setDeleteDialogOpen(false)}>{t.cancel}</Button>
+              <Button onClick={deleteItem} color="secondary" variant="contained">
+                {t.delete}
+              </Button>
             </DialogActions>
           </Dialog>
 
-          {/* Модалка аналітики */}
-          <Dialog open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} maxWidth="md" fullWidth>
+          {/* Діалог для аналітики */}
+          <Dialog
+            open={analyticsOpen}
+            onClose={() => setAnalyticsOpen(false)}
+            maxWidth="md"
+            fullWidth
+          >
             <DialogTitle>{t.analytics}</DialogTitle>
             <DialogContent sx={{ height: 400 }}>
               {profitByDate.length === 0 ? (
-                <Typography sx={{ mt: 3 }} align="center">
+                <Typography variant="body1" align="center" mt={3}>
                   {t.noData}
                 </Typography>
               ) : (
@@ -1064,7 +712,7 @@ export default function App() {
                     <Line
                       type="monotone"
                       dataKey="profit"
-                      stroke="#4ade80"
+                      stroke="#6F42C1" // Використовуємо акцентний колір
                       activeDot={{ r: 8 }}
                       name={t.profit}
                     />
@@ -1087,7 +735,7 @@ export default function App() {
               {snackbar.message}
             </Alert>
           </Snackbar>
-        </Container>
+        </StyledContainer>
       </Box>
     </ThemeProvider>
   );
