@@ -8,7 +8,7 @@ import {
 import {
   TrendingUp, Delete, Check, BarChart, Plus, Globe, X, ArrowUp, Edit,
   History, Settings, Tag, Palette, Rocket, Zap, DollarSign, Percent, TrendingDown,
-  ArrowDown, Menu as MenuIcon
+  ArrowDown, Menu as MenuIcon, Eye
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie,
@@ -16,10 +16,7 @@ import {
 } from 'recharts';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 
-// ❌ ЦЕЙ РЯДОК БІЛЬШЕ НЕ ПОТРІБЕН
-// import { db } from './firebase-config'; 
-// ❌ ЦЕЙ РЯДОК БІЛЬШЕ НЕ ПОТРІБЕН
-// import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'; 
+const HW = 'Hello World';
 
 const theme = createTheme({
   palette: {
@@ -47,6 +44,10 @@ const theme = createTheme({
       main: '#DC3545',
       light: '#F8D7DA',
     },
+    warning: {
+      main: '#FFC107',
+      light: '#FFF3CD',
+    }
   },
   typography: {
     fontFamily: ['"Inter"', 'sans-serif'].join(','),
@@ -109,7 +110,7 @@ const theme = createTheme({
           transition: 'box-shadow 0.3s, transform 0.3s',
           '&:hover': {
             boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
-            transform: 'translateY(-3px)',
+            transform: 'scale(1.01)',
           },
         },
       },
@@ -138,7 +139,7 @@ const theme = createTheme({
           fontWeight: 600,
           color: '#6C757D',
           '&.Mui-selected': {
-            color: '#212529',
+            color: '#4A148C',
           },
         },
       },
@@ -236,7 +237,7 @@ const LANGUAGES = {
     language: "МОВА",
     priceHistory: "ІСТОРІЯ ЦІНИ",
     noInvestmentsInCategory: "У ЦІЙ КАТЕГОРІЇ ДАНІ ВІДСУТНІ.",
-    floatValue: "Float Value (Дробове значення)",
+    floatValue: "Float Value",
     stickers: "НАКЛЕЙКИ",
     selectedItem: "ВИБРАНИЙ АКТИВ",
     itemDetails: "ДЕТАЛІЗАЦІЯ АКТИВУ",
@@ -256,7 +257,11 @@ const LANGUAGES = {
     active: "АКТИВНИЙ",
     totalInvestmentTooltip: "Сума, вкладена в усі активи, що зараз знаходяться в портфоліо.",
     totalProfitTooltip: "Чистий прибуток від усіх закритих операцій (проданих активів).",
-    percentageProfitTooltip: "Відношення загального прибутку до загального капіталу в процентах."
+    percentageProfitTooltip: "Відношення загального прибутку до загального капіталу в процентах.",
+    currentMarketValue: "ПОТОЧНА РИНКОВА ВАРТІСТЬ",
+    currentMarketProfit: "ПОТОЧНИЙ ПРИБУТОК",
+    details: "ДЕТАЛЬНА ІНФОРМАЦІЯ",
+    updateAllPrices: "ОНОВИТИ ВСІ ЦІНИ"
   },
   en: {
     portfolio: "STEAM INVESTMENTS",
@@ -269,7 +274,7 @@ const LANGUAGES = {
     addItem: "ADD ASSET",
     save: "SAVE",
     cancel: "CANCEL",
-    sold: "YES",
+    sold: "SOLD",
     yes: "YES",
     no: "NO",
     sellPrice: "SELL PRICE",
@@ -313,13 +318,16 @@ const LANGUAGES = {
     active: "ACTIVE",
     totalInvestmentTooltip: "The sum of money invested in all assets currently in the portfolio.",
     totalProfitTooltip: "Net profit from all closed operations (sold assets).",
-    percentageProfitTooltip: "The ratio of total profit to total capital, as a percentage."
+    percentageProfitTooltip: "The ratio of total profit to total capital, as a percentage.",
+    currentMarketValue: "CURRENT MARKET VALUE",
+    currentMarketProfit: "CURRENT PROFIT",
+    details: "DETAILS",
+    updateAllPrices: "UPDATE ALL PRICES"
   },
 };
 
-const BACKEND_URL = 'https://steam-proxy-server-lues.onrender.com'; // ✨ НОВЕ: URL твого бек-енду
-
-const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com"; // Використовуємо один URL для всіх запитів
+const BACKEND_URL = 'https://steam-proxy-server-lues.onrender.com';
+const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
@@ -356,10 +364,12 @@ export default function App() {
   const [itemToAnalyze, setItemToAnalyze] = useState(null);
   const [settingsAnchorEl, setSettingsAnchorEl] = useState(null);
   const settingsMenuOpen = Boolean(settingsAnchorEl);
+  const [itemDetailsDialogOpen, setItemDetailsDialogOpen] = useState(false);
+  const [itemToDisplayDetails, setItemToDisplayDetails] = useState(null);
+  const [isUpdatingAllPrices, setIsUpdatingAllPrices] = useState(false);
 
   const t = LANGUAGES[lang];
 
-  // ✨ Оновлена функція для отримання даних з бек-енду
   const getInvestments = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/investments`);
@@ -386,7 +396,6 @@ export default function App() {
     setSettingsAnchorEl(null);
   };
 
-  // ✨ Оновлена функція для оновлення інвестиції через бек-енд
   const updateInvestment = async (id, data) => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/investments/${id}`, {
@@ -397,7 +406,7 @@ export default function App() {
       if (!response.ok) {
         throw new Error('Failed to update investment');
       }
-      setInvestments(prev => prev.map(item => (item.id === id ? { ...item, ...data } : item)));
+      setInvestments(prev => prev.map(item => (item.id === id ? { ...item, ...data } : item));
       showSnackbar(t.itemUpdated, 'success');
     } catch (error) {
       console.error("Error updating investment:", error);
@@ -405,7 +414,6 @@ export default function App() {
     }
   };
 
-  // ✨ Оновлена функція для видалення інвестиції через бек-енд
   const deleteInvestment = async (id) => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/investments/${id}`, {
@@ -531,14 +539,44 @@ export default function App() {
 
       if (data.price) {
         const currentPrice = data.price;
-        updateInvestment(item.id, { currentPrice });
+        await updateInvestment(item.id, { currentPrice });
         showSnackbar(`Поточна ціна для ${item.name}: ${currentPrice.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}`, 'info');
+        getInvestments();
       } else {
         showSnackbar('Не вдалося отримати поточну ціну.', 'warning');
       }
     } catch (error) {
       console.error('Error fetching current price:', error);
       showSnackbar('Помилка при оновленні ціни.', 'error');
+    }
+  };
+
+  const fetchAndUpdateAllPrices = async () => {
+    setIsUpdatingAllPrices(true);
+    showSnackbar(t.updateAllPrices, 'info');
+    try {
+      const activeInvestments = investments.filter(item => !item.sold);
+      for (const item of activeInvestments) {
+        const url = `${PROXY_SERVER_URL}/current_price?item_name=${encodeURIComponent(item.market_hash_name)}&game=${encodeURIComponent(item.game)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.price) {
+          const currentPrice = data.price;
+          await fetch(`${BACKEND_URL}/api/investments/${item.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPrice }),
+          });
+        }
+      }
+      showSnackbar("Усі ціни оновлено!", 'success');
+      getInvestments();
+    } catch (error) {
+      console.error('Error fetching and updating all prices:', error);
+      showSnackbar('Помилка при масовому оновленні цін.', 'error');
+    } finally {
+      setIsUpdatingAllPrices(false);
     }
   };
 
@@ -577,7 +615,6 @@ export default function App() {
     }
   };
 
-  // ✨ Оновлена функція для додавання інвестиції через бек-енд
   const addItem = async () => {
     if (!name || count <= 0 || buyPrice <= 0 || !boughtDate) {
       showSnackbar("СИСТЕМНА ПОМИЛКА: ВВЕДІТЬ ПОВНІ ДАНІ", "error");
@@ -590,6 +627,7 @@ export default function App() {
         market_hash_name: selectedItemDetails?.market_hash_name || name,
         count: Number(count),
         buyPrice: Number(buyPrice),
+        currentPrice: 0,
         game,
         boughtDate,
         buyCurrency,
@@ -613,7 +651,7 @@ export default function App() {
       showSnackbar(t.itemAdded, "success");
       resetForm();
       setAddDialog(false);
-      getInvestments(); // Оновлюємо список після додавання
+      getInvestments();
       
     } catch (error) {
       console.error("Error adding investment:", error);
@@ -635,7 +673,7 @@ export default function App() {
       });
       setSellDialog(false);
       resetForm();
-      getInvestments(); // Оновлюємо список після оновлення
+      getInvestments();
     } catch (error) {
       console.error("Error marking item as sold:", error);
       showSnackbar("Помилка при закритті операції", "error");
@@ -698,7 +736,7 @@ export default function App() {
       await updateInvestment(itemToEdit.id, updatedData);
       setEditDialog(false);
       resetForm();
-      getInvestments(); // Оновлюємо список після оновлення
+      getInvestments();
     } catch (error) {
       console.error("Error saving edited item:", error);
       showSnackbar("Помилка при збереженні змін", "error");
@@ -717,14 +755,31 @@ export default function App() {
     setAnalyticsOpen(true);
   };
 
+  const handleItemDetailsOpen = (item) => {
+    setItemToDisplayDetails(item);
+    setItemDetailsDialogOpen(true);
+  };
+
   const filteredInvestments = tabValue === 0 ? investments : investments.filter((item) => item.game === GAMES[tabValue]);
 
   const totalInvestment = investments.reduce((sum, item) => sum + item.buyPrice * item.count, 0);
   const totalSoldProfit = investments
     .filter(item => item.sold)
     .reduce((sum, item) => sum + (item.sellPrice - item.buyPrice) * item.count, 0);
+  
+  const totalMarketValue = investments
+    .filter(item => !item.sold)
+    .reduce((sum, item) => sum + (item.currentPrice || item.buyPrice) * item.count, 0);
+  
+  const currentMarketProfit = totalMarketValue - investments
+    .filter(item => !item.sold)
+    .reduce((sum, item) => sum + item.buyPrice * item.count, 0);
+
   const profitColor = totalSoldProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
   const percentageProfit = totalInvestment > 0 ? (totalSoldProfit / totalInvestment) * 100 : 0;
+  
+  const currentProfitColor = currentMarketProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
+  const currentPercentageProfit = totalInvestment > 0 ? (currentMarketProfit / totalInvestment) * 100 : 0;
 
   const profitByDate = investments
     .filter(item => item.sold)
@@ -754,11 +809,55 @@ export default function App() {
 
   const PIE_COLORS = ['#4A148C', '#007BFF', '#DC3545', '#FFC107', '#28A745'];
 
+  const ItemDetailsDialog = ({ open, onClose, item }) => {
+    if (!item) return null;
+    const itemProfit = (item.currentPrice - item.buyPrice) * item.count;
+    const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
+
+    return (
+      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography variant="h6" fontWeight="bold" color="primary">{t.itemDetails}</Typography>
+          <IconButton onClick={onClose}>
+            <X />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
+            {item.image && (
+              <img src={item.image} alt={item.name} style={{ width: '100%', maxWidth: 200, borderRadius: 8, marginBottom: 16 }} />
+            )}
+            <Typography variant="h5" fontWeight="bold" textAlign="center">{item.name}</Typography>
+            <Chip label={item.game} color="secondary" size="small" sx={{ mt: 1 }} />
+          </Box>
+          <Divider sx={{ my: 2 }} />
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="text.secondary">{t.buyPrice}</Typography>
+              <Typography variant="h6" fontWeight="bold">{item.buyPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}</Typography>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" color="text.secondary">{t.currentPrice}</Typography>
+              <Typography variant="h6" fontWeight="bold">
+                {item.currentPrice ? `${item.currentPrice.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography variant="body2" color="text.secondary">{t.profit} ({t.currentMarketProfit})</Typography>
+              <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
+                {item.currentPrice ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+              </Typography>
+            </Grid>
+          </Grid>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', pb: 4 }}>
         <Container maxWidth="xl" sx={{ pt: 0, pb: 4 }}>
-          {/* Оновлений хедер */}
           <Paper elevation={0} sx={{ 
             py: 2, 
             px: 3, 
@@ -772,6 +871,11 @@ export default function App() {
                 {t.portfolio}
               </Typography>
               <Box display="flex" gap={1}>
+                <Tooltip title={t.updateAllPrices}>
+                  <IconButton color="primary" onClick={fetchAndUpdateAllPrices} disabled={isUpdatingAllPrices}>
+                    {isUpdatingAllPrices ? <CircularProgress size={24} /> : <Zap />}
+                  </IconButton>
+                </Tooltip>
                 <Tooltip title={t.analytics}>
                   <IconButton color="secondary" onClick={handleAnalyticsOpen}>
                     <BarChart />
@@ -833,9 +937,8 @@ export default function App() {
             </Box>
           </Paper>
   
-          {/* Оновлений Grid з великими фінансовими показниками */}
           <Grid container spacing={3} mb={4} justifyContent="center" sx={{ px: { xs: 2, md: 0 } }}>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3}>
               <Tooltip title={t.totalInvestmentTooltip} arrow>
                 <StyledMetricCard>
                   <DollarSign size={48} color={theme.palette.primary.main} sx={{ mb: 2 }} />
@@ -848,7 +951,7 @@ export default function App() {
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid item xs={12} md={3}>
               <Tooltip title={t.totalProfitTooltip} arrow>
                 <StyledMetricCard bgcolor={profitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
                   {totalSoldProfit >= 0 ? 
@@ -864,22 +967,37 @@ export default function App() {
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
-            <Grid item xs={12} md={4}>
-              <Tooltip title={t.percentageProfitTooltip} arrow>
+            <Grid item xs={12} md={3}>
+              <Tooltip title="Сумарна вартість усіх активних предметів за поточною ринковою ціною." arrow>
                 <StyledMetricCard>
-                  <Percent size={48} color={profitColor} sx={{ mb: 2 }} />
+                  <TrendingUp size={48} color={theme.palette.secondary.main} sx={{ mb: 2 }} />
                   <Typography variant="h6" color="text.secondary" gutterBottom>
-                    {t.percentageProfit}
+                    {t.currentMarketValue}
                   </Typography>
-                  <Typography variant="h3" fontWeight="bold" sx={{ color: profitColor }}>
-                    {percentageProfit.toFixed(2)}%
+                  <Typography variant="h3" fontWeight="bold" color="secondary">
+                    {totalMarketValue.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
+                  </Typography>
+                </StyledMetricCard>
+              </Tooltip>
+            </Grid>
+            <Grid item xs={12} md={3}>
+              <Tooltip title="Різниця між поточною ринковою вартістю та загальним капіталом." arrow>
+                <StyledMetricCard bgcolor={currentProfitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
+                  {currentMarketProfit >= 0 ?
+                    <TrendingUp size={48} color={theme.palette.success.main} sx={{ mb: 2 }} /> :
+                    <TrendingDown size={48} color={theme.palette.error.main} sx={{ mb: 2 }} />
+                  }
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    {t.currentMarketProfit}
+                  </Typography>
+                  <Typography variant="h3" fontWeight="bold" sx={{ color: currentProfitColor }}>
+                    {currentMarketProfit.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
           </Grid>
   
-          {/* Tabs для фільтрації по іграм */}
           <Paper sx={{ mb: 4, p: 1, mx: { xs: 2, md: 0 } }}>
             <Tabs 
               value={tabValue} 
@@ -909,7 +1027,6 @@ export default function App() {
             </Tabs>
           </Paper>
   
-          {/* Список інвестицій */}
           <Grid container spacing={3} sx={{ px: { xs: 2, md: 0 } }}>
             {filteredInvestments.length === 0 ? (
               <Grid item xs={12}>
@@ -919,11 +1036,11 @@ export default function App() {
               </Grid>
             ) : (
               filteredInvestments.map((item) => {
-                const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : 0;
+                const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : ((item.currentPrice || item.buyPrice) - item.buyPrice) * item.count;
                 const profitColorForCard = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
                 return (
                   <Grid item xs={12} sm={6} md={4} key={item.id}>
-                    <StyledCard>
+                    <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <CardContent>
                         <CardHeader>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -963,9 +1080,9 @@ export default function App() {
                             </Typography>
                           </Box>
                           <Box>
-                            <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
+                            <Typography variant="body2" color="text.secondary">{item.sold ? t.profit : t.currentMarketProfit}:</Typography>
                             <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
-                              {item.sold ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+                              {item.sold ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : (item.currentPrice ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—')}
                             </Typography>
                           </Box>
                           <Box>
@@ -977,14 +1094,14 @@ export default function App() {
                       <CardFooter>
                         <Box display="flex" gap={1}>
                           <Tooltip title={t.edit}>
-                            <IconButton color="secondary" onClick={() => handleEdit(item)} size="small">
+                            <IconButton color="secondary" onClick={(e) => { e.stopPropagation(); handleEdit(item); }} size="small">
                               <Edit size={18} />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title={t.markAsSold}>
                             <IconButton 
                               color="success" 
-                              onClick={() => { setItemToSell(item); setSellPrice(item.buyPrice); setSellDialog(true); }} 
+                              onClick={(e) => { e.stopPropagation(); setItemToSell(item); setSellPrice(item.buyPrice); setSellDialog(true); }} 
                               disabled={item.sold}
                               size="small"
                             >
@@ -992,22 +1109,22 @@ export default function App() {
                             </IconButton>
                           </Tooltip>
                           <Tooltip title={t.delete}>
-                            <IconButton color="error" onClick={() => confirmDelete(item)} size="small">
+                            <IconButton color="error" onClick={(e) => { e.stopPropagation(); confirmDelete(item); }} size="small">
                               <Delete size={18} />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title={t.priceHistory}>
-                            <IconButton color="primary" onClick={() => handlePriceHistory(item)} size="small">
+                            <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handlePriceHistory(item); }} size="small">
                               <History size={18} />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title={t.updatePrice}>
-                            <IconButton color="secondary" onClick={() => handleCurrentPriceUpdate(item)} size="small">
+                            <IconButton color="secondary" onClick={(e) => { e.stopPropagation(); handleCurrentPriceUpdate(item); }} size="small">
                               <Zap size={18} />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title={t.marketAnalysis}>
-                            <IconButton color="primary" onClick={() => handleMarketAnalysis(item)} size="small">
+                            <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handleMarketAnalysis(item); }} size="small">
                               <BarChart size={18} />
                             </IconButton>
                           </Tooltip>
@@ -1020,7 +1137,6 @@ export default function App() {
             )}
           </Grid>
   
-          {/* Оновлена плаваюча кнопка для додавання активу */}
           <Tooltip title={t.addItem} arrow>
             <Fab
               color="primary"
@@ -1045,7 +1161,6 @@ export default function App() {
             </Fab>
           </Tooltip>
   
-          {/* Dialog для додавання інвестиції */}
           <Dialog
             open={addDialog}
             onClose={() => setAddDialog(false)}
@@ -1211,7 +1326,6 @@ export default function App() {
             </DialogActions>
           </Dialog>
   
-          {/* Dialog для редагування інвестиції */}
           <Dialog open={editDialog} onClose={() => setEditDialog(false)} PaperProps={{ style: { maxWidth: 'md', width: '90%' } }}>
             <DialogTitle>
               <Typography variant="h6" fontWeight="bold" color="primary">{t.editItem}</Typography>
@@ -1297,7 +1411,6 @@ export default function App() {
             </DialogActions>
           </Dialog>
   
-          {/* Dialog для відмічення як продано */}
           <Dialog open={sellDialog} onClose={() => setSellDialog(false)} PaperProps={{ style: { borderRadius: 16 } }}>
             <DialogTitle>
               <Typography variant="h6" fontWeight="bold" color="primary">{t.markAsSold}</Typography>
@@ -1344,7 +1457,6 @@ export default function App() {
             </DialogActions>
           </Dialog>
   
-          {/* Dialog для підтвердження видалення */}
           <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} PaperProps={{ style: { borderRadius: 16 } }}>
             <DialogTitle>{t.deleteConfirmation}</DialogTitle>
             <DialogContent>
@@ -1368,7 +1480,6 @@ export default function App() {
             </DialogActions>
           </Dialog>
   
-          {/* Dialog для аналітики */}
           <Dialog open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
             <DialogTitle>
               <Typography variant="h6" fontWeight="bold" color="primary">{t.analytics}</Typography>
@@ -1419,7 +1530,6 @@ export default function App() {
             </DialogActions>
           </Dialog>
   
-          {/* Dialog для історії ціни */}
           <Dialog open={priceHistoryOpen} onClose={() => setPriceHistoryOpen(false)} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
             <DialogTitle>
               <Typography variant="h6" fontWeight="bold" color="primary">{t.priceHistory}</Typography>
@@ -1456,7 +1566,6 @@ export default function App() {
             </DialogActions>
           </Dialog>
   
-          {/* Dialog для аналізу ринку */}
           <Dialog open={marketAnalysisDialog} onClose={() => setMarketAnalysisDialog(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
             <DialogTitle>
               <Typography variant="h6" fontWeight="bold" color="primary">{t.marketAnalysisTitle}</Typography>
@@ -1488,8 +1597,13 @@ export default function App() {
               </Button>
             </DialogActions>
           </Dialog>
+
+          <ItemDetailsDialog 
+            open={itemDetailsDialogOpen} 
+            onClose={() => setItemDetailsDialogOpen(false)} 
+            item={itemToDisplayDetails}
+          />
   
-          {/* Snackbar для сповіщень */}
           <Snackbar 
             open={snackbar.open} 
             autoHideDuration={3500} 
@@ -1512,4 +1626,4 @@ export default function App() {
       </Box>
     </ThemeProvider>
   );
-} 
+}
