@@ -15,8 +15,11 @@ import {
   Cell
 } from 'recharts';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
-import { db } from './firebase-config'; // Імпорт db з налаштувань
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'; // Імпорт функцій Firestore
+
+// ❌ ЦЕЙ РЯДОК БІЛЬШЕ НЕ ПОТРІБЕН
+// import { db } from './firebase-config'; 
+// ❌ ЦЕЙ РЯДОК БІЛЬШЕ НЕ ПОТРІБЕН
+// import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'; 
 
 const theme = createTheme({
   palette: {
@@ -314,7 +317,9 @@ const LANGUAGES = {
   },
 };
 
-const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
+const BACKEND_URL = 'https://steam-proxy-server-lues.onrender.com'; // ✨ НОВЕ: URL твого бек-енду
+
+const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com"; // Використовуємо один URL для всіх запитів
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
@@ -352,21 +357,24 @@ export default function App() {
   const [settingsAnchorEl, setSettingsAnchorEl] = useState(null);
   const settingsMenuOpen = Boolean(settingsAnchorEl);
 
-  const investmentsCollectionRef = collection(db, 'investments');
-
   const t = LANGUAGES[lang];
 
-  // Використовуємо useEffect для отримання даних з Firestore при завантаженні
-  useEffect(() => {
-    const getInvestments = async () => {
-      try {
-        const data = await getDocs(investmentsCollectionRef);
-        setInvestments(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-      } catch (error) {
-        console.error("Error fetching investments:", error);
-        showSnackbar(t.fetchError, "error");
+  // ✨ Оновлена функція для отримання даних з бек-енду
+  const getInvestments = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/investments`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch investments from backend');
       }
-    };
+      const data = await response.json();
+      setInvestments(data);
+    } catch (error) {
+      console.error("Error fetching investments:", error);
+      showSnackbar(t.fetchError, "error");
+    }
+  };
+
+  useEffect(() => {
     getInvestments();
   }, []);
 
@@ -378,10 +386,17 @@ export default function App() {
     setSettingsAnchorEl(null);
   };
 
+  // ✨ Оновлена функція для оновлення інвестиції через бек-енд
   const updateInvestment = async (id, data) => {
     try {
-      const investmentDoc = doc(db, 'investments', id);
-      await updateDoc(investmentDoc, data);
+      const response = await fetch(`${BACKEND_URL}/api/investments/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update investment');
+      }
       setInvestments(prev => prev.map(item => (item.id === id ? { ...item, ...data } : item)));
       showSnackbar(t.itemUpdated, 'success');
     } catch (error) {
@@ -390,10 +405,15 @@ export default function App() {
     }
   };
 
+  // ✨ Оновлена функція для видалення інвестиції через бек-енд
   const deleteInvestment = async (id) => {
     try {
-      const investmentDoc = doc(db, 'investments', id);
-      await deleteDoc(investmentDoc);
+      const response = await fetch(`${BACKEND_URL}/api/investments/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete investment');
+      }
       setInvestments(prev => prev.filter(item => item.id !== id));
       showSnackbar(t.itemDeleted, 'success');
     } catch (error) {
@@ -557,6 +577,7 @@ export default function App() {
     }
   };
 
+  // ✨ Оновлена функція для додавання інвестиції через бек-енд
   const addItem = async () => {
     if (!name || count <= 0 || buyPrice <= 0 || !boughtDate) {
       showSnackbar("СИСТЕМНА ПОМИЛКА: ВВЕДІТЬ ПОВНІ ДАНІ", "error");
@@ -579,14 +600,21 @@ export default function App() {
         createdAt: new Date().toISOString(),
       };
 
-      await addDoc(investmentsCollectionRef, newItem);
+      const response = await fetch(`${BACKEND_URL}/api/investments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to add investment');
+      }
+
       showSnackbar(t.itemAdded, "success");
       resetForm();
       setAddDialog(false);
+      getInvestments(); // Оновлюємо список після додавання
       
-      const updatedInvestmentsData = await getDocs(investmentsCollectionRef);
-      setInvestments(updatedInvestmentsData.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-
     } catch (error) {
       console.error("Error adding investment:", error);
       showSnackbar("Помилка при додаванні активу", "error");
@@ -607,6 +635,7 @@ export default function App() {
       });
       setSellDialog(false);
       resetForm();
+      getInvestments(); // Оновлюємо список після оновлення
     } catch (error) {
       console.error("Error marking item as sold:", error);
       showSnackbar("Помилка при закритті операції", "error");
@@ -669,6 +698,7 @@ export default function App() {
       await updateInvestment(itemToEdit.id, updatedData);
       setEditDialog(false);
       resetForm();
+      getInvestments(); // Оновлюємо список після оновлення
     } catch (error) {
       console.error("Error saving edited item:", error);
       showSnackbar("Помилка при збереженні змін", "error");
