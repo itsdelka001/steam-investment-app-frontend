@@ -163,20 +163,20 @@ const StyledCard = styled(Card)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'space-between',
-  padding: theme.spacing(2),
+  padding: theme.spacing(1.5),
   [theme.breakpoints.down('sm')]: {
     padding: theme.spacing(1),
     '& .MuiTypography-h6': {
-      fontSize: '1rem',
+      fontSize: '0.9rem',
     },
     '& .MuiTypography-body2': {
-      fontSize: '0.75rem',
+      fontSize: '0.7rem',
     }
   }
 }));
 
 const StyledMetricCard = styled(Card)(({ theme, bgcolor }) => ({
-  padding: theme.spacing(3),
+  padding: theme.spacing(2),
   borderRadius: 16,
   boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
   backgroundColor: bgcolor || theme.palette.background.paper,
@@ -186,7 +186,7 @@ const StyledMetricCard = styled(Card)(({ theme, bgcolor }) => ({
     boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
   },
   textAlign: 'center',
-  minHeight: 180,
+  minHeight: 160,
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
@@ -196,14 +196,14 @@ const CardHeader = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  paddingBottom: theme.spacing(2),
+  paddingBottom: theme.spacing(1),
 }));
 
 const CardFooter = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  paddingTop: theme.spacing(2),
+  paddingTop: theme.spacing(1),
 }));
 
 const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
@@ -946,60 +946,60 @@ export default function App() {
             </Box>
           </Paper>
   
-          <Grid container spacing={3} mb={4} justifyContent="center" sx={{ px: { xs: 2, md: 0 } }}>
-            <Grid item xs={12} md={3}>
+          <Grid container spacing={2} mb={4} justifyContent="center" sx={{ px: { xs: 1, md: 0 } }}>
+            <Grid item xs={12} sm={6} md={3}>
               <Tooltip title={t.totalInvestmentTooltip} arrow>
                 <StyledMetricCard>
-                  <DollarSign size={48} color={theme.palette.primary.main} sx={{ mb: 2 }} />
+                  <DollarSign size={36} color={theme.palette.primary.main} sx={{ mb: 1 }} />
                   <Typography variant="h6" color="text.secondary" gutterBottom>
                     {t.totalInvestment}
                   </Typography>
-                  <Typography variant="h3" fontWeight="bold" color="primary">
+                  <Typography variant="h4" fontWeight="bold" color="primary">
                     {totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <Tooltip title={t.totalProfitTooltip} arrow>
                 <StyledMetricCard bgcolor={profitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
                   {totalSoldProfit >= 0 ? 
-                    <TrendingUp size={48} color={theme.palette.success.main} sx={{ mb: 2 }} /> : 
-                    <TrendingDown size={48} color={theme.palette.error.main} sx={{ mb: 2 }} />
+                    <TrendingUp size={36} color={theme.palette.success.main} sx={{ mb: 1 }} /> : 
+                    <TrendingDown size={36} color={theme.palette.error.main} sx={{ mb: 1 }} />
                   }
                   <Typography variant="h6" color="text.secondary" gutterBottom>
                     {t.totalProfit}
                   </Typography>
-                  <Typography variant="h3" fontWeight="bold" sx={{ color: profitColor }}>
+                  <Typography variant="h4" fontWeight="bold" sx={{ color: profitColor }}>
                     {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <Tooltip title="Сумарна вартість усіх активних предметів за поточною ринковою ціною." arrow>
                 <StyledMetricCard>
-                  <TrendingUp size={48} color={theme.palette.secondary.main} sx={{ mb: 2 }} />
+                  <TrendingUp size={36} color={theme.palette.secondary.main} sx={{ mb: 1 }} />
                   <Typography variant="h6" color="text.secondary" gutterBottom>
                     {t.currentMarketValue}
                   </Typography>
-                  <Typography variant="h3" fontWeight="bold" color="secondary">
+                  <Typography variant="h4" fontWeight="bold" color="secondary">
                     {totalMarketValue.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
-            <Grid item xs={12} md={3}>
+            <Grid item xs={12} sm={6} md={3}>
               <Tooltip title="Різниця між поточною ринковою вартістю та загальним капіталом." arrow>
                 <StyledMetricCard bgcolor={currentProfitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
                   {currentMarketProfit >= 0 ?
-                    <TrendingUp size={48} color={theme.palette.success.main} sx={{ mb: 2 }} /> :
-                    <TrendingDown size={48} color={theme.palette.error.main} sx={{ mb: 2 }} />
+                    <TrendingUp size={36} color={theme.palette.success.main} sx={{ mb: 1 }} /> :
+                    <TrendingDown size={36} color={theme.palette.error.main} sx={{ mb: 1 }} />
                   }
                   <Typography variant="h6" color="text.secondary" gutterBottom>
                     {t.currentMarketProfit}
                   </Typography>
-                  <Typography variant="h3" fontWeight="bold" sx={{ color: currentProfitColor }}>
+                  <Typography variant="h4" fontWeight="bold" sx={{ color: currentProfitColor }}>
                     {currentMarketProfit.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
                   </Typography>
                 </StyledMetricCard>
@@ -1007,7 +1007,7 @@ export default function App() {
             </Grid>
           </Grid>
   
-          <Paper sx={{ mb: 4, p: 1, mx: { xs: 2, md: 0 } }}>
+          <Paper sx={{ mb: 4, p: 1, mx: { xs: 1, md: 0 } }}>
             <Tabs 
               value={tabValue} 
               onChange={(e, newValue) => setTabValue(newValue)} 
@@ -1036,7 +1036,7 @@ export default function App() {
             </Tabs>
           </Paper>
   
-          <Grid container spacing={3} sx={{ px: { xs: 2, md: 0 } }}>
+          <Grid container spacing={2} sx={{ px: { xs: 1, md: 0 } }}>
             {filteredInvestments.length === 0 ? (
               <Grid item xs={12}>
                 <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary }}>
@@ -1048,23 +1048,23 @@ export default function App() {
                 const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : ((item.currentPrice || item.buyPrice) - item.buyPrice) * item.count;
                 const profitColorForCard = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
                 return (
-                  <Grid item xs={12} sm={4} md={4} key={item.id}>
+                  <Grid item xs={12} sm={6} md={4} key={item.id}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
-                      <CardContent>
+                      <CardContent sx={{ p: 1.5 }}>
                         <CardHeader>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             {item.image && (
                               <img
                                 src={item.image}
                                 alt={item.name}
-                                style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 8 }}
+                                style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }}
                               />
                             )}
-                            <Box sx={{ overflow: 'hidden' }}>
+                            <Box sx={{ overflow: 'hidden', flex: 1 }}>
                               <Typography variant="subtitle1" fontWeight="bold" noWrap>
                                 {item.name}
                               </Typography>
-                              <Typography variant="body2" color="text.secondary">
+                              <Typography variant="body2" color="text.secondary" noWrap>
                                 {item.game}
                               </Typography>
                             </Box>
@@ -1076,8 +1076,8 @@ export default function App() {
                             sx={{ ml: 1 }}
                           />
                         </CardHeader>
-                        <Divider sx={{ my: 2 }} />
-                        <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+                        <Divider sx={{ my: 1 }} />
+                        <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1}>
                           <Box>
                             <Typography variant="body2" color="text.secondary">{t.count}:</Typography>
                             <Typography variant="h6" fontWeight="bold">{item.count}</Typography>
@@ -1101,10 +1101,10 @@ export default function App() {
                         </Box>
                       </CardContent>
                       <CardFooter>
-                        <Box display="flex" gap={1}>
+                        <Box display="flex" gap={0.5} flexWrap="wrap">
                           <Tooltip title={t.edit}>
                             <IconButton color="secondary" onClick={(e) => { e.stopPropagation(); handleEdit(item); }} size="small">
-                              <Edit size={18} />
+                              <Edit size={16} />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title={t.markAsSold}>
@@ -1114,27 +1114,27 @@ export default function App() {
                               disabled={item.sold}
                               size="small"
                             >
-                              <TrendingUp size={18} />
+                              <TrendingUp size={16} />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title={t.delete}>
                             <IconButton color="error" onClick={(e) => { e.stopPropagation(); confirmDelete(item); }} size="small">
-                              <Delete size={18} />
+                              <Delete size={16} />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title={t.priceHistory}>
                             <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handlePriceHistory(item); }} size="small">
-                              <History size={18} />
+                              <History size={16} />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title={t.updatePrice}>
                             <IconButton color="secondary" onClick={(e) => { e.stopPropagation(); handleCurrentPriceUpdate(item); }} size="small">
-                              <Zap size={18} />
+                              <Zap size={16} />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title={t.marketAnalysis}>
                             <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handleMarketAnalysis(item); }} size="small">
-                              <BarChart size={18} />
+                              <BarChart size={16} />
                             </IconButton>
                           </Tooltip>
                         </Box>
@@ -1154,8 +1154,8 @@ export default function App() {
                 position: 'fixed', 
                 bottom: 32, 
                 right: 32,
-                width: 64,
-                height: 64,
+                width: 56,
+                height: 56,
                 boxShadow: '0 8px 20px rgba(74, 20, 140, 0.3)',
                 '&:hover': {
                   transform: 'scale(1.1) rotate(90deg)',
@@ -1166,7 +1166,7 @@ export default function App() {
               }}
               onClick={() => setAddDialog(true)}
             >
-              <Plus size={32} />
+              <Plus size={24} />
             </Fab>
           </Tooltip>
   
