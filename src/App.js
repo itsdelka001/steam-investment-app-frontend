@@ -8,8 +8,7 @@ import {
 import {
   TrendingUp, Delete, Check, BarChart, Plus, Language, X, ArrowUp, Edit,
   History, Settings, Tag, Palette, Rocket, Zap, DollarSign, Percent, TrendingDown,
-  ArrowDown, TrendingUp as TrendingUpIcon, TrendingDown as TrendingDownIcon,
-  Menu as MenuIcon
+  ArrowDown, Menu as MenuIcon
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie,
@@ -775,7 +774,7 @@ export default function App() {
                       {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
                     </Typography>
                   </Box>
-                  {totalSoldProfit >= 0 ? <TrendingUpIcon size={35} color={theme.palette.success.main} /> : <TrendingDownIcon size={35} color={theme.palette.error.main} />}
+                  {totalSoldProfit >= 0 ? <TrendingUp size={35} color={theme.palette.success.main} /> : <TrendingDown size={35} color={theme.palette.error.main} />}
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
@@ -898,7 +897,6 @@ export default function App() {
             </Fab>
           </Tooltip>
   
-          {/* Dialogs go here (unchanged) */}
           {/* Dialog для додавання інвестиції */}
           <Dialog
             open={addDialog}
@@ -1032,7 +1030,7 @@ export default function App() {
             <DialogActions sx={{ p: 3 }}>
               <Button onClick={() => setEditDialog(false)} color="secondary" variant="outlined">{t.cancel}</Button>
               <Button onClick={saveEditedItem} color="primary" variant="contained">{t.save}</Button>
-            </DialogActions>
+            </Dialogactions>
           </Dialog>
   
           {/* Dialog для відмічення як продано */}
