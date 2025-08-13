@@ -406,7 +406,7 @@ export default function App() {
       if (!response.ok) {
         throw new Error('Failed to update investment');
       }
-      setInvestments(prev => prev.map(item => (item.id === id ? { ...item, ...data } : item)));
+      setInvestments(prev => prev.map(item => (item.id === id ? { ...item, ...data } : item));
       showSnackbar(t.itemUpdated, 'success');
     } catch (error) {
       console.error("Error updating investment:", error);
