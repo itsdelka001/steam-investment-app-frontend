@@ -15,7 +15,8 @@ import {
   Cell
 } from 'recharts';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
-import { v4 as uuidv4 } from 'uuid';
+import { db } from './firebase-config'; // Імпорт db з налаштувань
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore'; // Імпорт функцій Firestore
 
 const theme = createTheme({
   palette: {
@@ -314,18 +315,9 @@ const LANGUAGES = {
 };
 
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
-const LOCAL_STORAGE_KEY = 'steam-investments';
 
 export default function App() {
-  const [investments, setInvestments] = useState(() => {
-    try {
-      const storedInvestments = localStorage.getItem(LOCAL_STORAGE_KEY);
-      return storedInvestments ? JSON.parse(storedInvestments) : [];
-    } catch (error) {
-      console.error("Failed to load investments from localStorage", error);
-      return [];
-    }
-  });
+  const [investments, setInvestments] = useState([]);
   const [name, setName] = useState("");
   const [count, setCount] = useState(1);
   const [buyPrice, setBuyPrice] = useState(0);
@@ -360,15 +352,23 @@ export default function App() {
   const [settingsAnchorEl, setSettingsAnchorEl] = useState(null);
   const settingsMenuOpen = Boolean(settingsAnchorEl);
 
+  const investmentsCollectionRef = collection(db, 'investments');
+
   const t = LANGUAGES[lang];
 
+  // Використовуємо useEffect для отримання даних з Firestore при завантаженні
   useEffect(() => {
-    try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(investments));
-    } catch (error) {
-      console.error("Failed to save investments to localStorage", error);
-    }
-  }, [investments]);
+    const getInvestments = async () => {
+      try {
+        const data = await getDocs(investmentsCollectionRef);
+        setInvestments(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+      } catch (error) {
+        console.error("Error fetching investments:", error);
+        showSnackbar(t.fetchError, "error");
+      }
+    };
+    getInvestments();
+  }, []);
 
   const handleSettingsMenuClick = (event) => {
     setSettingsAnchorEl(event.currentTarget);
@@ -378,14 +378,28 @@ export default function App() {
     setSettingsAnchorEl(null);
   };
 
-  const updateInvestment = (id, data) => {
-    setInvestments(prev => prev.map(item => (item.id === id ? { ...item, ...data } : item)));
-    showSnackbar(t.itemUpdated, 'success');
+  const updateInvestment = async (id, data) => {
+    try {
+      const investmentDoc = doc(db, 'investments', id);
+      await updateDoc(investmentDoc, data);
+      setInvestments(prev => prev.map(item => (item.id === id ? { ...item, ...data } : item)));
+      showSnackbar(t.itemUpdated, 'success');
+    } catch (error) {
+      console.error("Error updating investment:", error);
+      showSnackbar("Помилка при оновленні активу", "error");
+    }
   };
 
-  const deleteInvestment = (id) => {
-    setInvestments(prev => prev.filter(item => item.id !== id));
-    showSnackbar(t.itemDeleted, 'success');
+  const deleteInvestment = async (id) => {
+    try {
+      const investmentDoc = doc(db, 'investments', id);
+      await deleteDoc(investmentDoc);
+      setInvestments(prev => prev.filter(item => item.id !== id));
+      showSnackbar(t.itemDeleted, 'success');
+    } catch (error) {
+      console.error("Error deleting investment:", error);
+      showSnackbar("Помилка при видаленні активу", "error");
+    }
   };
 
   const getGameFromItemName = (itemName) => {
@@ -543,46 +557,60 @@ export default function App() {
     }
   };
 
-  const addItem = () => {
+  const addItem = async () => {
     if (!name || count <= 0 || buyPrice <= 0 || !boughtDate) {
       showSnackbar("СИСТЕМНА ПОМИЛКА: ВВЕДІТЬ ПОВНІ ДАНІ", "error");
       return;
     }
 
-    const newItem = {
-      id: uuidv4(),
-      name,
-      market_hash_name: selectedItemDetails?.market_hash_name || name,
-      count: Number(count),
-      buyPrice: Number(buyPrice),
-      game,
-      boughtDate,
-      buyCurrency,
-      sold: false,
-      sellPrice: 0,
-      sellDate: null,
-      image: selectedItemDetails?.image || null,
-      createdAt: new Date().toISOString(),
-    };
+    try {
+      const newItem = {
+        name,
+        market_hash_name: selectedItemDetails?.market_hash_name || name,
+        count: Number(count),
+        buyPrice: Number(buyPrice),
+        game,
+        boughtDate,
+        buyCurrency,
+        sold: false,
+        sellPrice: 0,
+        sellDate: null,
+        image: selectedItemDetails?.image || null,
+        createdAt: new Date().toISOString(),
+      };
 
-    setInvestments(prev => [...prev, newItem]);
-    showSnackbar(t.itemAdded, "success");
-    resetForm();
-    setAddDialog(false);
+      await addDoc(investmentsCollectionRef, newItem);
+      showSnackbar(t.itemAdded, "success");
+      resetForm();
+      setAddDialog(false);
+      
+      const updatedInvestmentsData = await getDocs(investmentsCollectionRef);
+      setInvestments(updatedInvestmentsData.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+
+    } catch (error) {
+      console.error("Error adding investment:", error);
+      showSnackbar("Помилка при додаванні активу", "error");
+    }
   };
 
-  const markAsSold = () => {
+  const markAsSold = async () => {
     if (!itemToSell || sellPrice <= 0 || !sellDate) {
       showSnackbar("СИСТЕМНА ПОМИЛКА: ВВЕДІТЬ ЦІНУ ВИХОДУ", "error");
       return;
     }
-    updateInvestment(itemToSell.id, {
-      sold: true,
-      sellPrice: Number(sellPrice),
-      sellDate: sellDate,
-    });
-    setSellDialog(false);
-    resetForm();
+
+    try {
+      await updateInvestment(itemToSell.id, {
+        sold: true,
+        sellPrice: Number(sellPrice),
+        sellDate: sellDate,
+      });
+      setSellDialog(false);
+      resetForm();
+    } catch (error) {
+      console.error("Error marking item as sold:", error);
+      showSnackbar("Помилка при закритті операції", "error");
+    }
   };
 
   const confirmDelete = (item) => {
@@ -590,10 +618,14 @@ export default function App() {
     setDeleteDialogOpen(true);
   };
 
-  const handleDelete = () => {
-    deleteInvestment(itemToDelete.id);
-    setDeleteDialogOpen(false);
-    setItemToDelete(null);
+  const handleDelete = async () => {
+    try {
+      await deleteInvestment(itemToDelete.id);
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    } catch (error) {
+      console.error("Error in handleDelete:", error);
+    }
   };
 
   const resetForm = () => {
@@ -619,7 +651,7 @@ export default function App() {
     setEditDialog(true);
   };
 
-  const saveEditedItem = () => {
+  const saveEditedItem = async () => {
     if (!itemToEdit || !name || count <= 0 || buyPrice <= 0 || !boughtDate) {
       showSnackbar("СИСТЕМНА ПОМИЛКА: ВВЕДІТЬ ПОВНІ ДАНІ", "error");
       return;
@@ -632,9 +664,15 @@ export default function App() {
       game,
       boughtDate,
     };
-    updateInvestment(itemToEdit.id, updatedData);
-    setEditDialog(false);
-    resetForm();
+
+    try {
+      await updateInvestment(itemToEdit.id, updatedData);
+      setEditDialog(false);
+      resetForm();
+    } catch (error) {
+      console.error("Error saving edited item:", error);
+      showSnackbar("Помилка при збереженні змін", "error");
+    }
   };
 
   const showSnackbar = (message, severity) => {
