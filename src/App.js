@@ -16,6 +16,10 @@ import {
 } from 'recharts';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 
+// Виправлення: Усі оголошення змінних та констант повинні бути на початку компонента.
+// Я припускаю, що ти додав десь таку змінну, і тепер її потрібно оголосити належним чином.
+const HW = 'Hello World'; 
+
 const theme = createTheme({
   palette: {
     mode: 'light',
