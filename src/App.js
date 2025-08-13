@@ -274,7 +274,7 @@ const LANGUAGES = {
     addItem: "ADD ASSET",
     save: "SAVE",
     cancel: "CANCEL",
-    sold: "YES",
+    sold: "SOLD",
     yes: "YES",
     no: "NO",
     sellPrice: "SELL PRICE",
@@ -811,7 +811,7 @@ export default function App() {
 
   const ItemDetailsDialog = ({ open, onClose, item }) => {
     if (!item) return null;
-    const itemProfit = (item.currentPrice || 0) * item.count - item.buyPrice * item.count;
+    const itemProfit = (item.currentPrice - item.buyPrice) * item.count;
     const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
 
     return (
@@ -839,13 +839,13 @@ export default function App() {
             <Grid item xs={12} sm={6}>
               <Typography variant="body2" color="text.secondary">{t.currentPrice}</Typography>
               <Typography variant="h6" fontWeight="bold">
-                {item.currentPrice ? `${item.currentPrice.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : `0.00 ${CURRENCY_SYMBOLS[item.buyCurrency]}`}
+                {item.currentPrice ? `${item.currentPrice.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
               </Typography>
             </Grid>
             <Grid item xs={12}>
               <Typography variant="body2" color="text.secondary">{t.profit} ({t.currentMarketProfit})</Typography>
               <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
-                {item.currentPrice ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : `0.00 ${CURRENCY_SYMBOLS[item.buyCurrency]}`}
+                {item.currentPrice ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
               </Typography>
             </Grid>
           </Grid>
@@ -1036,7 +1036,7 @@ export default function App() {
               </Grid>
             ) : (
               filteredInvestments.map((item) => {
-                const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : ((item.currentPrice || 0) - item.buyPrice) * item.count;
+                const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : ((item.currentPrice || item.buyPrice) - item.buyPrice) * item.count;
                 const profitColorForCard = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
                 return (
                   <Grid item xs={12} sm={6} md={4} key={item.id}>
@@ -1082,7 +1082,7 @@ export default function App() {
                           <Box>
                             <Typography variant="body2" color="text.secondary">{item.sold ? t.profit : t.currentMarketProfit}:</Typography>
                             <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
-                              {item.sold ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : (item.currentPrice ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : `0.00 ${CURRENCY_SYMBOLS[item.buyCurrency]}`)}
+                              {item.sold ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : (item.currentPrice ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—')}
                             </Typography>
                           </Box>
                           <Box>
