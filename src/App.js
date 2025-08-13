@@ -164,6 +164,15 @@ const StyledCard = styled(Card)(({ theme }) => ({
   flexDirection: 'column',
   justifyContent: 'space-between',
   padding: theme.spacing(2),
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(1),
+    '& .MuiTypography-h6': {
+      fontSize: '1rem',
+    },
+    '& .MuiTypography-body2': {
+      fontSize: '0.75rem',
+    }
+  }
 }));
 
 const StyledMetricCard = styled(Card)(({ theme, bgcolor }) => ({
@@ -274,7 +283,8 @@ const LANGUAGES = {
     addItem: "ADD ASSET",
     save: "SAVE",
     cancel: "CANCEL",
-    sold: "YES",
+    sold: "SOLD",
+    yes: "YES",
     no: "NO",
     sellPrice: "SELL PRICE",
     sellDate: "SELL DATE",
@@ -1038,7 +1048,7 @@ export default function App() {
                 const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : ((item.currentPrice || item.buyPrice) - item.buyPrice) * item.count;
                 const profitColorForCard = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
                 return (
-                  <Grid item xs={12} sm={6} md={4} key={item.id}>
+                  <Grid item xs={12} sm={4} md={4} key={item.id}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <CardContent>
                         <CardHeader>
