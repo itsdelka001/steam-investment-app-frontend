@@ -1052,7 +1052,18 @@ export default function App() {
                 const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : ((item.currentPrice || item.buyPrice) - item.buyPrice) * item.count;
                 const profitColorForCard = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
                 return (
-                  <Grid item xs={12} sm={6} md={4} key={item.id}>
+                  <Grid item xs={12} sm={6} md={4} key={item.id} sx={{ 
+                    '&:nth-child(3n+1)': { 
+                      pr: { sm: 2, md: 2 } 
+                    },
+                    '&:nth-child(3n+2)': { 
+                      pl: { sm: 1, md: 1 },
+                      pr: { sm: 1, md: 1 }
+                    },
+                    '&:nth-child(3n)': { 
+                      pl: { sm: 2, md: 2 } 
+                    }
+                  }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <CardContent sx={{ 
                         p: 1.5,
