@@ -811,7 +811,7 @@ export default function App() {
 
   const ItemDetailsDialog = ({ open, onClose, item }) => {
     if (!item) return null;
-    const itemProfit = (item.currentPrice - item.buyPrice) * item.count;
+    const itemProfit = (item.currentPrice || 0) * item.count - item.buyPrice * item.count;
     const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
 
     return (
@@ -1036,7 +1036,7 @@ export default function App() {
               </Grid>
             ) : (
               filteredInvestments.map((item) => {
-                const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : ((item.currentPrice || item.buyPrice) - item.buyPrice) * item.count;
+                const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : ((item.currentPrice || 0) - item.buyPrice) * item.count;
                 const profitColorForCard = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
                 return (
                   <Grid item xs={12} sm={6} md={4} key={item.id}>
