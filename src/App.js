@@ -162,15 +162,20 @@ const StyledCard = styled(Card)(({ theme }) => ({
 }));
 
 const StyledMetricCard = styled(Card)(({ theme, bgcolor }) => ({
-  padding: theme.spacing(2),
-  borderRadius: 12,
-  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+  padding: theme.spacing(3),
+  borderRadius: 16,
+  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
   backgroundColor: bgcolor || theme.palette.background.paper,
   transition: 'all 0.3s ease',
   '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+    transform: 'translateY(-3px)',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
   },
+  textAlign: 'center',
+  minHeight: 180,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
 }));
 
 const CardHeader = styled(Box)(({ theme }) => ({
@@ -695,7 +700,7 @@ export default function App() {
             boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
           }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="h6" color="primary" fontWeight="bold">
+              <Typography variant="h4" color="primary" fontWeight="bold">
                 {t.portfolio}
               </Typography>
               <Box display="flex" gap={1}>
@@ -760,53 +765,47 @@ export default function App() {
             </Box>
           </Paper>
   
-          {/* Оновлений Grid з фінансовими показниками */}
-          <Grid container spacing={2} mb={4} sx={{ px: { xs: 2, md: 0 } }}>
-            <Grid item xs={12} sm={4}>
+          {/* Оновлений Grid з великими фінансовими показниками */}
+          <Grid container spacing={3} mb={4} justifyContent="center" sx={{ px: { xs: 2, md: 0 } }}>
+            <Grid item xs={12} md={4}>
               <Tooltip title={t.totalInvestmentTooltip} arrow>
                 <StyledMetricCard>
-                  <Box display="flex" alignItems="center" gap={2}>
-                    <DollarSign size={24} color={theme.palette.primary.main} />
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">{t.totalInvestment}</Typography>
-                      <Typography variant="h6" fontWeight="bold">
-                        {totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
-                      </Typography>
-                    </Box>
-                  </Box>
+                  <DollarSign size={48} color={theme.palette.primary.main} sx={{ mb: 2 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    {t.totalInvestment}
+                  </Typography>
+                  <Typography variant="h3" fontWeight="bold" color="primary">
+                    {totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
+                  </Typography>
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} md={4}>
               <Tooltip title={t.totalProfitTooltip} arrow>
                 <StyledMetricCard bgcolor={profitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
-                  <Box display="flex" alignItems="center" gap={2}>
-                    {totalSoldProfit >= 0 ? 
-                      <TrendingUp size={24} color={theme.palette.success.main} /> : 
-                      <TrendingDown size={24} color={theme.palette.error.main} />
-                    }
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">{t.totalProfit}</Typography>
-                      <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
-                        {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
-                      </Typography>
-                    </Box>
-                  </Box>
+                  {totalSoldProfit >= 0 ? 
+                    <TrendingUp size={48} color={theme.palette.success.main} sx={{ mb: 2 }} /> : 
+                    <TrendingDown size={48} color={theme.palette.error.main} sx={{ mb: 2 }} />
+                  }
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    {t.totalProfit}
+                  </Typography>
+                  <Typography variant="h3" fontWeight="bold" sx={{ color: profitColor }}>
+                    {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
+                  </Typography>
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} md={4}>
               <Tooltip title={t.percentageProfitTooltip} arrow>
                 <StyledMetricCard>
-                  <Box display="flex" alignItems="center" gap={2}>
-                    <Percent size={24} color={profitColor} />
-                    <Box>
-                      <Typography variant="body2" color="text.secondary">{t.percentageProfit}</Typography>
-                      <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
-                        {percentageProfit.toFixed(2)}%
-                      </Typography>
-                    </Box>
-                  </Box>
+                  <Percent size={48} color={profitColor} sx={{ mb: 2 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    {t.percentageProfit}
+                  </Typography>
+                  <Typography variant="h3" fontWeight="bold" sx={{ color: profitColor }}>
+                    {percentageProfit.toFixed(2)}%
+                  </Typography>
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
@@ -953,23 +952,28 @@ export default function App() {
             )}
           </Grid>
   
-          {/* Плаваюча кнопка для додавання активу */}
+          {/* Оновлена плаваюча кнопка для додавання активу */}
           <Tooltip title={t.addItem} arrow>
             <Fab
               color="primary"
               aria-label="add"
               sx={{ 
                 position: 'fixed', 
-                bottom: 24, 
-                right: 24,
-                boxShadow: '0 4px 12px rgba(74, 20, 140, 0.3)',
+                bottom: 32, 
+                right: 32,
+                width: 64,
+                height: 64,
+                boxShadow: '0 8px 20px rgba(74, 20, 140, 0.3)',
                 '&:hover': {
-                  transform: 'scale(1.1)',
-                }
+                  transform: 'scale(1.1) rotate(90deg)',
+                  boxShadow: '0 12px 24px rgba(74, 20, 140, 0.4)',
+                },
+                transition: 'all 0.3s ease',
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
               }}
               onClick={() => setAddDialog(true)}
             >
-              <Plus />
+              <Plus size={32} />
             </Fab>
           </Tooltip>
   
