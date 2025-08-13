@@ -3,19 +3,20 @@ import {
   Container, Typography, Box, TextField, Button, Table, TableHead, TableBody, TableRow, TableCell,
   Select, MenuItem, FormControl, InputLabel, Dialog, DialogTitle, DialogContent, DialogActions,
   Tabs, Tab, IconButton, Snackbar, Alert, Grid, Card, CardContent, Chip, Tooltip,
-  Autocomplete, CircularProgress, Divider, LinearProgress, Paper
+  Autocomplete, CircularProgress, Divider, LinearProgress, Paper, Fab, Menu
 } from '@mui/material';
 import {
   TrendingUp, Delete, Check, BarChart, Plus, Language, X, ArrowUp, Edit,
   History, Settings, Tag, Palette, Rocket, Zap, DollarSign, Percent, TrendingDown,
-  ArrowDown, TrendingUp as TrendingUpIcon, TrendingDown as TrendingDownIcon
+  ArrowDown, TrendingUp as TrendingUpIcon, TrendingDown as TrendingDownIcon,
+  Menu as MenuIcon
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie,
   Cell
 } from 'recharts';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
-import { v4 as uuidv4 } from 'uuid'; // Для генерації унікальних ID
+import { v4 as uuidv4 } from 'uuid';
 
 const theme = createTheme({
   palette: {
@@ -50,6 +51,9 @@ const theme = createTheme({
       fontWeight: 700,
     },
     h5: {
+      fontWeight: 600,
+    },
+    h6: {
       fontWeight: 600,
     },
   },
@@ -137,14 +141,14 @@ const theme = createTheme({
       },
     },
     MuiTooltip: {
-        styleOverrides: {
-            tooltip: {
-                backgroundColor: '#212529',
-                color: '#E0E0E0',
-                borderRadius: 8,
-                boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-            }
-        }
+      styleOverrides: {
+        tooltip: {
+          backgroundColor: '#212529',
+          color: '#E0E0E0',
+          borderRadius: 8,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+        },
+      },
     },
   },
 });
@@ -349,6 +353,8 @@ export default function App() {
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisText, setAnalysisText] = useState("");
   const [itemToAnalyze, setItemToAnalyze] = useState(null);
+  const [settingsAnchorEl, setSettingsAnchorEl] = useState(null);
+  const settingsMenuOpen = Boolean(settingsAnchorEl);
 
   const t = LANGUAGES[lang];
 
@@ -359,6 +365,14 @@ export default function App() {
       console.error("Failed to save investments to localStorage", error);
     }
   }, [investments]);
+
+  const handleSettingsMenuClick = (event) => {
+    setSettingsAnchorEl(event.currentTarget);
+  };
+
+  const handleSettingsMenuClose = () => {
+    setSettingsAnchorEl(null);
+  };
 
   const updateInvestment = (id, data) => {
     setInvestments(prev => prev.map(item => (item.id === id ? { ...item, ...data } : item)));
@@ -389,7 +403,6 @@ export default function App() {
     return "CS2";
   };
   
-
   const handleItemNameChange = async (event, newInputValue) => {
     setName(newInputValue);
     if (newInputValue && newInputValue.length > 2) {
@@ -671,42 +684,85 @@ export default function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', py: 4 }}>
+      <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', pb: 4 }}>
         <Container maxWidth="xl" sx={{ pt: 0, pb: 4 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-            <Box/>
-            <Typography variant="h4" color="primary" sx={{ textAlign: 'center' }}>{t.portfolio}</Typography>
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
-                <InputLabel id="language-select-label">{t.language}</InputLabel>
-                <Select
-                  labelId="language-select-label"
-                  value={lang}
-                  onChange={(e) => setLang(e.target.value)}
-                  label={t.language}
+          {/* Мінімалістичний хедер */}
+          <Paper elevation={0} sx={{ py: 2, px: 3, mb: 4, borderRadius: 0, borderBottom: '1px solid #DEE2E6', background: 'transparent' }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              {/* Плейсхолдер логотипу */}
+              <Typography variant="h6" color="primary" fontWeight="bold">LOGO</Typography>
+              <Box>
+                <Tooltip title={t.analytics}>
+                  <IconButton color="secondary" onClick={handleAnalyticsOpen}>
+                    <BarChart />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={t.settings}>
+                  <IconButton color="secondary" onClick={handleSettingsMenuClick}>
+                    <Settings />
+                  </IconButton>
+                </Tooltip>
+                <Menu
+                  anchorEl={settingsAnchorEl}
+                  open={settingsMenuOpen}
+                  onClose={handleSettingsMenuClose}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
                 >
-                  <MenuItem value="uk">Українська</MenuItem>
-                  <MenuItem value="en">English</MenuItem>
-                </Select>
-              </FormControl>
-              <Button variant="contained" startIcon={<BarChart />} onClick={handleAnalyticsOpen}>
-                {t.analytics}
-              </Button>
-              <Button variant="contained" color="primary" startIcon={<Plus />} onClick={() => setAddDialog(true)}>
-                {t.addItem}
-              </Button>
+                  <MenuItem onClick={handleSettingsMenuClose}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Language size={18} />
+                      <FormControl variant="standard" size="small" sx={{ minWidth: 100 }}>
+                        <Select
+                          value={lang}
+                          onChange={(e) => setLang(e.target.value)}
+                          displayEmpty
+                          inputProps={{ 'aria-label': 'Without label' }}
+                        >
+                          <MenuItem value="uk">Українська</MenuItem>
+                          <MenuItem value="en">English</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </MenuItem>
+                  <MenuItem onClick={handleSettingsMenuClose}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <DollarSign size={18} />
+                      <FormControl variant="standard" size="small" sx={{ minWidth: 100 }}>
+                        <Select
+                          value={buyCurrency}
+                          onChange={(e) => setBuyCurrency(e.target.value)}
+                          displayEmpty
+                          inputProps={{ 'aria-label': 'Without label' }}
+                        >
+                          {CURRENCIES.map((currency, index) => (
+                            <MenuItem key={index} value={currency}>{CURRENCY_SYMBOLS[currency]}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </MenuItem>
+                </Menu>
+              </Box>
             </Box>
-          </Box>
+          </Paper>
   
-          <Grid container spacing={3} mb={4} justifyContent="center">
+          {/* Виправлений Grid з фінансовими показниками */}
+          <Grid container spacing={3} mb={4} justifyContent="center" sx={{ px: { xs: 2, md: 0 } }}>
             <Grid item xs={12} sm={6} md={4}>
               <Tooltip title={t.totalInvestmentTooltip} arrow>
                 <StyledMetricCard>
                   <Box sx={{ flexGrow: 1 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.totalInvestment}</Typography>
-                    <Typography variant="h5" component="div">{totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}</Typography>
+                    <Typography variant="h6" component="div" fontWeight="bold">{totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}</Typography>
                   </Box>
-                  <DollarSign size={40} color={theme.palette.primary.main} />
+                  <DollarSign size={35} color={theme.palette.primary.main} />
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
@@ -715,11 +771,11 @@ export default function App() {
                 <StyledMetricCard bgcolor={profitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
                   <Box sx={{ flexGrow: 1 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.totalProfit}</Typography>
-                    <Typography variant="h5" component="div" sx={{ color: profitColor }}>
+                    <Typography variant="h6" component="div" sx={{ color: profitColor }} fontWeight="bold">
                       {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
                     </Typography>
                   </Box>
-                  {totalSoldProfit >= 0 ? <TrendingUpIcon size={40} color={theme.palette.success.main} /> : <TrendingDownIcon size={40} color={theme.palette.error.main} />}
+                  {totalSoldProfit >= 0 ? <TrendingUpIcon size={35} color={theme.palette.success.main} /> : <TrendingDownIcon size={35} color={theme.palette.error.main} />}
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
@@ -728,17 +784,17 @@ export default function App() {
                 <StyledMetricCard bgcolor={profitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
                   <Box sx={{ flexGrow: 1 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.percentageProfit}</Typography>
-                    <Typography variant="h5" component="div" sx={{ color: profitColor }}>
+                    <Typography variant="h6" component="div" sx={{ color: profitColor }} fontWeight="bold">
                       {percentageProfit.toFixed(2)}%
                     </Typography>
                   </Box>
-                  <Percent size={40} color={profitColor} />
+                  <Percent size={35} color={profitColor} />
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
           </Grid>
   
-          <Paper sx={{ mb: 4, p: 1 }}>
+          <Paper sx={{ mb: 4, p: 1, mx: { xs: 2, md: 0 } }}>
             <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} aria-label="game tabs" centered>
               {GAMES.map((gameName, index) => (
                 <Tab key={index} label={gameName === "Усі" ? t.total : gameName} />
@@ -746,7 +802,7 @@ export default function App() {
             </Tabs>
           </Paper>
   
-          <Grid container spacing={3}>
+          <Grid container spacing={3} sx={{ px: { xs: 2, md: 0 } }}>
             {filteredInvestments.length === 0 ? (
               <Grid item xs={12}>
                 <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary }}>
@@ -829,6 +885,18 @@ export default function App() {
               })
             )}
           </Grid>
+  
+          {/* Плаваюча кнопка для додавання активу */}
+          <Tooltip title={t.addItem} arrow>
+            <Fab
+              color="primary"
+              aria-label="add"
+              sx={{ position: 'fixed', bottom: 24, right: 24 }}
+              onClick={() => setAddDialog(true)}
+            >
+              <Plus />
+            </Fab>
+          </Tooltip>
   
           {/* Dialogs go here (unchanged) */}
           {/* Dialog для додавання інвестиції */}
