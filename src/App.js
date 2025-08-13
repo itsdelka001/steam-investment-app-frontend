@@ -164,8 +164,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   flexDirection: 'column',
   justifyContent: 'space-between',
   padding: theme.spacing(1.5),
-  marginBottom: theme.spacing(2), // Додаємо відступ знизу
-  [theme.spacing(1.5), // Додаємо відступ знизу
+  marginBottom: theme.spacing(3), // Додаємо відступ знизу
   [theme.breakpoints.down('sm')]: {
     padding: theme.spacing(1),
     '& .MuiTypography-h6': {
