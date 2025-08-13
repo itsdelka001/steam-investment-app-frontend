@@ -7,7 +7,8 @@ import {
 } from '@mui/material';
 import {
   TrendingUp, Delete, Check, BarChart, Plus, Language, X, ArrowUp, Edit,
-  History, Settings, Tag, Palette, Rocket, Zap
+  History, Settings, Tag, Palette, Rocket, Zap, DollarSign, Percent, TrendingDown,
+  ArrowDown, TrendingUp as TrendingUpIcon, TrendingDown as TrendingDownIcon
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie,
@@ -36,15 +37,20 @@ const theme = createTheme({
     divider: '#DEE2E6',
     success: {
       main: '#28A745',
+      light: '#D4EDDA',
     },
     error: {
       main: '#DC3545',
+      light: '#F8D7DA',
     },
   },
   typography: {
     fontFamily: ['"Inter"', 'sans-serif'].join(','),
     h4: {
       fontWeight: 700,
+    },
+    h5: {
+      fontWeight: 600,
     },
   },
   components: {
@@ -151,6 +157,19 @@ const StyledCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(2),
 }));
 
+const StyledMetricCard = styled(Card)(({ theme, color, bgcolor }) => ({
+  height: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  padding: theme.spacing(3),
+  transition: 'transform 0.3s ease-in-out',
+  '&:hover': {
+    transform: 'translateY(-5px)',
+  },
+  backgroundColor: bgcolor || theme.palette.background.paper,
+  color: color || theme.palette.text.primary,
+}));
+
 const CardHeader = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
@@ -222,6 +241,10 @@ const LANGUAGES = {
     marketAnalysis: "АНАЛІЗ РИНКУ (AI)",
     marketAnalysisTitle: "ІМІТАЦІЯ АНАЛІЗУ РИНКУ",
     marketAnalysisGenerating: "ГЕНЕРАЦІЯ АНАЛІЗУ...",
+    active: "АКТИВНИЙ",
+    totalInvestmentTooltip: "Сума, вкладена в усі активи, що зараз знаходяться в портфоліо.",
+    totalProfitTooltip: "Чистий прибуток від усіх закритих операцій (проданих активів).",
+    percentageProfitTooltip: "Відношення загального прибутку до загального капіталу в процентах."
   },
   en: {
     portfolio: "STEAM INVESTMENTS",
@@ -275,6 +298,10 @@ const LANGUAGES = {
     marketAnalysis: "MARKET ANALYSIS (AI)",
     marketAnalysisTitle: "MARKET ANALYSIS SIMULATION",
     marketAnalysisGenerating: "GENERATING ANALYSIS...",
+    active: "ACTIVE",
+    totalInvestmentTooltip: "The sum of money invested in all assets currently in the portfolio.",
+    totalProfitTooltip: "Net profit from all closed operations (sold assets).",
+    percentageProfitTooltip: "The ratio of total profit to total capital, as a percentage."
   },
 };
 
@@ -282,7 +309,6 @@ const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
 const LOCAL_STORAGE_KEY = 'steam-investments';
 
 export default function App() {
-  // Завантаження даних з localStorage при першому завантаженні
   const [investments, setInvestments] = useState(() => {
     try {
       const storedInvestments = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -326,7 +352,6 @@ export default function App() {
 
   const t = LANGUAGES[lang];
 
-  // Зберігаємо дані в localStorage щоразу, коли 'investments' оновлюється
   useEffect(() => {
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(investments));
@@ -346,7 +371,7 @@ export default function App() {
   };
 
   const getGameFromItemName = (itemName) => {
-    const cs2Keywords = ["case", "sticker", "skin", "glove", "knife", "pin", "key", "capsule", "souvenir"];
+    const cs2Keywords = ["case", "sticker", "skin", "glove", "knife", "pin", "key", "capsule", "souvenir", "weapon"];
     const dota2Keywords = ["treasure", "immortal", "arcana", "set", "courier", "chest", "hero"];
     const pubgKeywords = ["crate", "box", "outfit", "skin", "key", "g-coin"];
   
@@ -361,7 +386,7 @@ export default function App() {
     if (pubgKeywords.some(keyword => lowerItemName.includes(keyword))) {
       return "PUBG";
     }
-    return "CS2"; // За замовчуванням CS2, якщо не знайдено
+    return "CS2";
   };
   
 
@@ -646,424 +671,437 @@ export default function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Container maxWidth="xl" sx={{ pt: 4, pb: 8, backgroundColor: theme.palette.background.default, minHeight: '100vh' }}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-          <Box/> {/* Empty box to balance the layout */}
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
-              <InputLabel id="language-select-label">{t.language}</InputLabel>
-              <Select
-                labelId="language-select-label"
-                value={lang}
-                onChange={(e) => setLang(e.target.value)}
-                label={t.language}
-              >
-                <MenuItem value="uk">Українська</MenuItem>
-                <MenuItem value="en">English</MenuItem>
-              </Select>
-            </FormControl>
-            <Button variant="contained" startIcon={<BarChart />} onClick={handleAnalyticsOpen}>
-              {t.analytics}
-            </Button>
-            <Button variant="contained" color="primary" startIcon={<Plus />} onClick={() => setAddDialog(true)}>
-              {t.addItem}
-            </Button>
+      <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', py: 4 }}>
+        <Container maxWidth="xl" sx={{ pt: 0, pb: 4 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+            <Box/>
+            <Typography variant="h4" color="primary" sx={{ textAlign: 'center' }}>{t.portfolio}</Typography>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <FormControl variant="outlined" size="small" sx={{ minWidth: 120 }}>
+                <InputLabel id="language-select-label">{t.language}</InputLabel>
+                <Select
+                  labelId="language-select-label"
+                  value={lang}
+                  onChange={(e) => setLang(e.target.value)}
+                  label={t.language}
+                >
+                  <MenuItem value="uk">Українська</MenuItem>
+                  <MenuItem value="en">English</MenuItem>
+                </Select>
+              </FormControl>
+              <Button variant="contained" startIcon={<BarChart />} onClick={handleAnalyticsOpen}>
+                {t.analytics}
+              </Button>
+              <Button variant="contained" color="primary" startIcon={<Plus />} onClick={() => setAddDialog(true)}>
+                {t.addItem}
+              </Button>
+            </Box>
           </Box>
-        </Box>
-
-        <Grid container spacing={3} mb={4}>
-          <Grid item xs={12} sm={6} md={4}>
-            <StyledCard>
-              <CardContent>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.totalInvestment}</Typography>
-                <Typography variant="h4" component="div">{totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}</Typography>
-              </CardContent>
-            </StyledCard>
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <StyledCard>
-              <CardContent>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.totalProfit}</Typography>
-                <Typography variant="h4" component="div" sx={{ color: profitColor }}>
-                  {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
-                </Typography>
-              </CardContent>
-            </StyledCard>
-          </Grid>
-          <Grid item xs={12} sm={6} md={4}>
-            <StyledCard>
-              <CardContent>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.percentageProfit}</Typography>
-                <Typography variant="h4" component="div" sx={{ color: profitColor }}>
-                  {percentageProfit.toFixed(2)}%
-                </Typography>
-              </CardContent>
-            </StyledCard>
-          </Grid>
-        </Grid>
-
-        <Paper sx={{ mb: 4, p: 1 }}>
-          <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} aria-label="game tabs" centered>
-            {GAMES.map((gameName, index) => (
-              <Tab key={index} label={gameName === "Усі" ? t.total : gameName} />
-            ))}
-          </Tabs>
-        </Paper>
-
-        <Grid container spacing={3}>
-          {filteredInvestments.length === 0 ? (
-            <Grid item xs={12}>
-              <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary }}>
-                <Typography variant="h6">{t.noInvestmentsInCategory}</Typography>
-              </Box>
+  
+          <Grid container spacing={3} mb={4} justifyContent="center">
+            <Grid item xs={12} sm={6} md={4}>
+              <Tooltip title={t.totalInvestmentTooltip} arrow>
+                <StyledMetricCard>
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.totalInvestment}</Typography>
+                    <Typography variant="h5" component="div">{totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}</Typography>
+                  </Box>
+                  <DollarSign size={40} color={theme.palette.primary.main} />
+                </StyledMetricCard>
+              </Tooltip>
             </Grid>
-          ) : (
-            filteredInvestments.map((item) => {
-              const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : 0;
-              const profitColorForCard = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
-              return (
-                <Grid item xs={12} sm={6} md={4} key={item.id}>
-                  <StyledCard>
-                    <CardContent>
-                      <CardHeader>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          {item.image && (
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, marginRight: 16 }}
-                            />
-                          )}
-                          <Box>
-                            <Typography variant="subtitle1" fontWeight="bold">{item.name}</Typography>
-                            <Typography variant="body2" color="text.secondary">{item.game}</Typography>
-                          </Box>
-                        </Box>
-                        <Box>
-                          <Chip label={item.sold ? t.sold : t.active} color={item.sold ? "success" : "primary"} size="small" />
-                        </Box>
-                      </CardHeader>
-                      <Divider sx={{ my: 1 }} />
-                      <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">{t.count}:</Typography>
-                          <Typography variant="h6" fontWeight="bold">{item.count}</Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">{t.buyPrice}:</Typography>
-                          <Typography variant="h6" fontWeight="bold">{item.buyPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}</Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
-                          <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
-                            {item.sold ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
-                          </Typography>
-                        </Box>
-                        <Box>
-                          <Typography variant="body2" color="text.secondary">{t.boughtDate}:</Typography>
-                          <Typography variant="h6" fontWeight="bold">{item.boughtDate}</Typography>
-                        </Box>
-                      </Box>
-                    </CardContent>
-                    <CardFooter>
-                      <Tooltip title={t.edit}>
-                        <IconButton color="secondary" onClick={() => handleEdit(item)}><Edit size={20} /></IconButton>
-                      </Tooltip>
-                      <Tooltip title={t.markAsSold}>
-                        <IconButton color="success" onClick={() => { setItemToSell(item); setSellPrice(item.buyPrice); setSellDialog(true); }} disabled={item.sold}>
-                          <TrendingUp size={20} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title={t.delete}>
-                        <IconButton color="error" onClick={() => confirmDelete(item)}><Delete size={20} /></IconButton>
-                      </Tooltip>
-                      <Tooltip title={t.priceHistory}>
-                        <IconButton color="primary" onClick={() => handlePriceHistory(item)}><History size={20} /></IconButton>
-                      </Tooltip>
-                      <Tooltip title={t.updatePrice}>
-                        <IconButton color="secondary" onClick={() => handleCurrentPriceUpdate(item)}><Zap size={20} /></IconButton>
-                      </Tooltip>
-                      <Tooltip title={t.marketAnalysis}>
-                        <IconButton color="primary" onClick={() => handleMarketAnalysis(item)}><BarChart size={20} /></IconButton>
-                      </Tooltip>
-                    </CardFooter>
-                  </StyledCard>
-                </Grid>
-              );
-            })
-          )}
-        </Grid>
-
-        {/* Dialog для додавання інвестиції */}
-        <Dialog
-          open={addDialog}
-          onClose={() => setAddDialog(false)}
-          PaperProps={{ style: { maxWidth: 'md', width: '90%', margin: 16 } }}
-        >
-          <DialogTitle>
-            <Typography variant="h6" fontWeight="bold" color="primary">{t.addInvestment}</Typography>
-          </DialogTitle>
-          <DialogContent dividers>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={selectedItemDetails ? 6 : 12}>
-                <Autocomplete
-                  options={itemOptions}
-                  getOptionLabel={(option) => option.label || ""}
-                  value={autocompleteValue}
-                  onInputChange={handleItemNameChange}
-                  onChange={handleAutocompleteChange}
-                  loading={autocompleteLoading}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label={t.name}
-                      variant="outlined"
-                      fullWidth
-                      required
-                      InputProps={{
-                        ...params.InputProps,
-                        endAdornment: (
-                          <React.Fragment>
-                            {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
-                            {params.InputProps.endAdornment}
-                          </React.Fragment>
-                        ),
-                      }}
-                    />
-                  )}
-                  renderOption={(props, option) => (
-                    <Box component="li" {...props} sx={{ '& > img': { mr: 2, flexShrink: 0 } }}>
-                      {option.image && (
-                        <img loading="lazy" width="30" src={option.image} alt={option.label} style={{borderRadius: 4}} />
-                      )}
-                      {option.label}
-                    </Box>
-                  )}
-                />
-                <Box mt={2}>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <TextField label={t.count} type="number" value={count} onChange={(e) => setCount(e.target.value)} fullWidth required InputProps={{ inputProps: { min: 1 } }} />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <FormControl fullWidth required>
-                        <InputLabel>{t.game}</InputLabel>
-                        <Select value={game} label={t.game} onChange={(e) => setGame(e.target.value)}>
-                          {GAMES.slice(1).map((gameName, index) => (
-                            <MenuItem key={index} value={gameName}>{gameName}</MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <TextField label={t.buyPrice} type="number" value={buyPrice} onChange={(e) => setBuyPrice(e.target.value)} fullWidth required InputProps={{ inputProps: { min: 0 } }} />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                      <FormControl fullWidth required>
-                        <InputLabel>{t.currency}</InputLabel>
-                        <Select value={buyCurrency} label={t.currency} onChange={(e) => setBuyCurrency(e.target.value)}>
-                          {CURRENCIES.map((currency, index) => (
-                            <MenuItem key={index} value={currency}>{CURRENCY_SYMBOLS[currency]}</MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Grid>
-                    <Grid item xs={12}>
-                      <TextField label={t.boughtDate} type="date" value={boughtDate} onChange={(e) => setBoughtDate(e.target.value)} fullWidth required InputLabelProps={{ shrink: true }} />
-                    </Grid>
-                  </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Tooltip title={t.totalProfitTooltip} arrow>
+                <StyledMetricCard bgcolor={profitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.totalProfit}</Typography>
+                    <Typography variant="h5" component="div" sx={{ color: profitColor }}>
+                      {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
+                    </Typography>
+                  </Box>
+                  {totalSoldProfit >= 0 ? <TrendingUpIcon size={40} color={theme.palette.success.main} /> : <TrendingDownIcon size={40} color={theme.palette.error.main} />}
+                </StyledMetricCard>
+              </Tooltip>
+            </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+              <Tooltip title={t.percentageProfitTooltip} arrow>
+                <StyledMetricCard bgcolor={profitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.percentageProfit}</Typography>
+                    <Typography variant="h5" component="div" sx={{ color: profitColor }}>
+                      {percentageProfit.toFixed(2)}%
+                    </Typography>
+                  </Box>
+                  <Percent size={40} color={profitColor} />
+                </StyledMetricCard>
+              </Tooltip>
+            </Grid>
+          </Grid>
+  
+          <Paper sx={{ mb: 4, p: 1 }}>
+            <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} aria-label="game tabs" centered>
+              {GAMES.map((gameName, index) => (
+                <Tab key={index} label={gameName === "Усі" ? t.total : gameName} />
+              ))}
+            </Tabs>
+          </Paper>
+  
+          <Grid container spacing={3}>
+            {filteredInvestments.length === 0 ? (
+              <Grid item xs={12}>
+                <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary }}>
+                  <Typography variant="h6">{t.noInvestmentsInCategory}</Typography>
                 </Box>
               </Grid>
-              {selectedItemDetails && (
-                <Grid item xs={12} md={6}>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, background: '#F1F3F5', borderRadius: 8, height: '100%' }}>
-                    <Typography variant="h6" mb={2} color="secondary">{t.selectedItem}</Typography>
-                    <img src={selectedItemDetails.image} alt={selectedItemDetails.label} style={{ width: 'auto', maxHeight: '150px', objectFit: 'contain', borderRadius: 8 }} />
-                    <Box mt={2} textAlign="center">
-                      <Typography variant="h6" fontWeight="bold">{selectedItemDetails.label}</Typography>
-                    </Box>
+            ) : (
+              filteredInvestments.map((item) => {
+                const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : 0;
+                const profitColorForCard = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={item.id}>
+                    <StyledCard>
+                      <CardContent>
+                        <CardHeader>
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            {item.image && (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, marginRight: 16 }}
+                              />
+                            )}
+                            <Box>
+                              <Typography variant="subtitle1" fontWeight="bold">{item.name}</Typography>
+                              <Typography variant="body2" color="text.secondary">{item.game}</Typography>
+                            </Box>
+                          </Box>
+                          <Box>
+                            <Chip label={item.sold ? t.sold : t.active} color={item.sold ? "success" : "primary"} size="small" />
+                          </Box>
+                        </CardHeader>
+                        <Divider sx={{ my: 1 }} />
+                        <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
+                          <Box>
+                            <Typography variant="body2" color="text.secondary">{t.count}:</Typography>
+                            <Typography variant="h6" fontWeight="bold">{item.count}</Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="body2" color="text.secondary">{t.buyPrice}:</Typography>
+                            <Typography variant="h6" fontWeight="bold">{item.buyPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}</Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
+                            <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
+                              {item.sold ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+                            </Typography>
+                          </Box>
+                          <Box>
+                            <Typography variant="body2" color="text.secondary">{t.boughtDate}:</Typography>
+                            <Typography variant="h6" fontWeight="bold">{item.boughtDate}</Typography>
+                          </Box>
+                        </Box>
+                      </CardContent>
+                      <CardFooter>
+                        <Tooltip title={t.edit}>
+                          <IconButton color="secondary" onClick={() => handleEdit(item)}><Edit size={20} /></IconButton>
+                        </Tooltip>
+                        <Tooltip title={t.markAsSold}>
+                          <IconButton color="success" onClick={() => { setItemToSell(item); setSellPrice(item.buyPrice); setSellDialog(true); }} disabled={item.sold}>
+                            <TrendingUp size={20} />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title={t.delete}>
+                          <IconButton color="error" onClick={() => confirmDelete(item)}><Delete size={20} /></IconButton>
+                        </Tooltip>
+                        <Tooltip title={t.priceHistory}>
+                          <IconButton color="primary" onClick={() => handlePriceHistory(item)}><History size={20} /></IconButton>
+                        </Tooltip>
+                        <Tooltip title={t.updatePrice}>
+                          <IconButton color="secondary" onClick={() => handleCurrentPriceUpdate(item)}><Zap size={20} /></IconButton>
+                        </Tooltip>
+                        <Tooltip title={t.marketAnalysis}>
+                          <IconButton color="primary" onClick={() => handleMarketAnalysis(item)}><BarChart size={20} /></IconButton>
+                        </Tooltip>
+                      </CardFooter>
+                    </StyledCard>
+                  </Grid>
+                );
+              })
+            )}
+          </Grid>
+  
+          {/* Dialogs go here (unchanged) */}
+          {/* Dialog для додавання інвестиції */}
+          <Dialog
+            open={addDialog}
+            onClose={() => setAddDialog(false)}
+            PaperProps={{ style: { maxWidth: 'md', width: '90%', margin: 16 } }}
+          >
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold" color="primary">{t.addInvestment}</Typography>
+            </DialogTitle>
+            <DialogContent dividers>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={selectedItemDetails ? 6 : 12}>
+                  <Autocomplete
+                    options={itemOptions}
+                    getOptionLabel={(option) => option.label || ""}
+                    value={autocompleteValue}
+                    onInputChange={handleItemNameChange}
+                    onChange={handleAutocompleteChange}
+                    loading={autocompleteLoading}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={t.name}
+                        variant="outlined"
+                        fullWidth
+                        required
+                        InputProps={{
+                          ...params.InputProps,
+                          endAdornment: (
+                            <React.Fragment>
+                              {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                              {params.InputProps.endAdornment}
+                            </React.Fragment>
+                          ),
+                        }}
+                      />
+                    )}
+                    renderOption={(props, option) => (
+                      <Box component="li" {...props} sx={{ '& > img': { mr: 2, flexShrink: 0 } }}>
+                        {option.image && (
+                          <img loading="lazy" width="30" src={option.image} alt={option.label} style={{borderRadius: 4}} />
+                        )}
+                        {option.label}
+                      </Box>
+                    )}
+                  />
+                  <Box mt={2}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <TextField label={t.count} type="number" value={count} onChange={(e) => setCount(e.target.value)} fullWidth required InputProps={{ inputProps: { min: 1 } }} />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth required>
+                          <InputLabel>{t.game}</InputLabel>
+                          <Select value={game} label={t.game} onChange={(e) => setGame(e.target.value)}>
+                            {GAMES.slice(1).map((gameName, index) => (
+                              <MenuItem key={index} value={gameName}>{gameName}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField label={t.buyPrice} type="number" value={buyPrice} onChange={(e) => setBuyPrice(e.target.value)} fullWidth required InputProps={{ inputProps: { min: 0 } }} />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth required>
+                          <InputLabel>{t.currency}</InputLabel>
+                          <Select value={buyCurrency} label={t.currency} onChange={(e) => setBuyCurrency(e.target.value)}>
+                            {CURRENCIES.map((currency, index) => (
+                              <MenuItem key={index} value={currency}>{CURRENCY_SYMBOLS[currency]}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField label={t.boughtDate} type="date" value={boughtDate} onChange={(e) => setBoughtDate(e.target.value)} fullWidth required InputLabelProps={{ shrink: true }} />
+                      </Grid>
+                    </Grid>
                   </Box>
                 </Grid>
+                {selectedItemDetails && (
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, background: '#F1F3F5', borderRadius: 8, height: '100%' }}>
+                      <Typography variant="h6" mb={2} color="secondary">{t.selectedItem}</Typography>
+                      <img src={selectedItemDetails.image} alt={selectedItemDetails.label} style={{ width: 'auto', maxHeight: '150px', objectFit: 'contain', borderRadius: 8 }} />
+                      <Box mt={2} textAlign="center">
+                        <Typography variant="h6" fontWeight="bold">{selectedItemDetails.label}</Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                )}
+              </Grid>
+            </DialogContent>
+            <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
+              <Button onClick={() => setAddDialog(false)} color="secondary" variant="outlined">{t.cancel}</Button>
+              <Button onClick={addItem} color="primary" variant="contained" endIcon={<ArrowUp />}>{t.save}</Button>
+            </DialogActions>
+          </Dialog>
+  
+          {/* Dialog для редагування інвестиції */}
+          <Dialog open={editDialog} onClose={() => setEditDialog(false)} PaperProps={{ style: { maxWidth: 'md', width: '90%' } }}>
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold" color="primary">{t.editItem}</Typography>
+            </DialogTitle>
+            <DialogContent dividers sx={{ p: 3 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField label={t.name} value={name} onChange={(e) => setName(e.target.value)} fullWidth required />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField label={t.count} type="number" value={count} onChange={(e) => setCount(e.target.value)} fullWidth required InputProps={{ inputProps: { min: 1 } }} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField label={t.buyPrice} type="number" value={buyPrice} onChange={(e) => setBuyPrice(e.target.value)} fullWidth required InputProps={{ inputProps: { min: 0 } }} />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth required>
+                    <InputLabel>{t.game}</InputLabel>
+                    <Select value={game} label={t.game} onChange={(e) => setGame(e.target.value)}>
+                      {GAMES.slice(1).map((gameName, index) => (
+                        <MenuItem key={index} value={gameName}>{gameName}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField label={t.boughtDate} type="date" value={boughtDate} onChange={(e) => setBoughtDate(e.target.value)} fullWidth required InputLabelProps={{ shrink: true }} />
+                </Grid>
+              </Grid>
+            </DialogContent>
+            <DialogActions sx={{ p: 3 }}>
+              <Button onClick={() => setEditDialog(false)} color="secondary" variant="outlined">{t.cancel}</Button>
+              <Button onClick={saveEditedItem} color="primary" variant="contained">{t.save}</Button>
+            </DialogActions>
+          </Dialog>
+  
+          {/* Dialog для відмічення як продано */}
+          <Dialog open={sellDialog} onClose={() => setSellDialog(false)} PaperProps={{ style: { borderRadius: 16 } }}>
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold" color="primary">{t.markAsSold}</Typography>
+            </DialogTitle>
+            <DialogContent dividers>
+              <TextField autoFocus margin="dense" label={t.sellPrice} type="number" fullWidth value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} InputProps={{ inputProps: { min: 0 } }} />
+              <TextField margin="dense" label={t.sellDate} type="date" fullWidth value={sellDate} onChange={(e) => setSellDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+            </DialogContent>
+            <DialogActions sx={{ p: 2 }}>
+              <Button onClick={() => setSellDialog(false)} color="secondary" variant="outlined">{t.cancel}</Button>
+              <Button onClick={markAsSold} color="primary" variant="contained">{t.save}</Button>
+            </DialogActions>
+          </Dialog>
+  
+          {/* Dialog для підтвердження видалення */}
+          <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} PaperProps={{ style: { borderRadius: 16 } }}>
+            <DialogTitle>{t.deleteConfirmation}</DialogTitle>
+            <DialogContent>
+              <Typography>{t.deleteConfirmation}</Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setDeleteDialogOpen(false)} color="secondary">{t.no}</Button>
+              <Button onClick={handleDelete} color="error">{t.yes}</Button>
+            </DialogActions>
+          </Dialog>
+  
+          {/* Dialog для аналітики */}
+          <Dialog open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold" color="primary">{t.analytics}</Typography>
+            </DialogTitle>
+            <DialogContent dividers>
+              <Typography variant="h6" mb={2} color="secondary">{t.totalProfit} ({CURRENCY_SYMBOLS[buyCurrency]})</Typography>
+              {cumulativeProfit.length === 0 ? (
+                <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={cumulativeProfit} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
+                    <XAxis dataKey="date" stroke="#666" />
+                    <YAxis stroke="#666" />
+                    <ChartTooltip contentStyle={{ backgroundColor: '#F8F9FA', border: '1px solid #ccc', borderRadius: 8 }} />
+                    <Legend />
+                    <Line type="monotone" dataKey="profit" stroke={theme.palette.primary.main} activeDot={{ r: 8 }} name={t.profit} />
+                  </LineChart>
+                </ResponsiveContainer>
               )}
-            </Grid>
-          </DialogContent>
-          <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
-            <Button onClick={() => setAddDialog(false)} color="secondary" variant="outlined">{t.cancel}</Button>
-            <Button onClick={addItem} color="primary" variant="contained" endIcon={<ArrowUp />}>{t.save}</Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Dialog для редагування інвестиції */}
-        <Dialog open={editDialog} onClose={() => setEditDialog(false)} PaperProps={{ style: { maxWidth: 'md', width: '90%' } }}>
-          <DialogTitle>
-            <Typography variant="h6" fontWeight="bold" color="primary">{t.editItem}</Typography>
-          </DialogTitle>
-          <DialogContent dividers sx={{ p: 3 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField label={t.name} value={name} onChange={(e) => setName(e.target.value)} fullWidth required />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField label={t.count} type="number" value={count} onChange={(e) => setCount(e.target.value)} fullWidth required InputProps={{ inputProps: { min: 1 } }} />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField label={t.buyPrice} type="number" value={buyPrice} onChange={(e) => setBuyPrice(e.target.value)} fullWidth required InputProps={{ inputProps: { min: 0 } }} />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth required>
-                  <InputLabel>{t.game}</InputLabel>
-                  <Select value={game} label={t.game} onChange={(e) => setGame(e.target.value)}>
-                    {GAMES.slice(1).map((gameName, index) => (
-                      <MenuItem key={index} value={gameName}>{gameName}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12}>
-                <TextField label={t.boughtDate} type="date" value={boughtDate} onChange={(e) => setBoughtDate(e.target.value)} fullWidth required InputLabelProps={{ shrink: true }} />
-              </Grid>
-            </Grid>
-          </DialogContent>
-          <DialogActions sx={{ p: 3 }}>
-            <Button onClick={() => setEditDialog(false)} color="secondary" variant="outlined">{t.cancel}</Button>
-            <Button onClick={saveEditedItem} color="primary" variant="contained">{t.save}</Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Dialog для відмічення як продано */}
-        <Dialog open={sellDialog} onClose={() => setSellDialog(false)} PaperProps={{ style: { borderRadius: 16 } }}>
-          <DialogTitle>
-            <Typography variant="h6" fontWeight="bold" color="primary">{t.markAsSold}</Typography>
-          </DialogTitle>
-          <DialogContent dividers>
-            <TextField autoFocus margin="dense" label={t.sellPrice} type="number" fullWidth value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} InputProps={{ inputProps: { min: 0 } }} />
-            <TextField margin="dense" label={t.sellDate} type="date" fullWidth value={sellDate} onChange={(e) => setSellDate(e.target.value)} InputLabelProps={{ shrink: true }} />
-          </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button onClick={() => setSellDialog(false)} color="secondary" variant="outlined">{t.cancel}</Button>
-            <Button onClick={markAsSold} color="primary" variant="contained">{t.save}</Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Dialog для підтвердження видалення */}
-        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} PaperProps={{ style: { borderRadius: 16 } }}>
-          <DialogTitle>{t.deleteConfirmation}</DialogTitle>
-          <DialogContent>
-            <Typography>{t.deleteConfirmation}</Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDeleteDialogOpen(false)} color="secondary">{t.no}</Button>
-            <Button onClick={handleDelete} color="error">{t.yes}</Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Dialog для аналітики */}
-        <Dialog open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
-          <DialogTitle>
-            <Typography variant="h6" fontWeight="bold" color="primary">{t.analytics}</Typography>
-          </DialogTitle>
-          <DialogContent dividers>
-            <Typography variant="h6" mb={2} color="secondary">{t.totalProfit} ({CURRENCY_SYMBOLS[buyCurrency]})</Typography>
-            {cumulativeProfit.length === 0 ? (
-              <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={cumulativeProfit} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
-                  <XAxis dataKey="date" stroke="#666" />
-                  <YAxis stroke="#666" />
-                  <ChartTooltip contentStyle={{ backgroundColor: '#F8F9FA', border: '1px solid #ccc', borderRadius: 8 }} />
-                  <Legend />
-                  <Line type="monotone" dataKey="profit" stroke={theme.palette.primary.main} activeDot={{ r: 8 }} name={t.profit} />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-            <Divider sx={{ my: 3 }} />
-            <Typography variant="h6" mb={2} color="secondary">{t.investmentDistribution}</Typography>
-            {investmentDistributionData.length === 0 ? (
-              <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie data={investmentDistributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill={theme.palette.primary.main} label>
-                    {investmentDistributionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip contentStyle={{ backgroundColor: '#F8F9FA', border: '1px solid #ccc', borderRadius: 8 }} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setAnalyticsOpen(false)} color="secondary" variant="outlined">{t.cancel}</Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Dialog для історії ціни */}
-        <Dialog open={priceHistoryOpen} onClose={() => setPriceHistoryOpen(false)} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
-          <DialogTitle>
-            <Typography variant="h6" fontWeight="bold" color="primary">{t.priceHistory}</Typography>
-          </DialogTitle>
-          <DialogContent dividers>
-            {priceHistoryLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                <CircularProgress />
-              </Box>
-            ) : priceHistory.length === 0 ? (
-              <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={priceHistory} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
-                  <XAxis dataKey="date" stroke="#666" />
-                  <YAxis stroke="#666" />
-                  <ChartTooltip contentStyle={{ backgroundColor: '#F8F9FA', border: '1px solid #ccc', borderRadius: 8 }} />
-                  <Legend />
-                  <Line type="monotone" dataKey="price" stroke={theme.palette.secondary.main} activeDot={{ r: 8 }} name="Ціна" />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setPriceHistoryOpen(false)} color="secondary" variant="outlined">{t.cancel}</Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Dialog для аналізу ринку */}
-        <Dialog open={marketAnalysisDialog} onClose={() => setMarketAnalysisDialog(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
-          <DialogTitle>
-            <Typography variant="h6" fontWeight="bold" color="primary">{t.marketAnalysisTitle}</Typography>
-          </DialogTitle>
-          <DialogContent dividers>
-            {analysisLoading ? (
-              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 4 }}>
-                <CircularProgress color="primary" />
-                <Typography variant="body1" mt={2} color="secondary">{t.marketAnalysisGenerating}</Typography>
-              </Box>
-            ) : (
-              <Box>
-                <Typography variant="h6" mb={1} color="secondary">{itemToAnalyze?.name}</Typography>
-                <Divider sx={{ my: 1 }} />
-                <Typography sx={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', color: 'text.secondary' }}>
-                  {analysisText}
-                </Typography>
-              </Box>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setMarketAnalysisDialog(false)} color="secondary" variant="outlined">{t.cancel}</Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* Snackbar для сповіщень */}
-        <Snackbar open={snackbar.open} autoHideDuration={3500} onClose={closeSnackbar} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-          <Alert onClose={closeSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
-            {snackbar.message}
-          </Alert>
-        </Snackbar>
-      </Container>
+              <Divider sx={{ my: 3 }} />
+              <Typography variant="h6" mb={2} color="secondary">{t.investmentDistribution}</Typography>
+              {investmentDistributionData.length === 0 ? (
+                <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie data={investmentDistributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill={theme.palette.primary.main} label>
+                      {investmentDistributionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <ChartTooltip contentStyle={{ backgroundColor: '#F8F9FA', border: '1px solid #ccc', borderRadius: 8 }} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setAnalyticsOpen(false)} color="secondary" variant="outlined">{t.cancel}</Button>
+            </DialogActions>
+          </Dialog>
+  
+          {/* Dialog для історії ціни */}
+          <Dialog open={priceHistoryOpen} onClose={() => setPriceHistoryOpen(false)} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold" color="primary">{t.priceHistory}</Typography>
+            </DialogTitle>
+            <DialogContent dividers>
+              {priceHistoryLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                  <CircularProgress />
+                </Box>
+              ) : priceHistory.length === 0 ? (
+                <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={priceHistory} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
+                    <XAxis dataKey="date" stroke="#666" />
+                    <YAxis stroke="#666" />
+                    <ChartTooltip contentStyle={{ backgroundColor: '#F8F9FA', border: '1px solid #ccc', borderRadius: 8 }} />
+                    <Legend />
+                    <Line type="monotone" dataKey="price" stroke={theme.palette.secondary.main} activeDot={{ r: 8 }} name="Ціна" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setPriceHistoryOpen(false)} color="secondary" variant="outlined">{t.cancel}</Button>
+            </DialogActions>
+          </Dialog>
+  
+          {/* Dialog для аналізу ринку */}
+          <Dialog open={marketAnalysisDialog} onClose={() => setMarketAnalysisDialog(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold" color="primary">{t.marketAnalysisTitle}</Typography>
+            </DialogTitle>
+            <DialogContent dividers>
+              {analysisLoading ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 4 }}>
+                  <CircularProgress color="primary" />
+                  <Typography variant="body1" mt={2} color="secondary">{t.marketAnalysisGenerating}</Typography>
+                </Box>
+              ) : (
+                <Box>
+                  <Typography variant="h6" mb={1} color="secondary">{itemToAnalyze?.name}</Typography>
+                  <Divider sx={{ my: 1 }} />
+                  <Typography sx={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', color: 'text.secondary' }}>
+                    {analysisText}
+                  </Typography>
+                </Box>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setMarketAnalysisDialog(false)} color="secondary" variant="outlined">{t.cancel}</Button>
+            </DialogActions>
+          </Dialog>
+  
+          {/* Snackbar для сповіщень */}
+          <Snackbar open={snackbar.open} autoHideDuration={3500} onClose={closeSnackbar} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+            <Alert onClose={closeSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
+        </Container>
+      </Box>
     </ThemeProvider>
   );
 }
