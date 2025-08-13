@@ -62,10 +62,10 @@ const theme = createTheme({
         root: {
           borderRadius: 8,
           textTransform: 'none',
-          boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
           transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
           '&:hover': {
-            boxShadow: '0 8px 15px rgba(0,0,0,0.15)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
             transform: 'translateY(-2px)',
           },
         },
@@ -79,7 +79,7 @@ const theme = createTheme({
         root: {
           borderRadius: 12,
           background: '#FFFFFF',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
         },
       },
     },
@@ -100,12 +100,12 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 12,
-          boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
           background: '#FFFFFF',
           transition: 'box-shadow 0.3s, transform 0.3s',
           '&:hover': {
-            boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
-            transform: 'translateY(-4px)',
+            boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
+            transform: 'translateY(-3px)',
           },
         },
       },
@@ -115,7 +115,7 @@ const theme = createTheme({
         paper: {
           borderRadius: 16,
           background: '#F8F9FA',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
         },
       },
     },
@@ -146,6 +146,7 @@ const theme = createTheme({
           color: '#E0E0E0',
           borderRadius: 8,
           boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+          fontSize: '0.875rem',
         },
       },
     },
@@ -156,21 +157,20 @@ const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
   display: 'flex',
   flexDirection: 'column',
-  justifyContent: 'center',
+  justifyContent: 'space-between',
   padding: theme.spacing(2),
 }));
 
-const StyledMetricCard = styled(Card)(({ theme, color, bgcolor }) => ({
-  height: '100%',
-  display: 'flex',
-  alignItems: 'center',
-  padding: theme.spacing(3),
-  transition: 'transform 0.3s ease-in-out',
-  '&:hover': {
-    transform: 'translateY(-5px)',
-  },
+const StyledMetricCard = styled(Card)(({ theme, bgcolor }) => ({
+  padding: theme.spacing(2),
+  borderRadius: 12,
+  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
   backgroundColor: bgcolor || theme.palette.background.paper,
-  color: color || theme.palette.text.primary,
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: '0 6px 16px rgba(0,0,0,0.12)',
+  },
 }));
 
 const CardHeader = styled(Box)(({ theme }) => ({
@@ -182,7 +182,7 @@ const CardHeader = styled(Box)(({ theme }) => ({
 
 const CardFooter = styled(Box)(({ theme }) => ({
   display: 'flex',
-  justifyContent: 'space-around',
+  justifyContent: 'space-between',
   alignItems: 'center',
   paddingTop: theme.spacing(2),
 }));
@@ -685,12 +685,20 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', pb: 4 }}>
         <Container maxWidth="xl" sx={{ pt: 0, pb: 4 }}>
-          {/* Мінімалістичний хедер */}
-          <Paper elevation={0} sx={{ py: 2, px: 3, mb: 4, borderRadius: 0, borderBottom: '1px solid #DEE2E6', background: 'transparent' }}>
+          {/* Оновлений хедер */}
+          <Paper elevation={0} sx={{ 
+            py: 2, 
+            px: 3, 
+            mb: 4, 
+            borderRadius: 2,
+            background: theme.palette.background.paper,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+          }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
-              {/* Плейсхолдер логотипу */}
-              <Typography variant="h6" color="primary" fontWeight="bold">LOGO</Typography>
-              <Box>
+              <Typography variant="h6" color="primary" fontWeight="bold">
+                {t.portfolio}
+              </Typography>
+              <Box display="flex" gap={1}>
                 <Tooltip title={t.analytics}>
                   <IconButton color="secondary" onClick={handleAnalyticsOpen}>
                     <BarChart />
@@ -752,55 +760,89 @@ export default function App() {
             </Box>
           </Paper>
   
-          {/* Виправлений Grid з фінансовими показниками */}
-          <Grid container spacing={3} mb={4} justifyContent="center" sx={{ px: { xs: 2, md: 0 } }}>
-            <Grid item xs={12} sm={6} md={4}>
+          {/* Оновлений Grid з фінансовими показниками */}
+          <Grid container spacing={2} mb={4} sx={{ px: { xs: 2, md: 0 } }}>
+            <Grid item xs={12} sm={4}>
               <Tooltip title={t.totalInvestmentTooltip} arrow>
                 <StyledMetricCard>
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.totalInvestment}</Typography>
-                    <Typography variant="h6" component="div" fontWeight="bold">{totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}</Typography>
+                  <Box display="flex" alignItems="center" gap={2}>
+                    <DollarSign size={24} color={theme.palette.primary.main} />
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">{t.totalInvestment}</Typography>
+                      <Typography variant="h6" fontWeight="bold">
+                        {totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
+                      </Typography>
+                    </Box>
                   </Box>
-                  <DollarSign size={35} color={theme.palette.primary.main} />
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={4}>
               <Tooltip title={t.totalProfitTooltip} arrow>
                 <StyledMetricCard bgcolor={profitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.totalProfit}</Typography>
-                    <Typography variant="h6" component="div" sx={{ color: profitColor }} fontWeight="bold">
-                      {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
-                    </Typography>
+                  <Box display="flex" alignItems="center" gap={2}>
+                    {totalSoldProfit >= 0 ? 
+                      <TrendingUp size={24} color={theme.palette.success.main} /> : 
+                      <TrendingDown size={24} color={theme.palette.error.main} />
+                    }
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">{t.totalProfit}</Typography>
+                      <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
+                        {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
+                      </Typography>
+                    </Box>
                   </Box>
-                  {totalSoldProfit >= 0 ? <TrendingUp size={35} color={theme.palette.success.main} /> : <TrendingDown size={35} color={theme.palette.error.main} />}
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
-            <Grid item xs={12} sm={6} md={4}>
+            <Grid item xs={12} sm={4}>
               <Tooltip title={t.percentageProfitTooltip} arrow>
-                <StyledMetricCard bgcolor={profitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{t.percentageProfit}</Typography>
-                    <Typography variant="h6" component="div" sx={{ color: profitColor }} fontWeight="bold">
-                      {percentageProfit.toFixed(2)}%
-                    </Typography>
+                <StyledMetricCard>
+                  <Box display="flex" alignItems="center" gap={2}>
+                    <Percent size={24} color={profitColor} />
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">{t.percentageProfit}</Typography>
+                      <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
+                        {percentageProfit.toFixed(2)}%
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Percent size={35} color={profitColor} />
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
           </Grid>
   
+          {/* Tabs для фільтрації по іграм */}
           <Paper sx={{ mb: 4, p: 1, mx: { xs: 2, md: 0 } }}>
-            <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} aria-label="game tabs" centered>
+            <Tabs 
+              value={tabValue} 
+              onChange={(e, newValue) => setTabValue(newValue)} 
+              aria-label="game tabs" 
+              centered
+              sx={{
+                '& .MuiTabs-indicator': {
+                  backgroundColor: theme.palette.primary.main,
+                }
+              }}
+            >
               {GAMES.map((gameName, index) => (
-                <Tab key={index} label={gameName === "Усі" ? t.total : gameName} />
+                <Tab 
+                  key={index} 
+                  label={gameName === "Усі" ? t.total : gameName} 
+                  sx={{
+                    minWidth: 0,
+                    padding: '6px 12px',
+                    fontSize: '0.875rem',
+                    '&.Mui-selected': {
+                      color: theme.palette.primary.main,
+                    }
+                  }}
+                />
               ))}
             </Tabs>
           </Paper>
   
+          {/* Список інвестицій */}
           <Grid container spacing={3} sx={{ px: { xs: 2, md: 0 } }}>
             {filteredInvestments.length === 0 ? (
               <Grid item xs={12}>
@@ -817,24 +859,31 @@ export default function App() {
                     <StyledCard>
                       <CardContent>
                         <CardHeader>
-                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             {item.image && (
                               <img
                                 src={item.image}
                                 alt={item.name}
-                                style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, marginRight: 16 }}
+                                style={{ width: 50, height: 50, objectFit: 'cover', borderRadius: 8 }}
                               />
                             )}
-                            <Box>
-                              <Typography variant="subtitle1" fontWeight="bold">{item.name}</Typography>
-                              <Typography variant="body2" color="text.secondary">{item.game}</Typography>
+                            <Box sx={{ overflow: 'hidden' }}>
+                              <Typography variant="subtitle1" fontWeight="bold" noWrap>
+                                {item.name}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {item.game}
+                              </Typography>
                             </Box>
                           </Box>
-                          <Box>
-                            <Chip label={item.sold ? t.sold : t.active} color={item.sold ? "success" : "primary"} size="small" />
-                          </Box>
+                          <Chip 
+                            label={item.sold ? t.sold : t.active} 
+                            color={item.sold ? "success" : "primary"} 
+                            size="small" 
+                            sx={{ ml: 1 }}
+                          />
                         </CardHeader>
-                        <Divider sx={{ my: 1 }} />
+                        <Divider sx={{ my: 2 }} />
                         <Box display="grid" gridTemplateColumns="1fr 1fr" gap={2}>
                           <Box>
                             <Typography variant="body2" color="text.secondary">{t.count}:</Typography>
@@ -842,7 +891,9 @@ export default function App() {
                           </Box>
                           <Box>
                             <Typography variant="body2" color="text.secondary">{t.buyPrice}:</Typography>
-                            <Typography variant="h6" fontWeight="bold">{item.buyPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}</Typography>
+                            <Typography variant="h6" fontWeight="bold">
+                              {item.buyPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}
+                            </Typography>
                           </Box>
                           <Box>
                             <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
@@ -857,26 +908,43 @@ export default function App() {
                         </Box>
                       </CardContent>
                       <CardFooter>
-                        <Tooltip title={t.edit}>
-                          <IconButton color="secondary" onClick={() => handleEdit(item)}><Edit size={20} /></IconButton>
-                        </Tooltip>
-                        <Tooltip title={t.markAsSold}>
-                          <IconButton color="success" onClick={() => { setItemToSell(item); setSellPrice(item.buyPrice); setSellDialog(true); }} disabled={item.sold}>
-                            <TrendingUp size={20} />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip title={t.delete}>
-                          <IconButton color="error" onClick={() => confirmDelete(item)}><Delete size={20} /></IconButton>
-                        </Tooltip>
-                        <Tooltip title={t.priceHistory}>
-                          <IconButton color="primary" onClick={() => handlePriceHistory(item)}><History size={20} /></IconButton>
-                        </Tooltip>
-                        <Tooltip title={t.updatePrice}>
-                          <IconButton color="secondary" onClick={() => handleCurrentPriceUpdate(item)}><Zap size={20} /></IconButton>
-                        </Tooltip>
-                        <Tooltip title={t.marketAnalysis}>
-                          <IconButton color="primary" onClick={() => handleMarketAnalysis(item)}><BarChart size={20} /></IconButton>
-                        </Tooltip>
+                        <Box display="flex" gap={1}>
+                          <Tooltip title={t.edit}>
+                            <IconButton color="secondary" onClick={() => handleEdit(item)} size="small">
+                              <Edit size={18} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title={t.markAsSold}>
+                            <IconButton 
+                              color="success" 
+                              onClick={() => { setItemToSell(item); setSellPrice(item.buyPrice); setSellDialog(true); }} 
+                              disabled={item.sold}
+                              size="small"
+                            >
+                              <TrendingUp size={18} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title={t.delete}>
+                            <IconButton color="error" onClick={() => confirmDelete(item)} size="small">
+                              <Delete size={18} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title={t.priceHistory}>
+                            <IconButton color="primary" onClick={() => handlePriceHistory(item)} size="small">
+                              <History size={18} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title={t.updatePrice}>
+                            <IconButton color="secondary" onClick={() => handleCurrentPriceUpdate(item)} size="small">
+                              <Zap size={18} />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title={t.marketAnalysis}>
+                            <IconButton color="primary" onClick={() => handleMarketAnalysis(item)} size="small">
+                              <BarChart size={18} />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
                       </CardFooter>
                     </StyledCard>
                   </Grid>
@@ -890,7 +958,15 @@ export default function App() {
             <Fab
               color="primary"
               aria-label="add"
-              sx={{ position: 'fixed', bottom: 24, right: 24 }}
+              sx={{ 
+                position: 'fixed', 
+                bottom: 24, 
+                right: 24,
+                boxShadow: '0 4px 12px rgba(74, 20, 140, 0.3)',
+                '&:hover': {
+                  transform: 'scale(1.1)',
+                }
+              }}
               onClick={() => setAddDialog(true)}
             >
               <Plus />
@@ -946,12 +1022,25 @@ export default function App() {
                   <Box mt={2}>
                     <Grid container spacing={2}>
                       <Grid item xs={12} sm={6}>
-                        <TextField label={t.count} type="number" value={count} onChange={(e) => setCount(e.target.value)} fullWidth required InputProps={{ inputProps: { min: 1 } }} />
+                        <TextField 
+                          label={t.count} 
+                          type="number" 
+                          value={count} 
+                          onChange={(e) => setCount(e.target.value)} 
+                          fullWidth 
+                          required 
+                          InputProps={{ inputProps: { min: 1 } }} 
+                        />
                       </Grid>
                       <Grid item xs={12} sm={6}>
                         <FormControl fullWidth required>
                           <InputLabel>{t.game}</InputLabel>
-                          <Select value={game} label={t.game} onChange={(e) => setGame(e.target.value)}>
+                          <Select 
+                            value={game} 
+                            label={t.game} 
+                            onChange={(e) => setGame(e.target.value)}
+                            sx={{ borderRadius: 8 }}
+                          >
                             {GAMES.slice(1).map((gameName, index) => (
                               <MenuItem key={index} value={gameName}>{gameName}</MenuItem>
                             ))}
@@ -959,12 +1048,25 @@ export default function App() {
                         </FormControl>
                       </Grid>
                       <Grid item xs={12} sm={6}>
-                        <TextField label={t.buyPrice} type="number" value={buyPrice} onChange={(e) => setBuyPrice(e.target.value)} fullWidth required InputProps={{ inputProps: { min: 0 } }} />
+                        <TextField 
+                          label={t.buyPrice} 
+                          type="number" 
+                          value={buyPrice} 
+                          onChange={(e) => setBuyPrice(e.target.value)} 
+                          fullWidth 
+                          required 
+                          InputProps={{ inputProps: { min: 0 } }} 
+                        />
                       </Grid>
                       <Grid item xs={12} sm={6}>
                         <FormControl fullWidth required>
                           <InputLabel>{t.currency}</InputLabel>
-                          <Select value={buyCurrency} label={t.currency} onChange={(e) => setBuyCurrency(e.target.value)}>
+                          <Select 
+                            value={buyCurrency} 
+                            label={t.currency} 
+                            onChange={(e) => setBuyCurrency(e.target.value)}
+                            sx={{ borderRadius: 8 }}
+                          >
                             {CURRENCIES.map((currency, index) => (
                               <MenuItem key={index} value={currency}>{CURRENCY_SYMBOLS[currency]}</MenuItem>
                             ))}
@@ -972,17 +1074,43 @@ export default function App() {
                         </FormControl>
                       </Grid>
                       <Grid item xs={12}>
-                        <TextField label={t.boughtDate} type="date" value={boughtDate} onChange={(e) => setBoughtDate(e.target.value)} fullWidth required InputLabelProps={{ shrink: true }} />
+                        <TextField 
+                          label={t.boughtDate} 
+                          type="date" 
+                          value={boughtDate} 
+                          onChange={(e) => setBoughtDate(e.target.value)} 
+                          fullWidth 
+                          required 
+                          InputLabelProps={{ shrink: true }} 
+                        />
                       </Grid>
                     </Grid>
                   </Box>
                 </Grid>
                 {selectedItemDetails && (
                   <Grid item xs={12} md={6}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 3, background: '#F1F3F5', borderRadius: 8, height: '100%' }}>
-                      <Typography variant="h6" mb={2} color="secondary">{t.selectedItem}</Typography>
-                      <img src={selectedItemDetails.image} alt={selectedItemDetails.label} style={{ width: 'auto', maxHeight: '150px', objectFit: 'contain', borderRadius: 8 }} />
-                      <Box mt={2} textAlign="center">
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      alignItems: 'center', 
+                      p: 3, 
+                      background: '#F1F3F5', 
+                      borderRadius: 8, 
+                      height: '100%',
+                      gap: 2
+                    }}>
+                      <Typography variant="h6" color="secondary">{t.selectedItem}</Typography>
+                      <img 
+                        src={selectedItemDetails.image} 
+                        alt={selectedItemDetails.label} 
+                        style={{ 
+                          width: 'auto', 
+                          maxHeight: '150px', 
+                          objectFit: 'contain', 
+                          borderRadius: 8 
+                        }} 
+                      />
+                      <Box textAlign="center">
                         <Typography variant="h6" fontWeight="bold">{selectedItemDetails.label}</Typography>
                       </Box>
                     </Box>
@@ -991,8 +1119,23 @@ export default function App() {
               </Grid>
             </DialogContent>
             <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
-              <Button onClick={() => setAddDialog(false)} color="secondary" variant="outlined">{t.cancel}</Button>
-              <Button onClick={addItem} color="primary" variant="contained" endIcon={<ArrowUp />}>{t.save}</Button>
+              <Button 
+                onClick={() => setAddDialog(false)} 
+                color="secondary" 
+                variant="outlined"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.cancel}
+              </Button>
+              <Button 
+                onClick={addItem} 
+                color="primary" 
+                variant="contained" 
+                endIcon={<ArrowUp />}
+                sx={{ borderRadius: 8 }}
+              >
+                {t.save}
+              </Button>
             </DialogActions>
           </Dialog>
   
@@ -1004,18 +1147,45 @@ export default function App() {
             <DialogContent dividers sx={{ p: 3 }}>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <TextField label={t.name} value={name} onChange={(e) => setName(e.target.value)} fullWidth required />
+                  <TextField 
+                    label={t.name} 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
+                    fullWidth 
+                    required 
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField label={t.count} type="number" value={count} onChange={(e) => setCount(e.target.value)} fullWidth required InputProps={{ inputProps: { min: 1 } }} />
+                  <TextField 
+                    label={t.count} 
+                    type="number" 
+                    value={count} 
+                    onChange={(e) => setCount(e.target.value)} 
+                    fullWidth 
+                    required 
+                    InputProps={{ inputProps: { min: 1 } }} 
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField label={t.buyPrice} type="number" value={buyPrice} onChange={(e) => setBuyPrice(e.target.value)} fullWidth required InputProps={{ inputProps: { min: 0 } }} />
+                  <TextField 
+                    label={t.buyPrice} 
+                    type="number" 
+                    value={buyPrice} 
+                    onChange={(e) => setBuyPrice(e.target.value)} 
+                    fullWidth 
+                    required 
+                    InputProps={{ inputProps: { min: 0 } }} 
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <FormControl fullWidth required>
                     <InputLabel>{t.game}</InputLabel>
-                    <Select value={game} label={t.game} onChange={(e) => setGame(e.target.value)}>
+                    <Select 
+                      value={game} 
+                      label={t.game} 
+                      onChange={(e) => setGame(e.target.value)}
+                      sx={{ borderRadius: 8 }}
+                    >
                       {GAMES.slice(1).map((gameName, index) => (
                         <MenuItem key={index} value={gameName}>{gameName}</MenuItem>
                       ))}
@@ -1023,13 +1193,35 @@ export default function App() {
                   </FormControl>
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField label={t.boughtDate} type="date" value={boughtDate} onChange={(e) => setBoughtDate(e.target.value)} fullWidth required InputLabelProps={{ shrink: true }} />
+                  <TextField 
+                    label={t.boughtDate} 
+                    type="date" 
+                    value={boughtDate} 
+                    onChange={(e) => setBoughtDate(e.target.value)} 
+                    fullWidth 
+                    required 
+                    InputLabelProps={{ shrink: true }} 
+                  />
                 </Grid>
               </Grid>
             </DialogContent>
             <DialogActions sx={{ p: 3 }}>
-              <Button onClick={() => setEditDialog(false)} color="secondary" variant="outlined">{t.cancel}</Button>
-              <Button onClick={saveEditedItem} color="primary" variant="contained">{t.save}</Button>
+              <Button 
+                onClick={() => setEditDialog(false)} 
+                color="secondary" 
+                variant="outlined"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.cancel}
+              </Button>
+              <Button 
+                onClick={saveEditedItem} 
+                color="primary" 
+                variant="contained"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.save}
+              </Button>
             </DialogActions>
           </Dialog>
   
@@ -1039,12 +1231,44 @@ export default function App() {
               <Typography variant="h6" fontWeight="bold" color="primary">{t.markAsSold}</Typography>
             </DialogTitle>
             <DialogContent dividers>
-              <TextField autoFocus margin="dense" label={t.sellPrice} type="number" fullWidth value={sellPrice} onChange={(e) => setSellPrice(e.target.value)} InputProps={{ inputProps: { min: 0 } }} />
-              <TextField margin="dense" label={t.sellDate} type="date" fullWidth value={sellDate} onChange={(e) => setSellDate(e.target.value)} InputLabelProps={{ shrink: true }} />
+              <TextField 
+                autoFocus 
+                margin="dense" 
+                label={t.sellPrice} 
+                type="number" 
+                fullWidth 
+                value={sellPrice} 
+                onChange={(e) => setSellPrice(e.target.value)} 
+                InputProps={{ inputProps: { min: 0 } }} 
+                sx={{ mb: 2 }}
+              />
+              <TextField 
+                margin="dense" 
+                label={t.sellDate} 
+                type="date" 
+                fullWidth 
+                value={sellDate} 
+                onChange={(e) => setSellDate(e.target.value)} 
+                InputLabelProps={{ shrink: true }} 
+              />
             </DialogContent>
             <DialogActions sx={{ p: 2 }}>
-              <Button onClick={() => setSellDialog(false)} color="secondary" variant="outlined">{t.cancel}</Button>
-              <Button onClick={markAsSold} color="primary" variant="contained">{t.save}</Button>
+              <Button 
+                onClick={() => setSellDialog(false)} 
+                color="secondary" 
+                variant="outlined"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.cancel}
+              </Button>
+              <Button 
+                onClick={markAsSold} 
+                color="primary" 
+                variant="contained"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.save}
+              </Button>
             </DialogActions>
           </Dialog>
   
@@ -1055,8 +1279,20 @@ export default function App() {
               <Typography>{t.deleteConfirmation}</Typography>
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setDeleteDialogOpen(false)} color="secondary">{t.no}</Button>
-              <Button onClick={handleDelete} color="error">{t.yes}</Button>
+              <Button 
+                onClick={() => setDeleteDialogOpen(false)} 
+                color="secondary"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.no}
+              </Button>
+              <Button 
+                onClick={handleDelete} 
+                color="error"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.yes}
+              </Button>
             </DialogActions>
           </Dialog>
   
@@ -1100,7 +1336,14 @@ export default function App() {
               )}
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setAnalyticsOpen(false)} color="secondary" variant="outlined">{t.cancel}</Button>
+              <Button 
+                onClick={() => setAnalyticsOpen(false)} 
+                color="secondary" 
+                variant="outlined"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.cancel}
+              </Button>
             </DialogActions>
           </Dialog>
   
@@ -1130,7 +1373,14 @@ export default function App() {
               )}
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setPriceHistoryOpen(false)} color="secondary" variant="outlined">{t.cancel}</Button>
+              <Button 
+                onClick={() => setPriceHistoryOpen(false)} 
+                color="secondary" 
+                variant="outlined"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.cancel}
+              </Button>
             </DialogActions>
           </Dialog>
   
@@ -1156,13 +1406,33 @@ export default function App() {
               )}
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setMarketAnalysisDialog(false)} color="secondary" variant="outlined">{t.cancel}</Button>
+              <Button 
+                onClick={() => setMarketAnalysisDialog(false)} 
+                color="secondary" 
+                variant="outlined"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.cancel}
+              </Button>
             </DialogActions>
           </Dialog>
   
           {/* Snackbar для сповіщень */}
-          <Snackbar open={snackbar.open} autoHideDuration={3500} onClose={closeSnackbar} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
-            <Alert onClose={closeSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          <Snackbar 
+            open={snackbar.open} 
+            autoHideDuration={3500} 
+            onClose={closeSnackbar} 
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+          >
+            <Alert 
+              onClose={closeSnackbar} 
+              severity={snackbar.severity} 
+              sx={{ 
+                width: '100%',
+                borderRadius: 8,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              }}
+            >
               {snackbar.message}
             </Alert>
           </Snackbar>
