@@ -16,8 +16,6 @@ import {
 } from 'recharts';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 
-const HW = 'Hello World';
-
 const theme = createTheme({
   palette: {
     mode: 'light',
@@ -164,7 +162,6 @@ const StyledCard = styled(Card)(({ theme }) => ({
   flexDirection: 'column',
   justifyContent: 'space-between',
   padding: theme.spacing(1.5),
-  marginBottom: theme.spacing(2), // Виправлено відступ
   [theme.breakpoints.down('sm')]: {
     padding: theme.spacing(1),
     '& .MuiTypography-h6': {
@@ -947,7 +944,7 @@ export default function App() {
             </Box>
           </Paper>
   
-          <Grid container spacing={2} mb={4} justifyContent="center" sx={{ px: { xs: 1, md: 0 }, rowSpacing: 2 }}>
+          <Grid container spacing={2} mb={4} justifyContent="center" sx={{ px: { xs: 1, md: 0 } }}>
             <Grid item xs={12} sm={6} md={3}>
               <Tooltip title={t.totalInvestmentTooltip} arrow>
                 <StyledMetricCard>
@@ -1037,7 +1034,13 @@ export default function App() {
             </Tabs>
           </Paper>
   
-          <Grid container spacing={2} sx={{ px: { xs: 1, md: 0 }, rowSpacing: 2 }}>
+          <Grid container spacing={2} sx={{ 
+            px: { xs: 1, md: 0 },
+            '& .MuiGrid-item': {
+              pb: '16px !important',
+              mb: '0 !important'
+            }
+          }}>
             {filteredInvestments.length === 0 ? (
               <Grid item xs={12}>
                 <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary }}>
@@ -1051,7 +1054,12 @@ export default function App() {
                 return (
                   <Grid item xs={12} sm={6} md={4} key={item.id}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
-                      <CardContent sx={{ p: 1.5 }}>
+                      <CardContent sx={{ 
+                        p: 1.5,
+                        flexGrow: 1,
+                        display: 'flex',
+                        flexDirection: 'column'
+                      }}>
                         <CardHeader>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             {item.image && (
