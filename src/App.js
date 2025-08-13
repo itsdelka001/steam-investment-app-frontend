@@ -1030,7 +1030,7 @@ export default function App() {
             <DialogActions sx={{ p: 3 }}>
               <Button onClick={() => setEditDialog(false)} color="secondary" variant="outlined">{t.cancel}</Button>
               <Button onClick={saveEditedItem} color="primary" variant="contained">{t.save}</Button>
-            </Dialogactions>
+            </DialogActions>
           </Dialog>
   
           {/* Dialog для відмічення як продано */}
