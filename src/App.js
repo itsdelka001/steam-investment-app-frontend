@@ -158,11 +158,14 @@ const theme = createTheme({
 
 const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
+  minHeight: '320px',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'space-between',
   padding: theme.spacing(1.5),
+  overflow: 'hidden',
   [theme.breakpoints.down('sm')]: {
+    minHeight: '280px',
     padding: theme.spacing(1),
     '& .MuiTypography-h6': {
       fontSize: '0.9rem',
@@ -195,6 +198,7 @@ const CardHeader = styled(Box)(({ theme }) => ({
   justifyContent: 'space-between',
   alignItems: 'center',
   paddingBottom: theme.spacing(1),
+  minHeight: '64px',
 }));
 
 const CardFooter = styled(Box)(({ theme }) => ({
@@ -1052,16 +1056,17 @@ export default function App() {
                 const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : ((item.currentPrice || item.buyPrice) - item.buyPrice) * item.count;
                 const profitColorForCard = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
                 return (
-                  <Grid item xs={12} sm={6} md={4} key={item.id}>
+                  <Grid item xs={12} sm={6} md={4} key={item.id} sx={{ display: 'flex' }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <CardContent sx={{ 
                         p: 1.5,
                         flexGrow: 1,
                         display: 'flex',
-                        flexDirection: 'column'
+                        flexDirection: 'column',
+                        overflow: 'hidden'
                       }}>
                         <CardHeader>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
                             {item.image && (
                               <img
                                 src={item.image}
@@ -1069,8 +1074,8 @@ export default function App() {
                                 style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }}
                               />
                             )}
-                            <Box sx={{ overflow: 'hidden', flex: 1 }}>
-                              <Typography variant="subtitle1" fontWeight="bold" noWrap>
+                            <Box sx={{ overflow: 'hidden' }}>
+                              <Typography variant="subtitle1" fontWeight="bold" noWrap sx={{ textOverflow: 'ellipsis' }}>
                                 {item.name}
                               </Typography>
                               <Typography variant="body2" color="text.secondary" noWrap>
@@ -1086,7 +1091,7 @@ export default function App() {
                           />
                         </CardHeader>
                         <Divider sx={{ my: 1 }} />
-                        <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1}>
+                        <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1} sx={{ overflow: 'hidden' }}>
                           <Box>
                             <Typography variant="body2" color="text.secondary">{t.count}:</Typography>
                             <Typography variant="h6" fontWeight="bold">{item.count}</Typography>
