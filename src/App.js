@@ -16,7 +16,6 @@ import {
 } from 'recharts';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 
-// ✨ Оновлена тема з розширеним `xl` breakpoint
 const theme = createTheme({
   breakpoints: {
     values: {
@@ -24,7 +23,7 @@ const theme = createTheme({
       sm: 600,
       md: 900,
       lg: 1200,
-      xl: 1920, // Збільшений максимальний розмір контейнера
+      xl: 1920,
     },
   },
   palette: {
@@ -169,10 +168,9 @@ const theme = createTheme({
 const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
   minHeight: '320px',
-  // ✨ ВИПРАВЛЕНО: встановлено фіксовану ширину для карток на md екранах
   width: '100%',
   [theme.breakpoints.up('md')]: {
-    width: '100%', // Прибрано фіксовану ширину, щоб Grid міг розподілити простір
+    width: '100%',
   },
   display: 'flex',
   flexDirection: 'column',
@@ -227,131 +225,6 @@ const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
 const CURRENCIES = ["EUR", "USD", "UAH"];
 const CURRENCY_SYMBOLS = { "EUR": "€", "USD": "$", "UAH": "₴" };
 
-const LANGUAGES = {
-  uk: {
-    portfolio: "STEAM ІНВЕСТИЦІЇ",
-    name: "НАЗВА ПРЕДМЕТА",
-    count: "КІЛЬКІСТЬ",
-    buyPrice: "ЦІНА ВХОДУ",
-    game: "ГРА",
-    boughtDate: "ДАТА ВХОДУ",
-    action: "ДІЇ",
-    addItem: "ДОДАТИ АКТИВ",
-    save: "ЗБЕРЕГТИ",
-    cancel: "СКАСУВАТИ",
-    sold: "ПРОДАНО",
-    yes: "ТАК",
-    no: "НІ",
-    sellPrice: "ЦІНА ВИХОДУ",
-    sellDate: "ДАТА ВИХОДУ",
-    editItem: "РЕДАГУВАННЯ АКТИВУ",
-    deleteConfirmation: "ПІДТВЕРДЖЕННЯ: ВИДАЛИТИ АКТИВ?",
-    delete: "ВИДАЛИТИ",
-    totalInvestment: "ЗАГАЛЬНИЙ КАПІТАЛ",
-    profit: "ПРИБУТОК",
-    percentageProfit: "ПРОЦЕНТНИЙ ДОХІД",
-    analytics: "АНАЛІТИКА",
-    noData: "ДАНІ ВІДСУТНІ...",
-    itemAdded: "АКТИВ ЗАРАХОВАНО У ПОРТФОЛІО",
-    itemUpdated: "АКТИВ ОНОВЛЕНО",
-    itemDeleted: "АКТИВ ВИДАЛЕНО",
-    fetchError: "ПОМИЛКА ЗВ'ЯЗКУ З АРХІВОМ...",
-    addInvestment: "ДОДАВАННЯ НОВОГО АКТИВУ",
-    markAsSold: "ЗАКРИТИ ОПЕРАЦІЮ",
-    total: "ВСІ",
-    currency: "ВАЛЮТА",
-    language: "МОВА",
-    priceHistory: "ІСТОРІЯ ЦІНИ",
-    noInvestmentsInCategory: "У ЦІЙ КАТЕГОРІЇ ДАНІ ВІДСУТНІ.",
-    floatValue: "Float Value",
-    stickers: "НАКЛЕЙКИ",
-    selectedItem: "ВИБРАНИЙ АКТИВ",
-    itemDetails: "ДЕТАЛІЗАЦІЯ АКТИВУ",
-    settings: "НАЛАШТУВАННЯ СИСТЕМИ",
-    totalProfit: "ЗАГАЛЬНИЙ ПРИБУТОК",
-    investmentDistribution: "РОЗПОДІЛ КАПІТАЛУ",
-    edit: "РЕДАГУВАТИ",
-    tags: "ТЕГИ",
-    tagsPlaceholder: "НАПРИКЛАД: 'КЕЙС', 'СТІКЕР', 'ЗБРОЯ'",
-    floatValuePlaceholder: "НАПРИКЛАД: '0.12345'",
-    stickersList: "НАКЛЕЙКИ (ЧЕРЕЗ КОМУ)",
-    updatePrice: "ОНОВИТИ ЦІНУ",
-    currentPrice: "ПОТОЧНА ЦІНА",
-    marketAnalysis: "АНАЛІЗ РИНКУ (AI)",
-    marketAnalysisTitle: "ІМІТАЦІЯ АНАЛІЗУ РИНКУ",
-    marketAnalysisGenerating: "ГЕНЕРАЦІЯ АНАЛІЗУ...",
-    active: "АКТИВНИЙ",
-    totalInvestmentTooltip: "Сума, вкладена в усі активи, що зараз знаходяться в портфоліо.",
-    totalProfitTooltip: "Чистий прибуток від усіх закритих операцій (проданих активів).",
-    percentageProfitTooltip: "Відношення загального прибутку до загального капіталу в процентах.",
-    currentMarketValue: "ПОТОЧНА РИНКОВА ВАРТІСТЬ",
-    currentMarketProfit: "ПОТОЧНИЙ ПРИБУТОК",
-    details: "ДЕТАЛЬНА ІНФОРМАЦІЯ",
-    updateAllPrices: "ОНОВИТИ ВСІ ЦІНИ"
-  },
-  en: {
-    portfolio: "STEAM INVESTMENTS",
-    name: "ITEM NAME",
-    count: "COUNT",
-    buyPrice: "BUY PRICE",
-    game: "GAME",
-    boughtDate: "BUY DATE",
-    action: "ACTIONS",
-    addItem: "ADD ASSET",
-    save: "SAVE",
-    cancel: "CANCEL",
-    sold: "YES",
-    yes: "YES",
-    no: "NO",
-    sellPrice: "SELL PRICE",
-    sellDate: "SELL DATE",
-    editItem: "EDIT ASSET",
-    deleteConfirmation: "CONFIRMATION: DELETE ASSET?",
-    delete: "DELETE",
-    totalInvestment: "TOTAL CAPITAL",
-    profit: "PROFIT",
-    percentageProfit: "PERCENTAGE PROFIT",
-    analytics: "ANALYTICS",
-    noData: "DATA UNAVAILABLE...",
-    itemAdded: "ASSET ADDED TO PORTFOLIO",
-    itemUpdated: "ASSET UPDATED",
-    itemDeleted: "ASSET DELETED",
-    fetchError: "ARCHIVE CONNECTION ERROR...",
-    addInvestment: "ADDING NEW ASSET",
-    markAsSold: "CLOSE OPERATION",
-    total: "ALL",
-    currency: "CURRENCY",
-    language: "LANGUAGE",
-    priceHistory: "PRICE HISTORY",
-    noInvestmentsInCategory: "NO DATA IN THIS CATEGORY.",
-    floatValue: "Float Value",
-    stickers: "STICKERS",
-    selectedItem: "SELECTED ASSET",
-    itemDetails: "ASSET DETAILS",
-    settings: "SYSTEM SETTINGS",
-    totalProfit: "TOTAL PROFIT",
-    investmentDistribution: "CAPITAL DISTRIBUTION",
-    edit: "EDIT",
-    tags: "TAGS",
-    tagsPlaceholder: "E.G. 'CASE', 'STICKER', 'WEAPON'",
-    floatValuePlaceholder: "E.G. '0.12345'",
-    stickersList: "STICKERS (COMMA-SEPARATED)",
-    updatePrice: "UPDATE PRICE",
-    currentPrice: "CURRENT PRICE",
-    marketAnalysis: "MARKET ANALYSIS (AI)",
-    marketAnalysisTitle: "MARKET ANALYSIS SIMULATION",
-    marketAnalysisGenerating: "GENERATING ANALYSIS...",
-    active: "ACTIVE",
-    totalInvestmentTooltip: "The sum of money invested in all assets currently in the portfolio.",
-    totalProfitTooltip: "Net profit from all closed operations (sold assets).",
-    percentageProfitTooltip: "The ratio of total profit to total capital, as a percentage.",
-    currentMarketValue: "CURRENT MARKET VALUE",
-    currentMarketProfit: "CURRENT PROFIT",
-    details: "DETAILS",
-    updateAllPrices: "UPDATE ALL PRICES"
-  },
-};
-
 const BACKEND_URL = 'https://steam-proxy-server-lues.onrender.com';
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
 
@@ -393,13 +266,25 @@ export default function App() {
   const [itemDetailsDialogOpen, setItemDetailsDialogOpen] = useState(false);
   const [itemToDisplayDetails, setItemToDisplayDetails] = useState(null);
   const [isUpdatingAllPrices, setIsUpdatingAllPrices] = useState(false);
+  // ✨ ВИПРАВЛЕНО: Стан для динамічного завантаження перекладів
+  const [t, setT] = useState({});
 
-  const t = LANGUAGES[lang];
+  // ✨ ВИПРАВЛЕНО: Ефект для завантаження перекладів
+  useEffect(() => {
+    async function loadTranslations() {
+      try {
+        const translations = await import(`./locales/${lang}.json`);
+        setT(translations.default);
+      } catch (error) {
+        console.error('Failed to load translations:', error);
+      }
+    }
+    loadTranslations();
+  }, [lang]);
 
   const getInvestments = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/investments`);
-      // ✨ ВИПРАВЛЕНО: Додано обробку помилок для запиту
       if (!response.ok) {
         throw new Error('Failed to fetch investments from backend');
       }
@@ -496,7 +381,6 @@ export default function App() {
         }
 
         const data = await response.json();
-        // ✨ ВИПРАВЛЕНО: Додано перевірку, чи є data масивом
         if (Array.isArray(data)) {
             const formattedOptions = data.map(item => ({
                 label: item.name,
@@ -872,13 +756,13 @@ export default function App() {
             <Grid item xs={12} sm={6}>
               <Typography variant="body2" color="text.secondary">{t.currentPrice}</Typography>
               <Typography variant="h6" fontWeight="bold">
-                {item.currentPrice ? `${item.currentPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+                {item.currentPrice ? `${item.currentPrice.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
               </Typography>
             </Grid>
             <Grid item xs={12}>
               <Typography variant="body2" color="text.secondary">{t.profit} ({t.currentMarketProfit})</Typography>
               <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
-                {item.currentPrice ? `${itemProfit.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+                {item.currentPrice ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
               </Typography>
             </Grid>
           </Grid>
@@ -1060,11 +944,10 @@ export default function App() {
             </Tabs>
           </Paper>
   
-          {/* ✨ ВИПРАВЛЕНО: Розташування Grid */}
           <Grid container spacing={2} sx={{ 
             px: { xs: 1, md: 0 },
             alignItems: 'stretch',
-			justifyContent: 'center',
+            justifyContent: 'center',
           }}>
             {filteredInvestments.length === 0 ? (
               <Grid item xs={12}>
@@ -1079,7 +962,6 @@ export default function App() {
                   (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
   
                 return (
-                  // ✨ ВИПРАВЛЕНО: Встановлено `xs={3}`, `sm={3}` та `md={3}` для примусового відображення 4-х карток на всіх екранах
                   <Grid item xs={3} sm={3} md={3} key={item.id} sx={{ display: 'flex', pb: 2 }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
