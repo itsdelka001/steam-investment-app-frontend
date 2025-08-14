@@ -863,35 +863,19 @@ export default function App() {
                       </FormControl>
                     </Box>
                   </MenuItem>
+                  {/* Залишаємо лише один селектор для валюти відображення */}
                   <MenuItem onClick={handleSettingsMenuClose}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <DollarSign size={18} />
                       <FormControl variant="standard" size="small" sx={{ minWidth: 100 }}>
-                        <Select
-                          value={buyCurrency}
-                          onChange={(e) => setBuyCurrency(e.target.value)}
-                          displayEmpty
-                          inputProps={{ 'aria-label': 'Without label' }}
-                        >
-                          {CURRENCIES.map((currency, index) => (
-                            <MenuItem key={index} value={currency}>{CURRENCY_SYMBOLS[currency]}</MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Box>
-                  </MenuItem>
-                  <MenuItem>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Palette size={18} />
-                      <FormControl variant="standard" size="small" sx={{ minWidth: 100 }}>
+                        <InputLabel>Валюта відображення</InputLabel>
                         <Select
                           value={displayCurrency}
                           onChange={(e) => setDisplayCurrency(e.target.value)}
-                          displayEmpty
-                          inputProps={{ 'aria-label': 'Without label' }}
+                          label="Валюта відображення"
                         >
                           {CURRENCIES.map((currency, index) => (
-                            <MenuItem key={index} value={currency}>{CURRENCY_SYMBOLS[currency]}</MenuItem>
+                            <MenuItem key={index} value={currency}>{currency}</MenuItem>
                           ))}
                         </Select>
                       </FormControl>
