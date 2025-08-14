@@ -388,25 +388,6 @@ const App = () => {
       showSnackbar("Помилка при видаленні активу", "error");
     }
   };
-
-  const getGameFromItemName = (itemName) => {
-    const cs2Keywords = ["case", "sticker", "skin", "glove", "knife", "pin", "key", "capsule", "souvenir", "weapon"];
-    const dota2Keywords = ["treasure", "immortal", "arcana", "set", "courier", "chest", "hero"];
-    const pubgKeywords = ["crate", "box", "outfit", "skin", "key", "g-coin"];
-  
-    const lowerItemName = itemName.toLowerCase();
-  
-    if (cs2Keywords.some(keyword => lowerItemName.includes(keyword))) {
-      return "CS2";
-    }
-    if (dota2Keywords.some(keyword => lowerItemName.includes(keyword))) {
-      return "Dota 2";
-    }
-    if (pubgKeywords.some(keyword => lowerItemName.includes(keyword))) {
-      return "PUBG";
-    }
-    return "CS2";
-  };
   
   const handleItemNameChange = async (event, newInputValue) => {
     setName(newInputValue);
@@ -454,18 +435,25 @@ const App = () => {
       setAutocompleteLoading(false);
     }
   };
-
+  
   const handleAutocompleteChange = (event, newValue) => {
     setAutocompleteValue(newValue);
     if (newValue && typeof newValue === 'object') {
       setName(newValue.label);
       setSelectedItemDetails({ ...newValue, image: newValue.image });
-      const detectedGame = getGameFromItemName(newValue.label);
-      setGame(detectedGame);
-      setTabValue(GAMES.indexOf(detectedGame));
     } else {
       setName(newValue || '');
       setSelectedItemDetails(null);
+    }
+  };
+  
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+    if (newValue > 0) {
+      setGame(GAMES[newValue]);
+    } else {
+      // При виборі "Усі" можна встановити гру за замовчуванням
+      setGame('CS2');
     }
   };
 
@@ -980,7 +968,7 @@ const App = () => {
           }}>
             <Tabs 
               value={tabValue} 
-              onChange={(e, newValue) => setTabValue(newValue)} 
+              onChange={handleTabChange} 
               aria-label="game tabs" 
               centered
               sx={{
