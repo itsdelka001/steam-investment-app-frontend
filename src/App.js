@@ -805,14 +805,11 @@ export default function App() {
     
     return (
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
-        <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <DialogTitle sx={{ textAlign: 'center' }}>
           <Typography variant="h6" fontWeight="bold" color="primary">{t.itemDetails}</Typography>
-          <IconButton onClick={onClose}>
-            <X />
-          </IconButton>
         </DialogTitle>
         <DialogContent dividers>
-          <Grid container spacing={3}>
+          <Grid container spacing={3} alignItems="center">
             <Grid item xs={12} md={5}>
               <Box display="flex" flexDirection="column" alignItems="center">
                 {item.image && (
@@ -828,7 +825,7 @@ export default function App() {
               </Box>
             </Grid>
             <Grid item xs={12} md={7}>
-              <Typography variant="h6" color="secondary" fontWeight="bold" mb={2}>Статистика</Typography>
+              <Typography variant="h6" color="secondary" fontWeight="bold" mb={2} textAlign="center">Статистика</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={6}>
                   <Typography variant="body2" color="text.secondary">{t.totalInvestment}</Typography>
@@ -853,16 +850,36 @@ export default function App() {
                   </Typography>
                 </Grid>
               </Grid>
-              <Divider sx={{ my: 3 }} />
-              <Typography variant="h6" color="secondary" fontWeight="bold" mb={2}>Нотатки</Typography>
-              <TextField 
-                label="Ваші нотатки" 
-                multiline 
-                rows={3} 
-                fullWidth 
-                variant="outlined" 
-                placeholder="Залиште нотатку до цієї інвестиції..."
-              />
+            </Grid>
+          </Grid>
+          <Divider sx={{ my: 3 }} />
+          <Grid container spacing={2} sx={{ mt: 2 }}>
+            <Grid item xs={12}>
+                <Typography variant="h6" color="secondary" fontWeight="bold" textAlign="center" mb={1}>
+                  Ціна за одиницю
+                </Typography>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Box textAlign="center">
+                  <Typography variant="body2" color="text.secondary">Ціна покупки</Typography>
+                  <Typography variant="h6" fontWeight="bold">{convertCurrency(item.buyPrice, item.buyCurrency).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}</Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Box textAlign="center">
+                  <Typography variant="body2" color="text.secondary">Поточна ціна</Typography>
+                  <Typography variant="h6" fontWeight="bold">
+                      {item.currentPrice ? convertCurrency(item.currentPrice, 'EUR').toFixed(2) : '-'} {item.currentPrice ? CURRENCY_SYMBOLS[displayCurrency] : ''}
+                  </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Box textAlign="center">
+                  <Typography variant="body2" color="text.secondary">Ціна продажу</Typography>
+                  <Typography variant="h6" fontWeight="bold">
+                      {item.sold ? convertCurrency(item.sellPrice, item.buyCurrency).toFixed(2) : '-'} {item.sold ? CURRENCY_SYMBOLS[displayCurrency] : ''}
+                  </Typography>
+              </Box>
             </Grid>
           </Grid>
         </DialogContent>
@@ -1423,7 +1440,7 @@ export default function App() {
                             sx={{ borderRadius: 8 }}
                           >
                             {CURRENCIES.map((currency, index) => (
-                              <MenuItem key={index} value={currency}>{CURRENCY_SYMBOLS[currency]}</MenuItem>
+                              <MenuItem key={index} value={currency}>{currency}</MenuItem>
                             ))}
                           </Select>
                         </FormControl>
