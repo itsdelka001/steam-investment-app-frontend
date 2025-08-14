@@ -168,6 +168,16 @@ const getTheme = (mode) => createTheme({
         }),
       },
     },
+    MuiGrid: {
+      styleOverrides: {
+        root: {
+          overflow: 'visible !important'
+        },
+        item: {
+          overflow: 'visible !important'
+        }
+      }
+    },
   },
 });
 
@@ -226,7 +236,6 @@ const CardFooter = styled(Box)(({ theme }) => ({
   paddingTop: theme.spacing(1),
 }));
 
-
 const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
 const CURRENCIES = ["EUR", "USD", "UAH"];
 const CURRENCY_SYMBOLS = { "EUR": "€", "USD": "$", "UAH": "₴" };
@@ -257,7 +266,7 @@ export default function App() {
   const [sellDialog, setSellDialog] = useState(false);
   const [itemToSell, setItemToSell] = useState(null);
   const [sellPrice, setSellPrice] = useState(0);
-  const [sellDate, setSellDate] = new Date().toISOString().split('T')[0];
+  const [sellDate, setSellDate] = useState(new Date().toISOString().split('T')[0]);
   const [lang, setLang] = useState('uk');
   const [autocompleteLoading, setAutocompleteLoading] = useState(false);
   const [itemOptions, setItemOptions] = useState([]);
@@ -277,15 +286,11 @@ export default function App() {
   const [exchangeRates, setExchangeRates] = useState({});
   const [themeMode, setThemeMode] = useState('light');
   const [autoUpdateEnabled, setAutoUpdateEnabled] = useState(false);
-
-  // New commission state
   const [commissionManagerDialogOpen, setCommissionManagerDialogOpen] = useState(false);
   const [commissionItemToManage, setCommissionItemToManage] = useState(null);
   const [newCommissionRate, setNewCommissionRate] = useState(0);
   const [newCommissionNote, setNewCommissionNote] = useState("");
   const [editingCommissionIndex, setEditingCommissionIndex] = useState(null);
-
-  // Pagination and Sorting State
   const [page, setPage] = useState(1);
   const [sortOrder, setSortOrder] = useState('asc');
   const [sortBy, setSortBy] = useState('boughtDate');
@@ -305,7 +310,6 @@ export default function App() {
   }, [lang]);
 
   useEffect(() => {
-    // Fetch exchange rates on component mount
     const fetchExchangeRates = async () => {
       try {
         const response = await fetch(`https://v6.exchangerate-api.com/v6/${EXCHANGERATE_API_KEY}/latest/EUR`);
@@ -325,12 +329,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // Auto-update prices every 15 minutes if enabled
     let intervalId;
     if (autoUpdateEnabled) {
       intervalId = setInterval(() => {
         fetchAndUpdateAllPrices();
-      }, 15 * 60 * 1000); // 15 minutes
+      }, 15 * 60 * 1000);
     }
     return () => clearInterval(intervalId);
   }, [autoUpdateEnabled, investments]);
@@ -595,7 +598,7 @@ export default function App() {
         sellDate: null,
         image: selectedItemDetails?.image || null,
         createdAt: new Date().toISOString(),
-        commissions: [ // Initial commission list
+        commissions: [
           { id: Date.now(), rate: 15, note: "Steam Market" }
         ],
       };
@@ -770,7 +773,6 @@ export default function App() {
 
   const filteredInvestments = tabValue === 0 ? investments : investments.filter((item) => item.game === GAMES[tabValue]);
   
-  // Sorting logic
   const sortedInvestments = [...filteredInvestments].sort((a, b) => {
     const aValue = a[sortBy];
     const bValue = b[sortBy];
@@ -784,11 +786,9 @@ export default function App() {
     return 0;
   });
 
-  // Pagination logic
   const pageCount = Math.ceil(sortedInvestments.length / ITEMS_PER_PAGE);
   const paginatedInvestments = sortedInvestments.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  // Profit calculations with individual commission
   const getNetProfit = (grossProfit, totalValue, commissions) => {
     const totalRate = (commissions || []).reduce((sum, c) => sum + c.rate, 0);
     const totalCommission = totalValue * (totalRate / 100);
@@ -1113,7 +1113,7 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', pb: 4 }}>
-        <Container maxWidth="xl" sx={{ pt: 0, pb: 4 }}>
+        <Container maxWidth="xl" sx={{ pt: 0, pb: 4, overflow: 'visible' }}>
           <Paper elevation={0} sx={{ 
             py: 2, 
             px: 3, 
@@ -1209,7 +1209,7 @@ export default function App() {
             </Box>
           </Paper>
   
-          <Grid container spacing={2} mb={4} justifyContent="center" sx={{ px: { xs: 1, md: 0 } }}>
+          <Grid container spacing={2} mb={4} justifyContent="center" sx={{ px: { xs: 1, md: 0 }, overflow: 'visible' }}>
             <Grid item xs={12} sm={6} md={3}>
               <Tooltip title={t.totalInvestmentTooltip} arrow>
                 <StyledMetricCard>
@@ -1270,21 +1270,22 @@ export default function App() {
             </Grid>
           </Grid>
           
-          <Paper sx={{ 
-            mb: 4, 
-            p: 1, 
+          <Paper sx={{ 
+            mb: 4, 
+            p: 1, 
             boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
             width: '100%', 
             mx: 'auto',
+            overflow: 'visible'
           }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap">
-              <Tabs 
-                value={tabValue} 
+              <Tabs 
+                value={tabValue} 
                 onChange={(e, newValue) => {
                   setTabValue(newValue);
-                  setPage(1); // Reset page on tab change
-                }} 
-                aria-label="game tabs" 
+                  setPage(1);
+                }} 
+                aria-label="game tabs" 
                 sx={{
                   '& .MuiTabs-indicator': {
                     backgroundColor: theme.palette.primary.main,
@@ -1292,9 +1293,9 @@ export default function App() {
                 }}
               >
                 {GAMES.map((gameName, index) => (
-                  <Tab 
-                    key={index} 
-                    label={gameName === "Усі" ? t.total : gameName} 
+                  <Tab 
+                    key={index} 
+                    label={gameName === "Усі" ? t.total : gameName} 
                     sx={{
                       minWidth: 0,
                       padding: '6px 12px',
@@ -1314,7 +1315,7 @@ export default function App() {
                     value={sortBy}
                     onChange={(e) => {
                       setSortBy(e.target.value);
-                      setPage(1); // Reset page on sort change
+                      setPage(1);
                     }}
                     label="Сортувати за"
                   >
@@ -1330,14 +1331,16 @@ export default function App() {
             </Box>
           </Paper>
 
-          <Box sx={{ 
+          <Box sx={{ 
             width: '100%',
             display: 'flex',
             flexWrap: 'wrap',
-            gap: '5%',
-            rowGap: '32px',
+            gap: '16px',
             justifyContent: 'flex-start',
             px: 0,
+            overflow: 'visible',
+            position: 'relative',
+            isolation: 'isolate'
           }}>
             {paginatedInvestments.length === 0 ? (
               <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary, width: '100%' }}>
@@ -1356,13 +1359,14 @@ export default function App() {
                 const totalCommissionRate = (item.commissions || []).reduce((sum, c) => sum + c.rate, 0);
     
                 return (
-                  <Box 
-                    key={item.id} 
-                    sx={{ 
+                  <Box 
+                    key={item.id} 
+                    sx={{ 
                       width: '30%',
                       minWidth: '280px',
-                      overflow: 'visible',
                       position: 'relative',
+                      overflow: 'visible',
+                      zIndex: 0
                     }}
                   >
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
@@ -1398,24 +1402,24 @@ export default function App() {
                             onClick={(e) => { e.stopPropagation(); handleCommissionManagerOpen(e, item); }}
                             sx={{
                               position: 'absolute',
-                              top: 0,
-                              right: 0,
-                              transform: 'translate(50%, -50%)',
+                              top: -12,
+                              right: -12,
+                              zIndex: 1300,
                               backgroundColor: theme.palette.primary.main,
                               color: 'white',
-                              width: 40,
-                              height: 40,
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                              width: 42,
+                              height: 42,
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                               '&:hover': { 
                                 backgroundColor: theme.palette.primary.dark,
-                                transform: 'translate(50%, -50%) scale(1.1) rotate(15deg)',
+                                transform: 'scale(1.15) rotate(15deg)',
                               },
-                              transition: 'all 0.3s ease',
+                              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                              zIndex: 1,
+                              border: `2px solid ${theme.palette.background.paper}`
                             }}
                           >
-                            <Percent size={20} />
+                            <Percent size={22} />
                           </IconButton>
                         </Tooltip>
                         <Divider sx={{ my: 1 }} />
