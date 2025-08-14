@@ -1486,7 +1486,7 @@ export default function App() {
             </DialogActions>
           </Dialog>
   
-          <Dialog open={editDialog} onClose={() => setEditDialog(false)} PaperProps={{ style: { maxWidth: 'md', width: '90%' } }}>
+          <Dialog open={editDialog} onClose={() => setEditDialog(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
             <DialogTitle>
               <Typography variant="h6" fontWeight="bold" color="primary">{t.editItem}</Typography>
             </DialogTitle>
