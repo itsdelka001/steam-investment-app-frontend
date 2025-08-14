@@ -263,7 +263,6 @@ export default function App() {
   const [autocompleteValue, setAutocompleteValue] = useState(null);
   const [selectedItemDetails, setSelectedItemDetails] = useState(null);
   const [priceHistory, setPriceHistory] = useState([]);
-  const [priceHistoryOpen, setPriceHistoryOpen] = useState(false);
   const [priceHistoryLoading, setPriceHistoryLoading] = useState(false);
   const [marketAnalysisDialog, setMarketAnalysisDialog] = useState(false);
   const [analysisLoading, setAnalysisLoading] = useState(false);
@@ -486,7 +485,6 @@ export default function App() {
   };
 
   const handlePriceHistory = async (item) => {
-    setPriceHistoryOpen(true);
     setPriceHistoryLoading(true);
     try {
       const url = `${PROXY_SERVER_URL}/price_history?item_name=${encodeURIComponent(item.market_hash_name)}&game=${encodeURIComponent(item.game)}`;
@@ -735,9 +733,10 @@ export default function App() {
     setAnalyticsOpen(true);
   };
 
-  const handleItemDetailsOpen = (item) => {
+  const handleItemDetailsOpen = async (item) => {
     setItemToDisplayDetails(item);
     setItemDetailsDialogOpen(true);
+    await handlePriceHistory(item);
   };
 
   const filteredInvestments = tabValue === 0 ? investments : investments.filter((item) => item.game === GAMES[tabValue]);
@@ -809,13 +808,31 @@ export default function App() {
 
   const ItemDetailsDialog = ({ open, onClose, item }) => {
     if (!item) return null;
-    const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency);
+    
+    const convertedTotalBuyPrice = convertCurrency(item.buyPrice * item.count, item.buyCurrency);
     const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR") : null;
-    const itemProfit = convertedCurrentPrice ? (convertedCurrentPrice - convertedBuyPrice) * item.count : 0;
+    const convertedTotalCurrentPrice = convertedCurrentPrice ? convertedCurrentPrice * item.count : convertedTotalBuyPrice;
+    
+    const itemProfit = convertedTotalCurrentPrice - convertedTotalBuyPrice;
     const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
-
+    const profitPercentage = convertedTotalBuyPrice > 0 ? ((itemProfit / convertedTotalBuyPrice) * 100).toFixed(2) : '0.00';
+    
+    const handleOpenMarketLink = () => {
+      let url = '';
+      if (item.game === "CS2") {
+        url = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(item.market_hash_name)}`;
+      } else if (item.game === "Dota 2") {
+        url = `https://steamcommunity.com/market/listings/570/${encodeURIComponent(item.market_hash_name)}`;
+      } else if (item.game === "PUBG") {
+        url = `https://steamcommunity.com/market/listings/578080/${encodeURIComponent(item.market_hash_name)}`;
+      }
+      if (url) {
+        window.open(url, '_blank');
+      }
+    };
+    
     return (
-      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" fontWeight="bold" color="primary">{t.itemDetails}</Typography>
           <IconButton onClick={onClose}>
@@ -823,37 +840,132 @@ export default function App() {
           </IconButton>
         </DialogTitle>
         <DialogContent dividers>
-          <Box display="flex" flexDirection="column" alignItems="center" mb={2}>
-            {item.image && (
-              <img src={item.image} alt={item.name} style={{ width: '100%', maxWidth: 200, borderRadius: 8, marginBottom: 16 }} />
-            )}
-            <Typography variant="h5" fontWeight="bold" textAlign="center">{item.name}</Typography>
-            <Chip label={item.game} color="secondary" size="small" sx={{ mt: 1 }} />
-          </Box>
-          <Divider sx={{ my: 2 }} />
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body2" color="text.secondary">{t.buyPrice}</Typography>
-              <Typography variant="h6" fontWeight="bold">{convertedBuyPrice.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}</Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={5}>
+              <Box display="flex" flexDirection="column" alignItems="center">
+                {item.image && (
+                  <img src={item.image} alt={item.name} style={{ width: '100%', maxWidth: 200, borderRadius: 8, marginBottom: 16 }} />
+                )}
+                <Typography variant="h5" fontWeight="bold" textAlign="center">{item.name}</Typography>
+                <Chip 
+                  label={item.sold ? t.sold : t.active} 
+                  color={item.sold ? "success" : "primary"} 
+                  size="small" 
+                  sx={{ mt: 1, fontWeight: 'bold' }}
+                />
+              </Box>
+              
+              <Divider sx={{ my: 3 }} />
+
+              <Typography variant="h6" color="secondary" fontWeight="bold" mb={2}>Статистика</Typography>
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">{t.totalInvestment}</Typography>
+                  <Typography variant="h6" fontWeight="bold">{convertedTotalBuyPrice.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}</Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">{t.totalCurrentValue}</Typography>
+                  <Typography variant="h6" fontWeight="bold">
+                    {convertedTotalCurrentPrice.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">{t.profit}</Typography>
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
+                    {itemProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                  </Typography>
+                </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">ROI (%)</Typography>
+                  <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
+                    {profitPercentage}%
+                  </Typography>
+                </Grid>
+              </Grid>
+
+              <Divider sx={{ my: 3 }} />
+
+              <Typography variant="h6" color="secondary" fontWeight="bold" mb={2}>Нотатки</Typography>
+              <TextField 
+                label="Ваші нотатки" 
+                multiline 
+                rows={3} 
+                fullWidth 
+                variant="outlined" 
+                placeholder="Залиште нотатку до цієї інвестиції..."
+              />
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <Typography variant="body2" color="text.secondary">{t.currentPrice}</Typography>
-              <Typography variant="h6" fontWeight="bold">
-                {convertedCurrentPrice ? `${convertedCurrentPrice.toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}` : '—'}
-              </Typography>
-            </Grid>
-            <Grid item xs={12}>
-              <Typography variant="body2" color="text.secondary">{t.profit} ({t.currentMarketProfit})</Typography>
-              <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
-                {convertedCurrentPrice ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}` : '—'}
-              </Typography>
+            <Grid item xs={12} md={7}>
+              <Box>
+                <Typography variant="h6" color="secondary" fontWeight="bold" mb={2}>{t.priceHistory}</Typography>
+                {priceHistoryLoading ? (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                    <CircularProgress />
+                  </Box>
+                ) : priceHistory.length === 0 ? (
+                  <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={priceHistory} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                      <XAxis dataKey="date" stroke={theme.palette.text.secondary} />
+                      <YAxis stroke={theme.palette.text.secondary} />
+                      <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, border: '1px solid #ccc', borderRadius: 8 }} />
+                      <Legend />
+                      <Line type="monotone" dataKey="price" stroke={theme.palette.secondary.main} activeDot={{ r: 8 }} name="Ціна" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </Box>
             </Grid>
           </Grid>
         </DialogContent>
+        <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
+          <Box>
+            <Button 
+              onClick={() => { onClose(); confirmDelete(item); }} 
+              color="error" 
+              variant="text" 
+              startIcon={<Delete />}
+              sx={{ borderRadius: 8 }}
+            >
+              {t.delete}
+            </Button>
+          </Box>
+          <Box display="flex" gap={1}>
+            <Button 
+              onClick={() => { onClose(); handleCurrentPriceUpdate(item); }} 
+              color="info" 
+              variant="outlined" 
+              startIcon={<Zap />}
+              sx={{ borderRadius: 8 }}
+            >
+              {t.updatePrice}
+            </Button>
+            <Button 
+              onClick={() => { onClose(); handleOpenMarketLink(); }} 
+              color="secondary" 
+              variant="outlined" 
+              startIcon={<Globe />}
+              sx={{ borderRadius: 8 }}
+            >
+              {t.openMarket}
+            </Button>
+            <Button 
+              onClick={() => { onClose(); handleEdit(item); }} 
+              color="primary" 
+              variant="contained" 
+              startIcon={<Edit />}
+              sx={{ borderRadius: 8 }}
+            >
+              {t.edit}
+            </Button>
+          </Box>
+        </DialogActions>
       </Dialog>
     );
   };
-
+  
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', pb: 4 }}>
@@ -1636,42 +1748,6 @@ export default function App() {
             <DialogActions>
               <Button 
                 onClick={() => setAnalyticsOpen(false)} 
-                color="secondary" 
-                variant="outlined"
-                sx={{ borderRadius: 8 }}
-              >
-                {t.cancel}
-              </Button>
-            </DialogActions>
-          </Dialog>
-  
-          <Dialog open={priceHistoryOpen} onClose={() => setPriceHistoryOpen(false)} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
-            <DialogTitle>
-              <Typography variant="h6" fontWeight="bold" color="primary">{t.priceHistory}</Typography>
-            </DialogTitle>
-            <DialogContent dividers>
-              {priceHistoryLoading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                  <CircularProgress />
-                </Box>
-              ) : priceHistory.length === 0 ? (
-                <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
-              ) : (
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={priceHistory} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
-                    <XAxis dataKey="date" stroke={theme.palette.text.secondary} />
-                    <YAxis stroke={theme.palette.text.secondary} />
-                    <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, border: '1px solid #ccc', borderRadius: 8 }} />
-                    <Legend />
-                    <Line type="monotone" dataKey="price" stroke={theme.palette.secondary.main} activeDot={{ r: 8 }} name="Ціна" />
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </DialogContent>
-            <DialogActions>
-              <Button 
-                onClick={() => setPriceHistoryOpen(false)} 
                 color="secondary" 
                 variant="outlined"
                 sx={{ borderRadius: 8 }}
