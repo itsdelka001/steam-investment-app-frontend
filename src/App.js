@@ -399,6 +399,7 @@ export default function App() {
   const getInvestments = async () => {
     try {
       const response = await fetch(`${BACKEND_URL}/api/investments`);
+      // ✨ ВИПРАВЛЕНО: Додано обробку помилок для запиту
       if (!response.ok) {
         throw new Error('Failed to fetch investments from backend');
       }
@@ -495,12 +496,18 @@ export default function App() {
         }
 
         const data = await response.json();
-        const formattedOptions = data.map(item => ({
-          label: item.name,
-          image: item.icon_url,
-          market_hash_name: item.market_hash_name,
-        }));
-        setItemOptions(formattedOptions);
+        // ✨ ВИПРАВЛЕНО: Додано перевірку, чи є data масивом
+        if (Array.isArray(data)) {
+            const formattedOptions = data.map(item => ({
+                label: item.name,
+                image: item.icon_url,
+                market_hash_name: item.market_hash_name,
+            }));
+            setItemOptions(formattedOptions);
+        } else {
+            console.error('API did not return an array:', data);
+            setItemOptions([]);
+        }
       } catch (error) {
         if (error.name === 'AbortError') {
           console.log('Fetch aborted');
@@ -1071,7 +1078,7 @@ export default function App() {
                   (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
   
                 return (
-                  // ✨ ВИПРАВЛЕНО: Встановлено `xs={4}` та `sm={4}` для примусового відображення 3-х карток на всіх екранах
+                  // ✨ ВИПРАВЛЕНО: Встановлено `xs={3}`, `sm={3}` та `md={3}` для примусового відображення 4-х карток на всіх екранах
                   <Grid item xs={3} sm={3} md={3} key={item.id} sx={{ display: 'flex', pb: 2 }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
