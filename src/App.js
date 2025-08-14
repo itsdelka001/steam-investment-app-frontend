@@ -371,6 +371,7 @@ export default function App() {
     }
   };
 
+  // Функція для автоматичного визначення гри за назвою предмета
   const getGameFromItemName = (itemName) => {
     const cs2Keywords = ["case", "sticker", "skin", "glove", "knife", "pin", "key", "capsule", "souvenir", "weapon"];
     const dota2Keywords = ["treasure", "immortal", "arcana", "set", "courier", "chest", "hero"];
@@ -442,6 +443,7 @@ export default function App() {
     if (newValue && typeof newValue === 'object') {
       setName(newValue.label);
       setSelectedItemDetails({ ...newValue, image: newValue.image });
+      // Використовуємо функцію для автоматичного визначення гри
       const detectedGame = getGameFromItemName(newValue.label);
       setGame(detectedGame);
       setTabValue(GAMES.indexOf(detectedGame));
@@ -850,6 +852,9 @@ export default function App() {
                   <MenuItem onClick={handleSettingsMenuClose}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <Globe size={18} />
+                      <Typography variant="body1" sx={{ minWidth: 80, mr: 1, color: 'text.primary' }}>
+                        Мова
+                      </Typography>
                       <FormControl variant="standard" size="small" sx={{ minWidth: 100 }}>
                         <Select
                           value={lang}
@@ -863,12 +868,13 @@ export default function App() {
                       </FormControl>
                     </Box>
                   </MenuItem>
-                  {/* Залишаємо лише один селектор для валюти відображення */}
                   <MenuItem onClick={handleSettingsMenuClose}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <DollarSign size={18} />
+                      <Typography variant="body1" sx={{ minWidth: 80, mr: 1, color: 'text.primary' }}>
+                        Валюта відображення
+                      </Typography>
                       <FormControl variant="standard" size="small" sx={{ minWidth: 100 }}>
-                        <InputLabel>Валюта відображення</InputLabel>
                         <Select
                           value={displayCurrency}
                           onChange={(e) => setDisplayCurrency(e.target.value)}
