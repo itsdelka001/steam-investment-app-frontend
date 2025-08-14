@@ -884,16 +884,6 @@ export default function App() {
               </Grid>
 
               <Divider sx={{ my: 3 }} />
-
-              <Typography variant="h6" color="secondary" fontWeight="bold" mb={2}>Нотатки</Typography>
-              <TextField 
-                label="Ваші нотатки" 
-                multiline 
-                rows={3} 
-                fullWidth 
-                variant="outlined" 
-                placeholder="Залиште нотатку до цієї інвестиції..."
-              />
             </Grid>
             <Grid item xs={12} md={7}>
               <Box>
