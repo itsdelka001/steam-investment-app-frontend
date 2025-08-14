@@ -1361,6 +1361,8 @@ export default function App() {
                     sx={{ 
                       width: '30%',
                       minWidth: '280px',
+                      overflow: 'visible',
+                      position: 'relative',
                     }}
                   >
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
@@ -1410,6 +1412,7 @@ export default function App() {
                               },
                               transition: 'all 0.3s ease',
                               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                              zIndex: 1,
                             }}
                           >
                             <Percent size={20} />
