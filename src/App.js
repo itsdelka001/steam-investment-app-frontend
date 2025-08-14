@@ -1363,6 +1363,7 @@ export default function App() {
                       minWidth: '280px',
                       overflow: 'visible',
                       position: 'relative',
+                      paddingTop: '16px',
                     }}
                   >
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
