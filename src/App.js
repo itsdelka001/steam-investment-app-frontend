@@ -1516,4 +1516,3 @@ export default function App() {
       </Snackbar>
     </ThemeProvider>
   );
-}
