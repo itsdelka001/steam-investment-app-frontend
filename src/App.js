@@ -1389,37 +1389,31 @@ export default function App() {
                             size="small" 
                             sx={{ ml: 1 }}
                           />
-                          <Box 
-                            sx={{ 
-                              position: 'absolute', 
-                              top: -24, 
-                              right: -24,
+                        </CardHeader>
+                        <Tooltip title={`Комісія: ${totalCommissionRate.toFixed(2)}%`}>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => handleCommissionManagerOpen(e, item)}
+                            sx={{
+                              position: 'absolute',
+                              top: 8, 
+                              right: 8,
+                              backgroundColor: theme.palette.primary.main,
+                              color: 'white',
+                              width: 32,
+                              height: 32,
+                              '&:hover': { 
+                                backgroundColor: theme.palette.primary.dark,
+                                transform: 'scale(1.1) rotate(15deg)',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                              },
+                              transition: 'all 0.3s ease',
+                              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
                             }}
                           >
-                            <Tooltip title={`Комісія: ${totalCommissionRate.toFixed(2)}%`}>
-                              <IconButton
-                                size="small"
-                                onClick={(e) => handleCommissionManagerOpen(e, item)}
-                                sx={{
-                                  backgroundColor: theme.palette.primary.main,
-                                  color: 'white',
-                                  width: 48,
-                                  height: 48,
-                                  border: '2px solid',
-                                  borderColor: theme.palette.background.paper,
-                                  '&:hover': { 
-                                    backgroundColor: theme.palette.primary.dark,
-                                    transform: 'scale(1.1) rotate(15deg)',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                                  },
-                                  transition: 'all 0.3s ease',
-                                }}
-                              >
-                                <Percent size={20} />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        </CardHeader>
+                            <Percent size={18} />
+                          </IconButton>
+                        </Tooltip>
                         <Divider sx={{ my: 1 }} />
                         <CardContent sx={{ 
                           p: 1.5,
