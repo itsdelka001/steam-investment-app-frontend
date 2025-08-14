@@ -3,7 +3,7 @@ import {
   Container, Typography, Box, TextField, Button, Table, TableHead, TableBody, TableRow, TableCell,
   Select, MenuItem, FormControl, InputLabel, Dialog, DialogTitle, DialogContent, DialogActions,
   Tabs, Tab, IconButton, Snackbar, Alert, Grid, Card, CardContent, Chip, Tooltip,
-  Autocomplete, CircularProgress, Divider, LinearProgress, Paper, Fab, Menu
+  Autocomplete, CircularProgress, Divider, LinearProgress, Paper, Fab, Menu, Pagination
 } from '@mui/material';
 import {
   TrendingUp, Delete, Check, BarChart, Plus, Globe, X, ArrowUp, Edit,
@@ -268,6 +268,10 @@ export default function App() {
   const [t, setT] = useState({});
   const [exchangeRates, setExchangeRates] = useState({});
   const [exchangeRatesDialogOpen, setExchangeRatesDialogOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalItems, setTotalItems] = useState(0);
 
 
   useEffect(() => {
@@ -283,7 +287,6 @@ export default function App() {
   }, [lang]);
 
   useEffect(() => {
-    // Fetch exchange rates on component mount
     const fetchExchangeRates = async () => {
       try {
         const response = await fetch(`https://v6.exchangerate-api.com/v6/${EXCHANGERATE_API_KEY}/latest/EUR`);
@@ -311,14 +314,16 @@ export default function App() {
     return value * rateToEUR * rateFromEUR;
   };
 
-  const getInvestments = async () => {
+  const getInvestments = async (page = 1, limit = 10, game = 'all') => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/investments`);
+      const response = await fetch(`${BACKEND_URL}/api/investments?page=${page}&limit=${limit}&game=${game}`);
       if (!response.ok) {
         throw new Error('Failed to fetch investments from backend');
       }
       const data = await response.json();
-      setInvestments(data);
+      setInvestments(data.items);
+      setTotalItems(data.total);
+      setTotalPages(Math.ceil(data.total / limit));
     } catch (error) {
       console.error("Error fetching investments:", error);
       showSnackbar(t.fetchError, "error");
@@ -326,8 +331,9 @@ export default function App() {
   };
 
   useEffect(() => {
-    getInvestments();
-  }, []);
+    const game = tabValue === 0 ? 'all' : GAMES[tabValue];
+    getInvestments(page, itemsPerPage, game);
+  }, [page, itemsPerPage, tabValue]);
 
   const handleSettingsMenuClick = (event) => {
     setSettingsAnchorEl(event.currentTarget);
@@ -365,6 +371,7 @@ export default function App() {
       }
       setInvestments(prev => prev.filter(item => item.id !== id));
       showSnackbar(t.itemDeleted, 'success');
+      getInvestments(page, itemsPerPage, tabValue === 0 ? 'all' : GAMES[tabValue]);
     } catch (error) {
       console.error("Error deleting investment:", error);
       showSnackbar("Помилка при видаленні активу", "error");
@@ -462,7 +469,7 @@ export default function App() {
       if (data.success) {
         const historyData = data.prices.map(([date, price]) => ({
           date: new Date(date).toLocaleDateString(),
-          price: convertCurrency(parseFloat(price), "EUR"), // Steam prices are in EUR, converting to displayCurrency
+          price: convertCurrency(parseFloat(price), "EUR"),
         })).sort((a, b) => new Date(a.date) - new Date(b.date));
         setPriceHistory(historyData);
       } else {
@@ -487,7 +494,7 @@ export default function App() {
         const currentPrice = data.price;
         await updateInvestment(item.id, { currentPrice });
         showSnackbar(`Поточна ціна для ${item.name}: ${convertCurrency(currentPrice, "EUR").toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}`, 'info');
-        getInvestments();
+        getInvestments(page, itemsPerPage, tabValue === 0 ? 'all' : GAMES[tabValue]);
       } else {
         showSnackbar('Не вдалося отримати поточну ціну.', 'warning');
       }
@@ -501,7 +508,8 @@ export default function App() {
     setIsUpdatingAllPrices(true);
     showSnackbar(t.updateAllPrices, 'info');
     try {
-      const activeInvestments = investments.filter(item => !item.sold);
+      const allInvestments = await (await fetch(`${BACKEND_URL}/api/investments?limit=1000`)).json();
+      const activeInvestments = allInvestments.items.filter(item => !item.sold);
       for (const item of activeInvestments) {
         const url = `${PROXY_SERVER_URL}/current_price?item_name=${encodeURIComponent(item.market_hash_name)}&game=${encodeURIComponent(item.game)}`;
         const response = await fetch(url);
@@ -517,7 +525,7 @@ export default function App() {
         }
       }
       showSnackbar("Усі ціни оновлено!", 'success');
-      getInvestments();
+      getInvestments(page, itemsPerPage, tabValue === 0 ? 'all' : GAMES[tabValue]);
     } catch (error) {
       console.error('Error fetching and updating all prices:', error);
       showSnackbar('Помилка при масовому оновленні цін.', 'error');
@@ -597,7 +605,7 @@ export default function App() {
       showSnackbar(t.itemAdded, "success");
       resetForm();
       setAddDialog(false);
-      getInvestments();
+      getInvestments(page, itemsPerPage, tabValue === 0 ? 'all' : GAMES[tabValue]);
       
     } catch (error) {
       console.error("Error adding investment:", error);
@@ -619,7 +627,7 @@ export default function App() {
       });
       setSellDialog(false);
       resetForm();
-      getInvestments();
+      getInvestments(page, itemsPerPage, tabValue === 0 ? 'all' : GAMES[tabValue]);
     } catch (error) {
       console.error("Error marking item as sold:", error);
       showSnackbar("Помилка при закритті операції", "error");
@@ -682,7 +690,7 @@ export default function App() {
       await updateInvestment(itemToEdit.id, updatedData);
       setEditDialog(false);
       resetForm();
-      getInvestments();
+      getInvestments(page, itemsPerPage, tabValue === 0 ? 'all' : GAMES[tabValue]);
     } catch (error) {
       console.error("Error saving edited item:", error);
       showSnackbar("Помилка при збереженні змін", "error");
@@ -706,7 +714,14 @@ export default function App() {
     setItemDetailsDialogOpen(true);
   };
 
-  const filteredInvestments = tabValue === 0 ? investments : investments.filter((item) => item.game === GAMES[tabValue]);
+  const handlePageChange = (event, value) => {
+    setPage(value);
+  };
+  
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+    setPage(1); // Reset page to 1 when tab changes
+  };
 
   const totalInvestment = investments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
   const totalSoldProfit = investments
@@ -863,7 +878,6 @@ export default function App() {
                       </FormControl>
                     </Box>
                   </MenuItem>
-                  {/* Залишаємо лише один селектор для валюти відображення */}
                   <MenuItem onClick={handleSettingsMenuClose}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <DollarSign size={18} />
@@ -956,7 +970,7 @@ export default function App() {
           }}>
             <Tabs 
               value={tabValue} 
-              onChange={(e, newValue) => setTabValue(newValue)} 
+              onChange={handleTabChange} 
               aria-label="game tabs" 
               centered
               sx={{
@@ -991,12 +1005,12 @@ export default function App() {
             justifyContent: 'flex-start',
             px: 0,
           }}>
-            {filteredInvestments.length === 0 ? (
+            {investments.length === 0 ? (
               <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary, width: '100%' }}>
                 <Typography variant="h6">{t.noInvestmentsInCategory}</Typography>
               </Box>
             ) : (
-              filteredInvestments.map((item) => {
+              investments.map((item) => {
                 const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency);
                 const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR") : null;
                 const profitForCard = item.sold ? 
@@ -1135,6 +1149,14 @@ export default function App() {
               })
             )}
           </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={handlePageChange}
+              color="primary"
+            />
+          </Box>
   
           <Tooltip title={t.addItem} arrow>
             <Fab
@@ -1254,7 +1276,7 @@ export default function App() {
                             sx={{ borderRadius: 8 }}
                           >
                             {CURRENCIES.map((currency, index) => (
-                              <MenuItem key={index} value={currency}>{CURRENCY_SYMBOLS[currency]}</MenuItem>
+                              <MenuItem key={index} value={currency}>{currency}</MenuItem>
                             ))}
                           </Select>
                         </FormControl>
