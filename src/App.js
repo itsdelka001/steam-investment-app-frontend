@@ -3,12 +3,14 @@ import {
   Container, Typography, Box, TextField, Button, Table, TableHead, TableBody, TableRow, TableCell,
   Select, MenuItem, FormControl, InputLabel, Dialog, DialogTitle, DialogContent, DialogActions,
   Tabs, Tab, IconButton, Snackbar, Alert, Grid, Card, CardContent, Chip, Tooltip,
-  Autocomplete, CircularProgress, Divider, LinearProgress, Paper, Fab, Menu
+  Autocomplete, CircularProgress, Divider, LinearProgress, Paper, Fab, Menu,
+  Pagination, Switch, FormGroup, FormControlLabel,
+  TableSortLabel
 } from '@mui/material';
 import {
   TrendingUp, Delete, Check, BarChart, Plus, Globe, X, ArrowUp, Edit,
   History, Settings, Tag, Palette, Rocket, Zap, DollarSign, Percent, TrendingDown,
-  ArrowDown, Menu as MenuIcon, Eye
+  ArrowDown, Menu as MenuIcon, Eye,
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie,
@@ -16,7 +18,7 @@ import {
 } from 'recharts';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 
-const theme = createTheme({
+const getTheme = (mode) => createTheme({
   breakpoints: {
     values: {
       xs: 0,
@@ -27,33 +29,33 @@ const theme = createTheme({
     },
   },
   palette: {
-    mode: 'light',
+    mode: mode,
     primary: {
-      main: '#4A148C',
+      main: mode === 'dark' ? '#9575CD' : '#4A148C',
     },
     secondary: {
-      main: '#007BFF',
+      main: mode === 'dark' ? '#4FC3F7' : '#007BFF',
     },
     background: {
-      default: '#F8F9FA',
-      paper: '#FFFFFF',
+      default: mode === 'dark' ? '#121212' : '#F8F9FA',
+      paper: mode === 'dark' ? '#1E1E1E' : '#FFFFFF',
     },
     text: {
-      primary: '#212529',
-      secondary: '#6C757D',
+      primary: mode === 'dark' ? '#E0E0E0' : '#212529',
+      secondary: mode === 'dark' ? '#A0A0A0' : '#6C757D',
     },
-    divider: '#DEE2E6',
+    divider: mode === 'dark' ? '#333333' : '#DEE2E6',
     success: {
       main: '#28A745',
-      light: '#D4EDDA',
+      light: mode === 'dark' ? '#213324' : '#D4EDDA',
     },
     error: {
       main: '#DC3545',
-      light: '#F8D7DA',
+      light: mode === 'dark' ? '#3B2022' : '#F8D7DA',
     },
     warning: {
       main: '#FFC107',
-      light: '#FFF3CD',
+      light: mode === 'dark' ? '#3B331A' : '#FFF3CD',
     }
   },
   typography: {
@@ -71,7 +73,7 @@ const theme = createTheme({
   components: {
     MuiButton: {
       styleOverrides: {
-        root: {
+        root: ({ ownerState, theme }) => ({
           borderRadius: 8,
           textTransform: 'none',
           boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
@@ -80,32 +82,36 @@ const theme = createTheme({
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
             transform: 'translateY(-2px)',
           },
-        },
-        containedPrimary: {
-          background: 'linear-gradient(45deg, #4A148C 30%, #4A148C 90%)',
-        },
+          ...(ownerState.variant === 'contained' && ownerState.color === 'primary' && {
+            background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
+            color: '#fff',
+          }),
+        }),
       },
     },
     MuiPaper: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           borderRadius: 12,
-          background: '#FFFFFF',
+          background: theme.palette.background.paper,
           boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        },
+        }),
       },
     },
     MuiTextField: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           '& .MuiOutlinedInput-root': {
             borderRadius: 8,
-            backgroundColor: '#F1F3F5',
+            backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#F1F3F5',
             '&.Mui-focused fieldset': {
-              borderColor: '#007BFF',
+              borderColor: theme.palette.secondary.main,
+            },
+            '&:hover fieldset': {
+              borderColor: theme.palette.secondary.main,
             },
           },
-        },
+        }),
       },
     },
     MuiCard: {
@@ -113,7 +119,6 @@ const theme = createTheme({
         root: {
           borderRadius: 12,
           boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-          background: '#FFFFFF',
           transition: 'box-shadow 0.3s, transform 0.3s',
           '&:hover': {
             boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
@@ -124,42 +129,43 @@ const theme = createTheme({
     },
     MuiDialog: {
       styleOverrides: {
-        paper: {
+        paper: ({ theme }) => ({
           borderRadius: 16,
-          background: '#F8F9FA',
+          background: theme.palette.background.paper,
           boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
-        },
+        }),
       },
     },
     MuiTabs: {
       styleOverrides: {
-        indicator: {
+        indicator: ({ theme }) => ({
           height: 3,
           borderRadius: '4px 4px 0 0',
-        },
+          backgroundColor: theme.palette.primary.main,
+        }),
       },
     },
     MuiTab: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           textTransform: 'none',
           fontWeight: 600,
-          color: '#6C757D',
+          color: theme.palette.text.secondary,
           '&.Mui-selected': {
-            color: '#4A148C',
+            color: theme.palette.primary.main,
           },
-        },
+        }),
       },
     },
     MuiTooltip: {
       styleOverrides: {
-        tooltip: {
-          backgroundColor: '#212529',
-          color: '#E0E0E0',
+        tooltip: ({ theme }) => ({
+          backgroundColor: theme.palette.text.primary,
+          color: theme.palette.background.paper,
           borderRadius: 8,
           boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
           fontSize: '0.875rem',
-        },
+        }),
       },
     },
   },
@@ -174,6 +180,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   justifyContent: 'space-between',
   padding: theme.spacing(1.5),
   overflow: 'hidden',
+  cursor: 'pointer',
   [theme.breakpoints.down('sm')]: {
     minHeight: '280px',
     padding: theme.spacing(1),
@@ -226,6 +233,8 @@ const EXCHANGERATE_API_KEY = "61a8a12c18b1b14a645ebc37";
 const BACKEND_URL = 'https://steam-proxy-server-lues.onrender.com';
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
 
+const ITEMS_PER_PAGE = 9;
+
 export default function App() {
   const [investments, setInvestments] = useState([]);
   const [name, setName] = useState("");
@@ -268,7 +277,15 @@ export default function App() {
   const [t, setT] = useState({});
   const [exchangeRates, setExchangeRates] = useState({});
   const [exchangeRatesDialogOpen, setExchangeRatesDialogOpen] = useState(false);
+  const [themeMode, setThemeMode] = useState('light');
+  const [autoUpdateEnabled, setAutoUpdateEnabled] = useState(false);
 
+  // Pagination and Sorting State
+  const [page, setPage] = useState(1);
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [sortBy, setSortBy] = useState('boughtDate');
+
+  const theme = getTheme(themeMode);
 
   useEffect(() => {
     async function loadTranslations() {
@@ -301,6 +318,17 @@ export default function App() {
     };
     fetchExchangeRates();
   }, []);
+
+  useEffect(() => {
+    // Auto-update prices every 15 minutes if enabled
+    let intervalId;
+    if (autoUpdateEnabled) {
+      intervalId = setInterval(() => {
+        fetchAndUpdateAllPrices();
+      }, 15 * 60 * 1000); // 15 minutes
+    }
+    return () => clearInterval(intervalId);
+  }, [autoUpdateEnabled, investments]);
 
   const convertCurrency = (value, fromCurrency) => {
     if (fromCurrency === displayCurrency || !exchangeRates[fromCurrency] || !exchangeRates[displayCurrency]) {
@@ -335,6 +363,12 @@ export default function App() {
 
   const handleSettingsMenuClose = () => {
     setSettingsAnchorEl(null);
+  };
+
+  const handleSort = (property) => {
+    const isAsc = sortBy === property && sortOrder === 'asc';
+    setSortOrder(isAsc ? 'desc' : 'asc');
+    setSortBy(property);
   };
 
   const updateInvestment = async (id, data) => {
@@ -707,6 +741,24 @@ export default function App() {
   };
 
   const filteredInvestments = tabValue === 0 ? investments : investments.filter((item) => item.game === GAMES[tabValue]);
+  
+  // Sorting logic
+  const sortedInvestments = [...filteredInvestments].sort((a, b) => {
+    const aValue = a[sortBy];
+    const bValue = b[sortBy];
+
+    if (aValue < bValue) {
+      return sortOrder === 'asc' ? -1 : 1;
+    }
+    if (aValue > bValue) {
+      return sortOrder === 'asc' ? 1 : -1;
+    }
+    return 0;
+  });
+
+  // Pagination logic
+  const pageCount = Math.ceil(sortedInvestments.length / ITEMS_PER_PAGE);
+  const paginatedInvestments = sortedInvestments.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const totalInvestment = investments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
   const totalSoldProfit = investments
@@ -847,6 +899,22 @@ export default function App() {
                     horizontal: 'right',
                   }}
                 >
+                  <MenuItem onClick={(e) => e.stopPropagation()}>
+                    <FormGroup>
+                      <FormControlLabel
+                        control={<Switch checked={themeMode === 'dark'} onChange={() => setThemeMode(themeMode === 'dark' ? 'light' : 'dark')} />}
+                        label="Темна тема"
+                      />
+                    </FormGroup>
+                  </MenuItem>
+                  <MenuItem onClick={(e) => e.stopPropagation()}>
+                    <FormGroup>
+                      <FormControlLabel
+                        control={<Switch checked={autoUpdateEnabled} onChange={() => setAutoUpdateEnabled(!autoUpdateEnabled)} />}
+                        label="Автоматичне оновлення"
+                      />
+                    </FormGroup>
+                  </MenuItem>
                   <MenuItem onClick={handleSettingsMenuClose}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <Globe size={18} />
@@ -863,7 +931,6 @@ export default function App() {
                       </FormControl>
                     </Box>
                   </MenuItem>
-                  {/* Залишаємо лише один селектор для валюти відображення */}
                   <MenuItem onClick={handleSettingsMenuClose}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <DollarSign size={18} />
@@ -954,32 +1021,57 @@ export default function App() {
             width: '100%', 
             mx: 'auto',
           }}>
-            <Tabs 
-              value={tabValue} 
-              onChange={(e, newValue) => setTabValue(newValue)} 
-              aria-label="game tabs" 
-              centered
-              sx={{
-                '& .MuiTabs-indicator': {
-                  backgroundColor: theme.palette.primary.main,
-                }
-              }}
-            >
-              {GAMES.map((gameName, index) => (
-                <Tab 
-                  key={index} 
-                  label={gameName === "Усі" ? t.total : gameName} 
-                  sx={{
-                    minWidth: 0,
-                    padding: '6px 12px',
-                    fontSize: '0.875rem',
-                    '&.Mui-selected': {
-                      color: theme.palette.primary.main,
-                    }
-                  }}
-                />
-              ))}
-            </Tabs>
+            <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap">
+              <Tabs 
+                value={tabValue} 
+                onChange={(e, newValue) => {
+                  setTabValue(newValue);
+                  setPage(1); // Reset page on tab change
+                }} 
+                aria-label="game tabs" 
+                sx={{
+                  '& .MuiTabs-indicator': {
+                    backgroundColor: theme.palette.primary.main,
+                  }
+                }}
+              >
+                {GAMES.map((gameName, index) => (
+                  <Tab 
+                    key={index} 
+                    label={gameName === "Усі" ? t.total : gameName} 
+                    sx={{
+                      minWidth: 0,
+                      padding: '6px 12px',
+                      fontSize: '0.875rem',
+                      '&.Mui-selected': {
+                        color: theme.palette.primary.main,
+                      }
+                    }}
+                  />
+                ))}
+              </Tabs>
+              
+              <Box display="flex" alignItems="center" gap={1} flexWrap="wrap" mt={{ xs: 2, sm: 0 }}>
+                <FormControl variant="standard" size="small" sx={{ minWidth: 120 }}>
+                  <InputLabel>Сортувати за</InputLabel>
+                  <Select
+                    value={sortBy}
+                    onChange={(e) => {
+                      setSortBy(e.target.value);
+                      setPage(1); // Reset page on sort change
+                    }}
+                    label="Сортувати за"
+                  >
+                    <MenuItem value="name">Назвою</MenuItem>
+                    <MenuItem value="boughtDate">Датою покупки</MenuItem>
+                    <MenuItem value="buyPrice">Ціною покупки</MenuItem>
+                  </Select>
+                </FormControl>
+                <IconButton onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>
+                  {sortOrder === 'asc' ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
+                </IconButton>
+              </Box>
+            </Box>
           </Paper>
 
           <Box sx={{ 
@@ -991,17 +1083,17 @@ export default function App() {
             justifyContent: 'flex-start',
             px: 0,
           }}>
-            {filteredInvestments.length === 0 ? (
+            {paginatedInvestments.length === 0 ? (
               <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary, width: '100%' }}>
                 <Typography variant="h6">{t.noInvestmentsInCategory}</Typography>
               </Box>
             ) : (
-              filteredInvestments.map((item) => {
+              paginatedInvestments.map((item) => {
                 const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency);
                 const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR") : null;
                 const profitForCard = item.sold ? 
                   (convertCurrency(item.sellPrice, item.buyCurrency) - convertedBuyPrice) * item.count : 
-                  (convertedCurrentPrice - convertedBuyPrice) * item.count;
+                  (convertedCurrentPrice ? convertedCurrentPrice - convertedBuyPrice : 0) * item.count;
                 const profitColorForCard = profitForCard >= 0 ? theme.palette.success.main : theme.palette.error.main;
     
                 return (
@@ -1133,6 +1225,30 @@ export default function App() {
                   </Box>
                 );
               })
+            )}
+          </Box>
+          
+          <Box mt={4} display="flex" justifyContent="center">
+            {paginatedInvestments.length > 0 && (
+              <Pagination
+                count={pageCount}
+                page={page}
+                onChange={(event, value) => setPage(value)}
+                color="primary"
+                size="large"
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    color: theme.palette.text.primary,
+                    '&.Mui-selected': {
+                      backgroundColor: theme.palette.primary.main,
+                      color: 'white',
+                    },
+                    '&.Mui-selected:hover': {
+                      backgroundColor: theme.palette.primary.dark,
+                    },
+                  },
+                }}
+              />
             )}
           </Box>
   
@@ -1280,7 +1396,7 @@ export default function App() {
                       flexDirection: 'column', 
                       alignItems: 'center', 
                       p: 3, 
-                      background: '#F1F3F5', 
+                      background: theme.palette.background.default, 
                       borderRadius: 8, 
                       height: '100%',
                       gap: 2
@@ -1490,10 +1606,10 @@ export default function App() {
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={cumulativeProfit} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
-                    <XAxis dataKey="date" stroke="#666" />
-                    <YAxis stroke="#666" />
-                    <ChartTooltip contentStyle={{ backgroundColor: '#F8F9FA', border: '1px solid #ccc', borderRadius: 8 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                    <XAxis dataKey="date" stroke={theme.palette.text.secondary} />
+                    <YAxis stroke={theme.palette.text.secondary} />
+                    <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, border: '1px solid #ccc', borderRadius: 8 }} />
                     <Legend />
                     <Line type="monotone" dataKey="profit" stroke={theme.palette.primary.main} activeDot={{ r: 8 }} name={t.profit} />
                   </LineChart>
@@ -1511,7 +1627,7 @@ export default function App() {
                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                       ))}
                     </Pie>
-                    <ChartTooltip contentStyle={{ backgroundColor: '#F8F9FA', border: '1px solid #ccc', borderRadius: 8 }} />
+                    <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, border: '1px solid #ccc', borderRadius: 8 }} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
@@ -1543,10 +1659,10 @@ export default function App() {
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={priceHistory} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
-                    <XAxis dataKey="date" stroke="#666" />
-                    <YAxis stroke="#666" />
-                    <ChartTooltip contentStyle={{ backgroundColor: '#F8F9FA', border: '1px solid #ccc', borderRadius: 8 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                    <XAxis dataKey="date" stroke={theme.palette.text.secondary} />
+                    <YAxis stroke={theme.palette.text.secondary} />
+                    <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, border: '1px solid #ccc', borderRadius: 8 }} />
                     <Legend />
                     <Line type="monotone" dataKey="price" stroke={theme.palette.secondary.main} activeDot={{ r: 8 }} name="Ціна" />
                   </LineChart>
