@@ -1039,9 +1039,9 @@ export default function App() {
             </Tabs>
           </Paper>
   
-          {/* КОД ВИПРАВЛЕНО: Правильна структура Grid. Grid container обгортає всі Grid item. */}
           <Grid container spacing={2} sx={{ 
             px: { xs: 1, md: 0 },
+            alignItems: 'stretch',
             '& .MuiGrid-item': {
               pb: '16px !important',
               mb: '0 !important'
@@ -1055,19 +1055,21 @@ export default function App() {
               </Grid>
             ) : (
               filteredInvestments.map((item) => {
-                const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : ((item.currentPrice || item.buyPrice) - item.buyPrice) * item.count;
-                const profitColorForCard = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
+                const profitColorForCard = item.sold ? 
+                  ((item.sellPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main) : 
+                  (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
+  
                 return (
-                  // КОД ВИПРАВЛЕНО: Grid item має display: 'flex' для вирівнювання висоти карток.
                   <Grid item xs={12} sm={6} md={4} key={item.id} sx={{ display: 'flex' }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
                         <CardContent sx={{ 
                           p: 1.5,
-                          flexGrow: 1, // Додано flexGrow
+                          flexGrow: 1,
                           display: 'flex',
                           flexDirection: 'column',
                           overflow: 'hidden',
+                          minHeight: '200px', // Виправлення: мінімальна висота для контенту картки
                         }}>
                           <CardHeader>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
@@ -1106,12 +1108,22 @@ export default function App() {
                                 {item.buyPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}
                               </Typography>
                             </Box>
-                            <Box>
-                              <Typography variant="body2" color="text.secondary">{item.sold ? t.profit : t.currentMarketProfit}:</Typography>
-                              <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
-                                {item.sold ? `${itemProfit.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}` : (item.currentPrice ? `${itemProfit.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}` : '—')}
-                              </Typography>
-                            </Box>
+                            {/* ВИПРАВЛЕННЯ: Логіка відображення поточної ціни / прибутку */}
+                            {item.sold ? (
+                              <Box>
+                                <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
+                                <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
+                                  {((item.sellPrice - item.buyPrice) * item.count).toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}
+                                </Typography>
+                              </Box>
+                            ) : (
+                              <Box>
+                                <Typography variant="body2" color="text.secondary">{t.currentPrice}:</Typography>
+                                <Typography variant="h6" fontWeight="bold">
+                                  {item.currentPrice ? `${item.currentPrice.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+                                </Typography>
+                              </Box>
+                            )}
                             <Box>
                               <Typography variant="body2" color="text.secondary">{t.boughtDate}:</Typography>
                               <Typography variant="h6" fontWeight="bold">{item.boughtDate}</Typography>
