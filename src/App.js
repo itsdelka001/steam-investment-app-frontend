@@ -1393,25 +1393,26 @@ export default function App() {
                         <Tooltip title={`Комісія: ${totalCommissionRate.toFixed(2)}%`}>
                           <IconButton
                             size="small"
-                            onClick={(e) => handleCommissionManagerOpen(e, item)}
+                            onClick={(e) => { e.stopPropagation(); handleCommissionManagerOpen(e, item); }}
                             sx={{
                               position: 'absolute',
-                              top: 8, 
-                              right: 8,
+                              top: 0,
+                              right: 0,
+                              transform: 'translate(50%, -50%)',
                               backgroundColor: theme.palette.primary.main,
                               color: 'white',
-                              width: 32,
-                              height: 32,
+                              width: 40,
+                              height: 40,
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                               '&:hover': { 
                                 backgroundColor: theme.palette.primary.dark,
-                                transform: 'scale(1.1) rotate(15deg)',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                                transform: 'translate(50%, -50%) scale(1.1) rotate(15deg)',
                               },
                               transition: 'all 0.3s ease',
                               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
                             }}
                           >
-                            <Percent size={18} />
+                            <Percent size={20} />
                           </IconButton>
                         </Tooltip>
                         <Divider sx={{ my: 1 }} />
