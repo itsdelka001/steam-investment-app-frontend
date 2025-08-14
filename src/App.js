@@ -1413,7 +1413,8 @@ export default function App() {
                               },
                               transition: 'all 0.3s ease',
                               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                              zIndex: 1,
+                              zIndex: 3,
+                              border: `2px solid ${theme.palette.background.paper}`,
                             }}
                           >
                             <Percent size={20} />
