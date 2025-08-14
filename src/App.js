@@ -169,9 +169,6 @@ const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
   minHeight: '320px',
   width: '100%',
-  [theme.breakpoints.up('md')]: {
-    width: '100%',
-  },
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'space-between',
