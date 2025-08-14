@@ -257,7 +257,7 @@ export default function App() {
   const [sellDialog, setSellDialog] = useState(false);
   const [itemToSell, setItemToSell] = useState(null);
   const [sellPrice, setSellPrice] = useState(0);
-  const [sellDate, setSellDate] = useState(new Date().toISOString().split('T')[0]);
+  const [sellDate, setSellDate] = new Date().toISOString().split('T')[0];
   const [lang, setLang] = useState('uk');
   const [autocompleteLoading, setAutocompleteLoading] = useState(false);
   const [itemOptions, setItemOptions] = useState([]);
