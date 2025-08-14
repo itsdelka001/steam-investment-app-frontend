@@ -788,7 +788,7 @@ export default function App() {
     const itemProfit = convertedTotalCurrentPrice - convertedTotalBuyPrice;
     const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
     const profitPercentage = convertedTotalBuyPrice > 0 ? ((itemProfit / convertedTotalBuyPrice) * 100).toFixed(2) : '0.00';
-    
+
     const handleOpenMarketLink = () => {
       let url = '';
       if (item.game === "CS2") {
@@ -853,35 +853,33 @@ export default function App() {
             </Grid>
           </Grid>
           <Divider sx={{ my: 3 }} />
-          <Grid container spacing={2} sx={{ mt: 2 }}>
-            <Grid item xs={12}>
-                <Typography variant="h6" color="secondary" fontWeight="bold" textAlign="center" mb={1}>
-                  Ціна за одиницю
-                </Typography>
+          <Box textAlign="center">
+            <Typography variant="h6" color="secondary" fontWeight="bold" mb={2}>Деталізація активу</Typography>
+            <Grid container spacing={2} justifyContent="center">
+                <Grid item xs={12} sm={4}>
+                    <Box textAlign="center">
+                        <Typography variant="body2" color="text.secondary">Ціна за одиницю</Typography>
+                        <Typography variant="h6" fontWeight="bold">{convertCurrency(item.buyPrice, item.buyCurrency).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}</Typography>
+                    </Box>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <Box textAlign="center">
+                        <Typography variant="body2" color="text.secondary">Поточна ціна</Typography>
+                        <Typography variant="h6" fontWeight="bold">
+                            {item.currentPrice ? convertCurrency(item.currentPrice, 'EUR').toFixed(2) : '-'} {item.currentPrice ? CURRENCY_SYMBOLS[displayCurrency] : ''}
+                        </Typography>
+                    </Box>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                    <Box textAlign="center">
+                        <Typography variant="body2" color="text.secondary">Ціна продажу</Typography>
+                        <Typography variant="h6" fontWeight="bold">
+                            {item.sold ? convertCurrency(item.sellPrice, item.buyCurrency).toFixed(2) : '-'} {item.sold ? CURRENCY_SYMBOLS[displayCurrency] : ''}
+                        </Typography>
+                    </Box>
+                </Grid>
             </Grid>
-            <Grid item xs={12} sm={4}>
-              <Box textAlign="center">
-                  <Typography variant="body2" color="text.secondary">Ціна покупки</Typography>
-                  <Typography variant="h6" fontWeight="bold">{convertCurrency(item.buyPrice, item.buyCurrency).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}</Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Box textAlign="center">
-                  <Typography variant="body2" color="text.secondary">Поточна ціна</Typography>
-                  <Typography variant="h6" fontWeight="bold">
-                      {item.currentPrice ? convertCurrency(item.currentPrice, 'EUR').toFixed(2) : '-'} {item.currentPrice ? CURRENCY_SYMBOLS[displayCurrency] : ''}
-                  </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Box textAlign="center">
-                  <Typography variant="body2" color="text.secondary">Ціна продажу</Typography>
-                  <Typography variant="h6" fontWeight="bold">
-                      {item.sold ? convertCurrency(item.sellPrice, item.buyCurrency).toFixed(2) : '-'} {item.sold ? CURRENCY_SYMBOLS[displayCurrency] : ''}
-                  </Typography>
-              </Box>
-            </Grid>
-          </Grid>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
           <Box>
