@@ -719,7 +719,7 @@ export default function App() {
       showSnackbar("Комісія має бути більше 0", "error");
       return;
     }
-    const updatedCommissions = [...commissionItemToManage.commissions, { id: Date.now(), rate: Number(newCommissionRate), note: newCommissionNote }];
+    const updatedCommissions = [...(commissionItemToManage.commissions || []), { id: Date.now(), rate: Number(newCommissionRate), note: newCommissionNote }];
     updateInvestment(commissionItemToManage.id, { commissions: updatedCommissions });
     setNewCommissionRate(0);
     setNewCommissionNote("");
@@ -737,7 +737,7 @@ export default function App() {
       return;
     }
     if (editingCommissionIndex !== null) {
-      const updatedCommissions = [...commissionItemToManage.commissions];
+      const updatedCommissions = [...(commissionItemToManage.commissions || [])];
       updatedCommissions[editingCommissionIndex] = { ...updatedCommissions[editingCommissionIndex], rate: Number(newCommissionRate), note: newCommissionNote };
       updateInvestment(commissionItemToManage.id, { commissions: updatedCommissions });
       setNewCommissionRate(0);
@@ -747,7 +747,7 @@ export default function App() {
   };
 
   const handleDeleteCommission = (id) => {
-    const updatedCommissions = commissionItemToManage.commissions.filter(c => c.id !== id);
+    const updatedCommissions = (commissionItemToManage.commissions || []).filter(c => c.id !== id);
     updateInvestment(commissionItemToManage.id, { commissions: updatedCommissions });
   };
 
@@ -866,7 +866,7 @@ export default function App() {
     
     const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
     const profitPercentage = convertedTotalBuyPrice > 0 ? ((itemProfit / convertedTotalBuyPrice) * 100).toFixed(2) : '0.00';
-    const totalCommissionRate = item.commissions.reduce((sum, c) => sum + c.rate, 0);
+    const totalCommissionRate = (item.commissions || []).reduce((sum, c) => sum + c.rate, 0);
 
     const handleOpenMarketLink = () => {
       let url = '';
@@ -993,7 +993,7 @@ export default function App() {
     if (!item) return null;
   
     const isEditing = editingCommissionIndex !== null;
-    const totalCommissionRate = item.commissions.reduce((sum, c) => sum + c.rate, 0);
+    const totalCommissionRate = (item.commissions || []).reduce((sum, c) => sum + c.rate, 0);
   
     return (
       <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
@@ -1011,9 +1011,9 @@ export default function App() {
           </Box>
           <Divider sx={{ my: 2 }} />
           <Typography variant="body1" fontWeight="bold" mb={1}>Існуючі комісії:</Typography>
-          {item.commissions.length > 0 ? (
+          {(item.commissions || []).length > 0 ? (
             <List dense>
-              {item.commissions.map((commission, index) => (
+              {(item.commissions || []).map((commission, index) => (
                 <ListItem 
                   key={commission.id || index} 
                   disablePadding 
@@ -1353,7 +1353,7 @@ export default function App() {
                 const itemTotalValueForCard = item.sold ? convertCurrency(item.sellPrice, item.buyCurrency) * item.count : convertedCurrentPrice ? convertedCurrentPrice * item.count : 0;
                 const profitForCard = getNetProfit(itemGrossProfitForCard, itemTotalValueForCard, item.commissions);
                 const profitColorForCard = profitForCard >= 0 ? theme.palette.success.main : theme.palette.error.main;
-                const totalCommissionRate = item.commissions.reduce((sum, c) => sum + c.rate, 0);
+                const totalCommissionRate = (item.commissions || []).reduce((sum, c) => sum + c.rate, 0);
     
                 return (
                   <Box 
