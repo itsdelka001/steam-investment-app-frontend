@@ -1064,7 +1064,6 @@ export default function App() {
                 const profitColorForCard = profit >= 0 ? theme.palette.success.main : theme.palette.error.main;
   
                 return (
-                  {/* ✨ ВИПРАВЛЕНО: Змінено розмір для 3 карток в ряду */}
                   <Grid item xs={12} sm={6} md={6} lg={4} key={item.id} sx={{ display: 'flex', pb: 2 }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
