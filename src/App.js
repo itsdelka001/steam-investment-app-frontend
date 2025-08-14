@@ -1072,7 +1072,7 @@ export default function App() {
   
                 return (
                   // ✨ ВИПРАВЛЕНО: Встановлено `xs={4}` та `sm={4}` для примусового відображення 3-х карток на всіх екранах
-                  <Grid item xs={4} sm={4} md={4} key={item.id} sx={{ display: 'flex', pb: 2 }}>
+                  <Grid item xs={3} sm={3} md={3} key={item.id} sx={{ display: 'flex', pb: 2 }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
                         <CardContent sx={{ 
