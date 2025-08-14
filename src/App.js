@@ -723,16 +723,16 @@ export default function App() {
     setPage(1); // Reset page to 1 when tab changes
   };
 
-  const totalInvestment = investments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
-  const totalSoldProfit = investments
+  const totalInvestment = (investments || []).reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
+  const totalSoldProfit = (investments || [])
     .filter(item => item.sold)
     .reduce((sum, item) => sum + convertCurrency((item.sellPrice - item.buyPrice) * item.count, item.buyCurrency), 0);
   
-  const totalMarketValue = investments
+  const totalMarketValue = (investments || [])
     .filter(item => !item.sold)
     .reduce((sum, item) => sum + convertCurrency((item.currentPrice || item.buyPrice) * item.count, item.buyCurrency), 0);
   
-  const currentMarketProfit = totalMarketValue - investments
+  const currentMarketProfit = totalMarketValue - (investments || [])
     .filter(item => !item.sold)
     .reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
 
@@ -742,7 +742,7 @@ export default function App() {
   const currentProfitColor = currentMarketProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
   const currentPercentageProfit = totalInvestment > 0 ? (currentMarketProfit / totalInvestment) * 100 : 0;
 
-  const profitByDate = investments
+  const profitByDate = (investments || [])
     .filter(item => item.sold)
     .map(item => ({ date: item.sellDate, profit: convertCurrency((item.sellPrice - item.buyPrice) * item.count, item.buyCurrency) }))
     .sort((a, b) => new Date(a.date) - new Date(b.date))
@@ -762,7 +762,7 @@ export default function App() {
     return acc;
   }, []);
 
-  const investmentDistributionData = Object.entries(investments.reduce((acc, item) => {
+  const investmentDistributionData = Object.entries((investments || []).reduce((acc, item) => {
     if (!acc[item.game]) acc[item.game] = 0;
     acc[item.game] += convertCurrency(item.buyPrice * item.count, item.buyCurrency);
     return acc;
@@ -1010,7 +1010,7 @@ export default function App() {
                 <Typography variant="h6">{t.noInvestmentsInCategory}</Typography>
               </Box>
             ) : (
-              investments.map((item) => {
+              (investments || []).map((item) => {
                 const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency);
                 const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR") : null;
                 const profitForCard = item.sold ? 
