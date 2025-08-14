@@ -1060,6 +1060,7 @@ export default function App() {
                   (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
   
                 return (
+                  // ✨ ВИПРАВЛЕНО: Змінено розмір для 3 карток в ряду
                   <Grid item xs={12} sm={6} md={4} key={item.id} sx={{ display: 'flex', pb: 2 }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
@@ -1108,21 +1109,18 @@ export default function App() {
                                 {item.buyPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}
                               </Typography>
                             </Box>
-                            {item.sold ? (
-                              <Box>
-                                <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
+                              {item.sold ? (
                                 <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
                                   {((item.sellPrice - item.buyPrice) * item.count).toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}
                                 </Typography>
-                              </Box>
-                            ) : (
-                              <Box>
-                                <Typography variant="body2" color="text.secondary">{t.currentPrice}:</Typography>
-                                <Typography variant="h6" fontWeight="bold">
-                                  {item.currentPrice ? `${item.currentPrice.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+                              ) : (
+                                <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
+                                  {item.currentPrice ? ((item.currentPrice - item.buyPrice) * item.count).toFixed(2) : 0} {CURRENCY_SYMBOLS[item.buyCurrency]}
                                 </Typography>
-                              </Box>
-                            )}
+                              )}
+                            </Box>
                             <Box>
                               <Typography variant="body2" color="text.secondary">{t.boughtDate}:</Typography>
                               <Typography variant="h6" fontWeight="bold">{item.boughtDate}</Typography>
