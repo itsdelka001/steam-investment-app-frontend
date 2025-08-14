@@ -1399,8 +1399,8 @@ export default function App() {
                             onClick={(e) => { e.stopPropagation(); handleCommissionManagerOpen(e, item); }}
                             sx={{
                               position: 'absolute',
-                              top: 0,
-                              right: 0,
+                              top: -12,
+                              right: -12,
                               transform: 'translate(50%, -50%)',
                               backgroundColor: theme.palette.primary.main,
                               color: 'white',
@@ -1413,7 +1413,7 @@ export default function App() {
                               },
                               transition: 'all 0.3s ease',
                               background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                              zIndex: 3,
+                              zIndex: 100,
                               border: `2px solid ${theme.palette.background.paper}`,
                             }}
                           >
