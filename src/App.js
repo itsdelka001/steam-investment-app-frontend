@@ -1016,7 +1016,8 @@ export default function App() {
             </Grid>
           </Grid>
   
-          <Paper sx={{ mb: 4, p: 1, mx: { xs: 1, md: 0 } }}>
+          {/* ✨ ВИПРАВЛЕНО: Додано стилі для вирівнювання білої смужки */}
+          <Paper sx={{ mb: 4, p: 1, mx: { xs: 1, md: -1 } }}> 
             <Tabs 
               value={tabValue} 
               onChange={(e, newValue) => setTabValue(newValue)} 
@@ -1045,8 +1046,9 @@ export default function App() {
             </Tabs>
           </Paper>
   
+          {/* ✨ ВИПРАВЛЕНО: Додано стилі для вирівнювання карток */}
           <Grid container spacing={2} sx={{ 
-            px: { xs: 1, md: 0 },
+            px: { xs: 1, md: -1 },
             alignItems: 'stretch',
           }}>
             {filteredInvestments.length === 0 ? (
@@ -1062,8 +1064,8 @@ export default function App() {
                 const profitColorForCard = profit >= 0 ? theme.palette.success.main : theme.palette.error.main;
   
                 return (
-                  // ✨ ВИПРАВЛЕНО: Змінено розмір для 3 карток в ряду
-                  <Grid item xs={12} sm={6} md={4} key={item.id} sx={{ display: 'flex', pb: 2 }}>
+                  {/* ✨ ВИПРАВЛЕНО: Змінено розмір для 3 карток в ряду */}
+                  <Grid item xs={12} sm={6} md={6} lg={4} key={item.id} sx={{ display: 'flex', pb: 2 }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
                         <CardContent sx={{ 
