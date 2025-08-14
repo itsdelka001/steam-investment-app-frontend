@@ -5,7 +5,7 @@ import {
   Tabs, Tab, IconButton, Snackbar, Alert, Grid, Card, CardContent, Chip, Tooltip,
   Autocomplete, CircularProgress, Divider, LinearProgress, Paper, Fab, Menu,
   Pagination, Switch, FormGroup, FormControlLabel,
-  TableSortLabel
+  TableSortLabel, List, ListItem, ListItemText, ListItemSecondaryAction, ListItemButton
 } from '@mui/material';
 import {
   TrendingUp, Delete, Check, BarChart, Plus, Globe, X, ArrowUp, Edit,
@@ -277,11 +277,13 @@ export default function App() {
   const [exchangeRates, setExchangeRates] = useState({});
   const [themeMode, setThemeMode] = useState('light');
   const [autoUpdateEnabled, setAutoUpdateEnabled] = useState(false);
-  const [commissionDialogOpen, setCommissionDialogOpen] = useState(false);
-  const [commissionItemToEdit, setCommissionItemToEdit] = useState(null);
-  const [commissionRateToEdit, setCommissionRateToEdit] = useState(0);
-  const [additionalCommissionRateToEdit, setAdditionalCommissionRateToEdit] = useState(0);
-  const [commissionNoteToEdit, setCommissionNoteToEdit] = useState("");
+
+  // New commission state
+  const [commissionManagerDialogOpen, setCommissionManagerDialogOpen] = useState(false);
+  const [commissionItemToManage, setCommissionItemToManage] = useState(null);
+  const [newCommissionRate, setNewCommissionRate] = useState(0);
+  const [newCommissionNote, setNewCommissionNote] = useState("");
+  const [editingCommissionIndex, setEditingCommissionIndex] = useState(null);
 
   // Pagination and Sorting State
   const [page, setPage] = useState(1);
@@ -593,9 +595,9 @@ export default function App() {
         sellDate: null,
         image: selectedItemDetails?.image || null,
         createdAt: new Date().toISOString(),
-        commissionRate: 15, // Base commission added here
-        additionalCommissionRate: 0,
-        commissionNote: "",
+        commissions: [ // Initial commission list
+          { id: Date.now(), rate: 15, note: "Steam Market" }
+        ],
       };
 
       const response = await fetch(`${BACKEND_URL}/api/investments`, {
@@ -703,30 +705,50 @@ export default function App() {
     }
   };
 
-  const handleCommissionClick = (event, item) => {
+  const handleCommissionManagerOpen = (event, item) => {
     event.stopPropagation();
-    setCommissionItemToEdit(item);
-    setCommissionRateToEdit(item.commissionRate || 15);
-    setAdditionalCommissionRateToEdit(item.additionalCommissionRate || 0);
-    setCommissionNoteToEdit(item.commissionNote || "");
-    setCommissionDialogOpen(true);
+    setCommissionItemToManage(item);
+    setNewCommissionRate(0);
+    setNewCommissionNote("");
+    setEditingCommissionIndex(null);
+    setCommissionManagerDialogOpen(true);
   };
 
-  const handleSaveCommission = async () => {
-    if (!commissionItemToEdit) return;
-    try {
-      await updateInvestment(commissionItemToEdit.id, {
-        commissionRate: commissionRateToEdit,
-        additionalCommissionRate: additionalCommissionRateToEdit,
-        commissionNote: commissionNoteToEdit,
-      });
-      setCommissionDialogOpen(false);
-      setCommissionItemToEdit(null);
-      getInvestments();
-    } catch (error) {
-      console.error("Error saving commission:", error);
-      showSnackbar("Помилка при збереженні комісії", "error");
+  const handleAddCommission = () => {
+    if (newCommissionRate <= 0) {
+      showSnackbar("Комісія має бути більше 0", "error");
+      return;
     }
+    const updatedCommissions = [...commissionItemToManage.commissions, { id: Date.now(), rate: Number(newCommissionRate), note: newCommissionNote }];
+    updateInvestment(commissionItemToManage.id, { commissions: updatedCommissions });
+    setNewCommissionRate(0);
+    setNewCommissionNote("");
+  };
+
+  const handleEditCommission = (commission, index) => {
+    setNewCommissionRate(commission.rate);
+    setNewCommissionNote(commission.note);
+    setEditingCommissionIndex(index);
+  };
+
+  const handleUpdateCommission = () => {
+    if (newCommissionRate <= 0) {
+      showSnackbar("Комісія має бути більше 0", "error");
+      return;
+    }
+    if (editingCommissionIndex !== null) {
+      const updatedCommissions = [...commissionItemToManage.commissions];
+      updatedCommissions[editingCommissionIndex] = { ...updatedCommissions[editingCommissionIndex], rate: Number(newCommissionRate), note: newCommissionNote };
+      updateInvestment(commissionItemToManage.id, { commissions: updatedCommissions });
+      setNewCommissionRate(0);
+      setNewCommissionNote("");
+      setEditingCommissionIndex(null);
+    }
+  };
+
+  const handleDeleteCommission = (id) => {
+    const updatedCommissions = commissionItemToManage.commissions.filter(c => c.id !== id);
+    updateInvestment(commissionItemToManage.id, { commissions: updatedCommissions });
   };
 
   const showSnackbar = (message, severity) => {
@@ -767,8 +789,8 @@ export default function App() {
   const paginatedInvestments = sortedInvestments.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   // Profit calculations with individual commission
-  const getNetProfit = (grossProfit, totalValue, baseRate, additionalRate) => {
-    const totalRate = (baseRate || 0) + (additionalRate || 0);
+  const getNetProfit = (grossProfit, totalValue, commissions) => {
+    const totalRate = (commissions || []).reduce((sum, c) => sum + c.rate, 0);
     const totalCommission = totalValue * (totalRate / 100);
     return grossProfit - totalCommission;
   };
@@ -780,7 +802,7 @@ export default function App() {
     .reduce((sum, item) => {
         const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
         const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
-        const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissionRate, item.additionalCommissionRate);
+        const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissions);
         return sum + netProfit;
     }, 0);
   
@@ -803,7 +825,7 @@ export default function App() {
     .map(item => {
         const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
         const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
-        const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissionRate, item.additionalCommissionRate);
+        const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissions);
         return { date: item.sellDate, profit: netProfit };
     })
     .sort((a, b) => new Date(a.date) - new Date(b.date))
@@ -840,11 +862,11 @@ export default function App() {
     
     const itemGrossProfit = convertedTotalCurrentPrice - convertedTotalBuyPrice;
     const itemTotalValue = item.sold ? convertCurrency(item.sellPrice * item.count, item.buyCurrency) : convertedTotalCurrentPrice;
-    const itemProfit = getNetProfit(itemGrossProfit, itemTotalValue, item.commissionRate, item.additionalCommissionRate);
+    const itemProfit = getNetProfit(itemGrossProfit, itemTotalValue, item.commissions);
     
     const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
     const profitPercentage = convertedTotalBuyPrice > 0 ? ((itemProfit / convertedTotalBuyPrice) * 100).toFixed(2) : '0.00';
-    const totalCommission = (item.commissionRate || 0) + (item.additionalCommissionRate || 0);
+    const totalCommissionRate = item.commissions.reduce((sum, c) => sum + c.rate, 0);
 
     const handleOpenMarketLink = () => {
       let url = '';
@@ -906,9 +928,9 @@ export default function App() {
                         </Typography>
                     </Grid>
                     <Grid item xs={6}>
-                        <Typography variant="body2" color="text.secondary">Комісія</Typography>
+                        <Typography variant="body2" color="text.secondary">Загальна комісія</Typography>
                         <Typography variant="h6" fontWeight="bold" >
-                            {totalCommission}%
+                            {totalCommissionRate.toFixed(2)}%
                         </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -962,6 +984,126 @@ export default function App() {
               {t.edit}
             </Button>
           </Box>
+        </DialogActions>
+      </Dialog>
+    );
+  };
+  
+  const CommissionManagerDialog = ({ open, onClose, item }) => {
+    if (!item) return null;
+  
+    const isEditing = editingCommissionIndex !== null;
+    const totalCommissionRate = item.commissions.reduce((sum, c) => sum + c.rate, 0);
+  
+    return (
+      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+        <DialogTitle sx={{ textAlign: 'center', pb: 0 }}>
+          <Typography variant="h6" fontWeight="bold" color="primary">Управління комісіями</Typography>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Box mb={2}>
+            <Typography variant="body1" color="text.secondary" textAlign="center">
+              Комісії для предмета: <br/> **{item.name}**
+            </Typography>
+            <Typography variant="h5" fontWeight="bold" textAlign="center" mt={1}>
+              Загальна комісія: {totalCommissionRate.toFixed(2)}%
+            </Typography>
+          </Box>
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="body1" fontWeight="bold" mb={1}>Існуючі комісії:</Typography>
+          {item.commissions.length > 0 ? (
+            <List dense>
+              {item.commissions.map((commission, index) => (
+                <ListItem 
+                  key={commission.id || index} 
+                  disablePadding 
+                  secondaryAction={
+                    <ListItemSecondaryAction>
+                      <Tooltip title="Редагувати">
+                        <IconButton 
+                          edge="end" 
+                          aria-label="edit" 
+                          onClick={() => handleEditCommission(commission, index)}
+                          size="small"
+                        >
+                          <Edit size={16} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Видалити">
+                        <IconButton 
+                          edge="end" 
+                          aria-label="delete" 
+                          onClick={() => handleDeleteCommission(commission.id)}
+                          size="small"
+                          color="error"
+                        >
+                          <Delete size={16} />
+                        </IconButton>
+                      </Tooltip>
+                    </ListItemSecondaryAction>
+                  }
+                  sx={{ 
+                    '&:hover': { backgroundColor: theme.palette.action.hover },
+                    borderRadius: 8,
+                    mb: 1,
+                    backgroundColor: editingCommissionIndex === index ? theme.palette.action.selected : 'transparent'
+                  }}
+                >
+                  <ListItemButton>
+                    <ListItemText
+                      primary={`${commission.rate}%`}
+                      secondary={commission.note}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              ))}
+            </List>
+          ) : (
+            <Typography variant="body2" color="text.secondary" align="center">
+              Для цього предмета немає комісій.
+            </Typography>
+          )}
+          <Divider sx={{ my: 2 }} />
+          <Typography variant="body1" fontWeight="bold" mb={1}>{isEditing ? "Редагувати комісію" : "Додати нову комісію"}:</Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Відсоток комісії (%)"
+                type="number"
+                value={newCommissionRate}
+                onChange={(e) => setNewCommissionRate(e.target.value)}
+                fullWidth
+                required
+                InputProps={{ inputProps: { min: 0 } }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Примітка"
+                value={newCommissionNote}
+                onChange={(e) => setNewCommissionNote(e.target.value)}
+                fullWidth
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
+          <Button 
+            onClick={onClose} 
+            color="secondary" 
+            variant="outlined"
+            sx={{ borderRadius: 8 }}
+          >
+            Закрити
+          </Button>
+          <Button 
+            onClick={isEditing ? handleUpdateCommission : handleAddCommission} 
+            color="primary" 
+            variant="contained"
+            sx={{ borderRadius: 8 }}
+          >
+            {isEditing ? "Зберегти зміни" : "Додати"}
+          </Button>
         </DialogActions>
       </Dialog>
     );
@@ -1209,9 +1351,9 @@ export default function App() {
                   (convertCurrency(item.sellPrice, item.buyCurrency) - convertedBuyPrice) * item.count : 
                   (convertedCurrentPrice ? convertedCurrentPrice - convertedBuyPrice : 0) * item.count;
                 const itemTotalValueForCard = item.sold ? convertCurrency(item.sellPrice, item.buyCurrency) * item.count : convertedCurrentPrice ? convertedCurrentPrice * item.count : 0;
-                const profitForCard = getNetProfit(itemGrossProfitForCard, itemTotalValueForCard, item.commissionRate, item.additionalCommissionRate);
+                const profitForCard = getNetProfit(itemGrossProfitForCard, itemTotalValueForCard, item.commissions);
                 const profitColorForCard = profitForCard >= 0 ? theme.palette.success.main : theme.palette.error.main;
-                const totalCommissionRate = (item.commissionRate || 0) + (item.additionalCommissionRate || 0);
+                const totalCommissionRate = item.commissions.reduce((sum, c) => sum + c.rate, 0);
     
                 return (
                   <Box 
@@ -1254,10 +1396,10 @@ export default function App() {
                               right: -24,
                             }}
                           >
-                            <Tooltip title={`Комісія: ${totalCommissionRate}%`}>
+                            <Tooltip title={`Комісія: ${totalCommissionRate.toFixed(2)}%`}>
                               <IconButton
                                 size="small"
-                                onClick={(e) => handleCommissionClick(e, item)}
+                                onClick={(e) => handleCommissionManagerOpen(e, item)}
                                 sx={{
                                   backgroundColor: theme.palette.primary.main,
                                   color: 'white',
@@ -1819,67 +1961,11 @@ export default function App() {
             </DialogActions>
           </Dialog>
 
-          <Dialog open={commissionDialogOpen} onClose={() => setCommissionDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
-            <DialogTitle sx={{ textAlign: 'center' }}>
-              <Typography variant="h6" fontWeight="bold" color="primary">Налаштування комісії</Typography>
-            </DialogTitle>
-            <DialogContent dividers>
-              <Typography variant="body1" color="text.secondary" mb={2} textAlign="center">
-                Комісія для предмета: <br/> **{commissionItemToEdit?.name}**
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Базова комісія (%)"
-                    type="number"
-                    value={commissionRateToEdit}
-                    onChange={(e) => setCommissionRateToEdit(Number(e.target.value))}
-                    fullWidth
-                    required
-                    InputProps={{ inputProps: { min: 0 } }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Додаткова комісія (%)"
-                    type="number"
-                    value={additionalCommissionRateToEdit}
-                    onChange={(e) => setAdditionalCommissionRateToEdit(Number(e.target.value))}
-                    fullWidth
-                    InputProps={{ inputProps: { min: 0 } }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Примітка до комісії"
-                    value={commissionNoteToEdit}
-                    onChange={(e) => setCommissionNoteToEdit(e.target.value)}
-                    multiline
-                    rows={2}
-                    fullWidth
-                  />
-                </Grid>
-              </Grid>
-            </DialogContent>
-            <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
-              <Button 
-                onClick={() => { setCommissionDialogOpen(false); setCommissionItemToEdit(null); }} 
-                color="secondary" 
-                variant="outlined"
-                sx={{ borderRadius: 8 }}
-              >
-                Скасувати
-              </Button>
-              <Button 
-                onClick={handleSaveCommission} 
-                color="primary" 
-                variant="contained"
-                sx={{ borderRadius: 8 }}
-              >
-                Зберегти
-              </Button>
-            </DialogActions>
-          </Dialog>
+          <CommissionManagerDialog
+            open={commissionManagerDialogOpen}
+            onClose={() => setCommissionManagerDialogOpen(false)}
+            item={commissionItemToManage}
+          />
 
           <ItemDetailsDialog 
             open={itemDetailsDialogOpen} 
