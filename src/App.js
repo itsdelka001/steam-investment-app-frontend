@@ -1014,7 +1014,13 @@ export default function App() {
             </Grid>
           </Grid>
   
-          <Paper sx={{ mb: 4, p: 1, mx: { xs: 1, md: 0 } }}>
+          <Paper sx={{ 
+            mb: 4, 
+            p: 1, 
+            mx: { xs: 1, md: 0 },
+            maxWidth: 'md', // 👈 Додано для обмеження ширини
+            margin: '0 auto', // 👈 Додано для центрування
+          }}>
             <Tabs 
               value={tabValue} 
               onChange={(e, newValue) => setTabValue(newValue)} 
