@@ -159,6 +159,11 @@ const theme = createTheme({
 const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
   minHeight: '320px',
+  // ✨ ВИПРАВЛЕНО: встановлено фіксовану ширину для карток на md екранах
+  width: '100%',
+  [theme.breakpoints.up('md')]: {
+    width: '320px', // Фіксована ширина для середніх і великих екранів
+  },
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'space-between',
@@ -285,7 +290,7 @@ const LANGUAGES = {
     addItem: "ADD ASSET",
     save: "SAVE",
     cancel: "CANCEL",
-    sold: "SOLD",
+    sold: "YES",
     yes: "YES",
     no: "NO",
     sellPrice: "SELL PRICE",
@@ -1055,7 +1060,6 @@ export default function App() {
                   (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
   
                 return (
-                  // ✨ ВИПРАВЛЕНО: Додано display: 'flex' та відступ знизу
                   <Grid item xs={12} sm={6} md={4} key={item.id} sx={{ display: 'flex', pb: 2 }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
