@@ -275,11 +275,11 @@ export default function App() {
   const [isUpdatingAllPrices, setIsUpdatingAllPrices] = useState(false);
   const [t, setT] = useState({});
   const [exchangeRates, setExchangeRates] = useState({});
-  const [exchangeRatesDialogOpen, setExchangeRatesDialogOpen] = useState(false);
   const [themeMode, setThemeMode] = useState('light');
   const [autoUpdateEnabled, setAutoUpdateEnabled] = useState(false);
-  const [globalCommissionRate, setGlobalCommissionRate] = useState(15);
   const [commissionDialogOpen, setCommissionDialogOpen] = useState(false);
+  const [commissionItemToEdit, setCommissionItemToEdit] = useState(null);
+  const [commissionRateToEdit, setCommissionRateToEdit] = useState(0);
 
   // Pagination and Sorting State
   const [page, setPage] = useState(1);
@@ -698,6 +698,27 @@ export default function App() {
     }
   };
 
+  const handleCommissionClick = (event, item) => {
+    event.stopPropagation();
+    setCommissionItemToEdit(item);
+    setCommissionRateToEdit(item.commissionRate || 0); // Use 0 if no rate is set
+    setCommissionDialogOpen(true);
+  };
+
+  const handleSaveCommission = async () => {
+    if (!commissionItemToEdit) return;
+    try {
+      await updateInvestment(commissionItemToEdit.id, {
+        commissionRate: commissionRateToEdit
+      });
+      setCommissionDialogOpen(false);
+      setCommissionItemToEdit(null);
+    } catch (error) {
+      console.error("Error saving commission:", error);
+      showSnackbar("Помилка при збереженні комісії", "error");
+    }
+  };
+
   const showSnackbar = (message, severity) => {
     setSnackbar({ open: true, message, severity });
   };
@@ -735,9 +756,10 @@ export default function App() {
   const pageCount = Math.ceil(sortedInvestments.length / ITEMS_PER_PAGE);
   const paginatedInvestments = sortedInvestments.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  // Profit calculations with global commission
+  // Profit calculations with individual commission
   const getNetProfit = (grossProfit, totalValue, commissionRate) => {
-    const totalCommission = totalValue * (commissionRate / 100);
+    const rate = commissionRate || 0; // Default to 0 if not set
+    const totalCommission = totalValue * (rate / 100);
     return grossProfit - totalCommission;
   };
 
@@ -748,7 +770,7 @@ export default function App() {
     .reduce((sum, item) => {
         const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
         const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
-        const netProfit = getNetProfit(grossProfit, totalSellValue, globalCommissionRate);
+        const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissionRate);
         return sum + netProfit;
     }, 0);
   
@@ -771,7 +793,7 @@ export default function App() {
     .map(item => {
         const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
         const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
-        const netProfit = getNetProfit(grossProfit, totalSellValue, globalCommissionRate);
+        const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissionRate);
         return { date: item.sellDate, profit: netProfit };
     })
     .sort((a, b) => new Date(a.date) - new Date(b.date))
@@ -808,7 +830,7 @@ export default function App() {
     
     const itemGrossProfit = convertedTotalCurrentPrice - convertedTotalBuyPrice;
     const itemTotalValue = item.sold ? convertCurrency(item.sellPrice * item.count, item.buyCurrency) : convertedTotalCurrentPrice;
-    const itemProfit = getNetProfit(itemGrossProfit, itemTotalValue, globalCommissionRate);
+    const itemProfit = getNetProfit(itemGrossProfit, itemTotalValue, item.commissionRate);
     
     const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
     const profitPercentage = convertedTotalBuyPrice > 0 ? ((itemProfit / convertedTotalBuyPrice) * 100).toFixed(2) : '0.00';
@@ -875,7 +897,7 @@ export default function App() {
                     <Grid item xs={6}>
                         <Typography variant="body2" color="text.secondary">Комісія</Typography>
                         <Typography variant="h6" fontWeight="bold" >
-                            {globalCommissionRate}%
+                            {item.commissionRate || 0}%
                         </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -960,11 +982,6 @@ export default function App() {
                 <Tooltip title={t.analytics}>
                   <IconButton color="secondary" onClick={handleAnalyticsOpen}>
                     <BarChart />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Налаштувати комісію">
-                  <IconButton color="primary" onClick={() => setCommissionDialogOpen(true)}>
-                    <Percent />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title={t.settings}>
@@ -1181,7 +1198,7 @@ export default function App() {
                   (convertCurrency(item.sellPrice, item.buyCurrency) - convertedBuyPrice) * item.count : 
                   (convertedCurrentPrice ? convertedCurrentPrice - convertedBuyPrice : 0) * item.count;
                 const itemTotalValueForCard = item.sold ? convertCurrency(item.sellPrice, item.buyCurrency) * item.count : convertedCurrentPrice ? convertedCurrentPrice * item.count : 0;
-                const profitForCard = getNetProfit(itemGrossProfitForCard, itemTotalValueForCard, globalCommissionRate);
+                const profitForCard = getNetProfit(itemGrossProfitForCard, itemTotalValueForCard, item.commissionRate);
                 const profitColorForCard = profitForCard >= 0 ? theme.palette.success.main : theme.palette.error.main;
     
                 return (
@@ -1193,7 +1210,50 @@ export default function App() {
                     }}
                   >
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
-                      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', position: 'relative' }}>
+                        <CardHeader>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
+                            {item.image && (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }}
+                              />
+                            )}
+                            <Box sx={{ overflow: 'hidden' }}>
+                              <Typography variant="subtitle1" fontWeight="bold" noWrap sx={{ textOverflow: 'ellipsis' }}>
+                                {item.name}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary" noWrap>
+                                {item.game}
+                              </Typography>
+                            </Box>
+                          </Box>
+                          <Chip 
+                            label={item.sold ? t.sold : t.active} 
+                            color={item.sold ? "success" : "primary"} 
+                            size="small" 
+                            sx={{ ml: 1 }}
+                          />
+                          <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
+                            <Tooltip title={`Комісія: ${item.commissionRate || 0}%`}>
+                              <IconButton
+                                size="small"
+                                onClick={(e) => handleCommissionClick(e, item)}
+                                sx={{
+                                  backgroundColor: 'rgba(0,0,0,0.1)',
+                                  '&:hover': { backgroundColor: 'rgba(0,0,0,0.2)' },
+                                  color: 'white',
+                                  p: 0.5,
+                                  borderRadius: '50%',
+                                }}
+                              >
+                                <Percent size={16} />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </CardHeader>
+                        <Divider sx={{ my: 1 }} />
                         <CardContent sx={{ 
                           p: 1.5,
                           flexGrow: 1,
@@ -1202,32 +1262,6 @@ export default function App() {
                           overflow: 'hidden',
                           minHeight: '200px',
                         }}>
-                          <CardHeader>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
-                              {item.image && (
-                                <img
-                                  src={item.image}
-                                  alt={item.name}
-                                  style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }}
-                                />
-                              )}
-                              <Box sx={{ overflow: 'hidden' }}>
-                                <Typography variant="subtitle1" fontWeight="bold" noWrap sx={{ textOverflow: 'ellipsis' }}>
-                                  {item.name}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" noWrap>
-                                  {item.game}
-                                </Typography>
-                              </Box>
-                            </Box>
-                            <Chip 
-                              label={item.sold ? t.sold : t.active} 
-                              color={item.sold ? "success" : "primary"} 
-                              size="small" 
-                              sx={{ ml: 1 }}
-                            />
-                          </CardHeader>
-                          <Divider sx={{ my: 1 }} />
                           <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1} sx={{ overflow: 'hidden' }}>
                             <Box>
                               <Typography variant="body2" color="text.secondary">{t.count}:</Typography>
@@ -1766,13 +1800,13 @@ export default function App() {
             </DialogTitle>
             <DialogContent dividers>
               <Typography variant="body1" color="text.secondary" mb={2}>
-                Встановіть єдиний відсоток комісії, який буде застосовуватися до всіх розрахунків прибутку.
+                Встановіть відсоток комісії для предмета: <br/> **{commissionItemToEdit?.name}**
               </Typography>
               <TextField
                 label="Відсоток комісії (%)"
                 type="number"
-                value={globalCommissionRate}
-                onChange={(e) => setGlobalCommissionRate(Number(e.target.value))}
+                value={commissionRateToEdit}
+                onChange={(e) => setCommissionRateToEdit(Number(e.target.value))}
                 fullWidth
                 required
                 InputProps={{ inputProps: { min: 0 } }}
@@ -1780,12 +1814,20 @@ export default function App() {
             </DialogContent>
             <DialogActions>
               <Button 
-                onClick={() => setCommissionDialogOpen(false)} 
+                onClick={() => { setCommissionDialogOpen(false); setCommissionItemToEdit(null); }} 
                 color="secondary" 
                 variant="outlined"
                 sx={{ borderRadius: 8 }}
               >
-                Закрити
+                Скасувати
+              </Button>
+              <Button 
+                onClick={handleSaveCommission} 
+                color="primary" 
+                variant="contained"
+                sx={{ borderRadius: 8 }}
+              >
+                Зберегти
               </Button>
             </DialogActions>
           </Dialog>
