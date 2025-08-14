@@ -444,6 +444,7 @@ export default function App() {
       setSelectedItemDetails({ ...newValue, image: newValue.image });
       const detectedGame = getGameFromItemName(newValue.label);
       setGame(detectedGame);
+      setTabValue(GAMES.indexOf(detectedGame));
     } else {
       setName(newValue || '');
       setSelectedItemDetails(null);
@@ -850,18 +851,14 @@ export default function App() {
                     <Box display="flex" alignItems="center" gap={1}>
                       <Globe size={18} />
                       <FormControl variant="standard" size="small" sx={{ minWidth: 100 }}>
+                        <InputLabel>Мова</InputLabel>
                         <Select
                           value={lang}
                           onChange={(e) => setLang(e.target.value)}
-                          displayEmpty
-                          inputProps={{ 'aria-label': 'Without label' }}
+                          label="Мова"
                         >
-                          <MenuItem value="uk">
-                            <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>Українська</Typography>
-                          </MenuItem>
-                          <MenuItem value="en">
-                            <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>English</Typography>
-                          </MenuItem>
+                          <MenuItem value="uk">Українська</MenuItem>
+                          <MenuItem value="en">English</MenuItem>
                         </Select>
                       </FormControl>
                     </Box>
