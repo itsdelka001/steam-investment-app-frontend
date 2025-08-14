@@ -165,13 +165,14 @@ const theme = createTheme({
   },
 });
 
+// Стилізована картка, яка тепер має бути завжди однакової висоти
 const StyledCard = styled(Card)(({ theme }) => ({
-  height: '100%',
-  minHeight: '320px',
+  height: '100%', // Важливо, щоб картка заповнювала весь простір елемента Grid
+  minHeight: '320px', // Мінімальна висота, щоб навіть порожні картки були достатньо великими
   width: '100%',
   display: 'flex',
   flexDirection: 'column',
-  justifyContent: 'space-between',
+  justifyContent: 'space-between', // Розподіляє вміст вертикально
   padding: theme.spacing(1.5),
   overflow: 'hidden',
   [theme.breakpoints.down('sm')]: {
@@ -939,9 +940,10 @@ export default function App() {
             </Tabs>
           </Paper>
   
+          {/* !!! Цей контейнер Grid було оновлено !!! */}
           <Grid container spacing={2} sx={{ 
             px: { xs: 1, md: 0 },
-            alignItems: 'stretch',
+            alignItems: 'stretch', // Ця властивість змушує елементи Grid розтягуватися по висоті
             justifyContent: 'center',
           }}>
             {filteredInvestments.length === 0 ? (
