@@ -942,9 +942,7 @@ export default function App() {
   
           {/* !!! Цей контейнер Grid було оновлено !!! */}
           <Grid container spacing={2} sx={{ 
-            px: { xs: 1, md: 0 },
-            alignItems: 'stretch', // Ця властивість змушує елементи Grid розтягуватися по висоті
-            justifyContent: 'center',
+            alignItems: 'stretch'
           }}>
             {filteredInvestments.length === 0 ? (
               <Grid item xs={12}>
@@ -959,7 +957,7 @@ export default function App() {
                   (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
   
                 return (
-                  <Grid item xs={12} sm={6} md={3} key={item.id} sx={{ display: 'flex', pb: 2 }}>
+                  <Grid item xs={12} sm={6} md={4} key={item.id} sx={{ display: 'flex' }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
                         <CardContent sx={{ 
