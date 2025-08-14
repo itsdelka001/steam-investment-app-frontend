@@ -910,165 +910,179 @@ export default function App() {
             </Grid>
           </Grid>
           
-          <Box sx={{ px: { xs: 1, md: 4, xl: 8 } }}>
-            <Paper sx={{ mb: 4, p: 1, boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-              <Tabs 
-                value={tabValue} 
-                onChange={(e, newValue) => setTabValue(newValue)} 
-                aria-label="game tabs" 
-                centered
-                sx={{
-                  '& .MuiTabs-indicator': {
-                    backgroundColor: theme.palette.primary.main,
-                  }
-                }}
-              >
-                {GAMES.map((gameName, index) => (
-                  <Tab 
-                    key={index} 
-                    label={gameName === "Усі" ? t.total : gameName} 
-                    sx={{
-                      minWidth: 0,
-                      padding: '6px 12px',
-                      fontSize: '0.875rem',
-                      '&.Mui-selected': {
-                        color: theme.palette.primary.main,
-                      }
+          <Paper sx={{ 
+            mb: 4, 
+            p: 1, 
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            width: '100%', 
+            mx: 'auto',
+          }}>
+            <Tabs 
+              value={tabValue} 
+              onChange={(e, newValue) => setTabValue(newValue)} 
+              aria-label="game tabs" 
+              centered
+              sx={{
+                '& .MuiTabs-indicator': {
+                  backgroundColor: theme.palette.primary.main,
+                }
+              }}
+            >
+              {GAMES.map((gameName, index) => (
+                <Tab 
+                  key={index} 
+                  label={gameName === "Усі" ? t.total : gameName} 
+                  sx={{
+                    minWidth: 0,
+                    padding: '6px 12px',
+                    fontSize: '0.875rem',
+                    '&.Mui-selected': {
+                      color: theme.palette.primary.main,
+                    }
+                  }}
+                />
+              ))}
+            </Tabs>
+          </Paper>
+
+          {/* Контейнер для карток з flexbox та gap */}
+          <Box sx={{ 
+            width: '100%',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '5%',
+            justifyContent: 'flex-start',
+            px: 0,
+          }}>
+            {filteredInvestments.length === 0 ? (
+              <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary, width: '100%' }}>
+                <Typography variant="h6">{t.noInvestmentsInCategory}</Typography>
+              </Box>
+            ) : (
+              filteredInvestments.map((item) => {
+                const profitColorForCard = item.sold ? 
+                  ((item.sellPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main) : 
+                  (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
+    
+                return (
+                  <Box 
+                    key={item.id} 
+                    sx={{ 
+                      width: '30%',
+                      minWidth: '280px',
+                      mb: 3,
                     }}
-                  />
-                ))}
-              </Tabs>
-            </Paper>
-            
-            <Grid container spacing={2} sx={{ 
-                alignItems: 'stretch',
-                justifyContent: 'flex-start'
-            }}>
-              {filteredInvestments.length === 0 ? (
-                <Grid item xs={12}>
-                  <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary }}>
-                    <Typography variant="h6">{t.noInvestmentsInCategory}</Typography>
-                  </Box>
-                </Grid>
-              ) : (
-                filteredInvestments.map((item) => {
-                  const profitColorForCard = item.sold ? 
-                    ((item.sellPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main) : 
-                    (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
-      
-                  return (
-                    <Grid item xs={12} sm={6} md={4} key={item.id} sx={{ display: 'flex' }}>
-                      <StyledCard onClick={() => handleItemDetailsOpen(item)}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-                          <CardContent sx={{ 
-                            p: 1.5,
-                            flexGrow: 1,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            overflow: 'hidden',
-                            minHeight: '200px',
-                          }}>
-                            <CardHeader>
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
-                                {item.image && (
-                                  <img
-                                    src={item.image}
-                                    alt={item.name}
-                                    style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }}
-                                  />
-                                )}
-                                <Box sx={{ overflow: 'hidden' }}>
-                                  <Typography variant="subtitle1" fontWeight="bold" noWrap sx={{ textOverflow: 'ellipsis' }}>
-                                    {item.name}
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary" noWrap>
-                                    {item.game}
-                                  </Typography>
-                                </Box>
-                              </Box>
-                              <Chip 
-                                label={item.sold ? t.sold : t.active} 
-                                color={item.sold ? "success" : "primary"} 
-                                size="small" 
-                                sx={{ ml: 1 }}
-                              />
-                            </CardHeader>
-                            <Divider sx={{ my: 1 }} />
-                            <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1} sx={{ overflow: 'hidden' }}>
-                              <Box>
-                                <Typography variant="body2" color="text.secondary">{t.count}:</Typography>
-                                <Typography variant="h6" fontWeight="bold">{item.count}</Typography>
-                              </Box>
-                              <Box>
-                                <Typography variant="body2" color="text.secondary">{t.buyPrice}:</Typography>
-                                <Typography variant="h6" fontWeight="bold">
-                                  {item.buyPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}
+                  >
+                    <StyledCard onClick={() => handleItemDetailsOpen(item)}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                        <CardContent sx={{ 
+                          p: 1.5,
+                          flexGrow: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          overflow: 'hidden',
+                          minHeight: '200px',
+                        }}>
+                          <CardHeader>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
+                              {item.image && (
+                                <img
+                                  src={item.image}
+                                  alt={item.name}
+                                  style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }}
+                                />
+                              )}
+                              <Box sx={{ overflow: 'hidden' }}>
+                                <Typography variant="subtitle1" fontWeight="bold" noWrap sx={{ textOverflow: 'ellipsis' }}>
+                                  {item.name}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary" noWrap>
+                                  {item.game}
                                 </Typography>
                               </Box>
-                              <Box>
-                                <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
-                                {item.sold ? (
-                                  <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
-                                    {((item.sellPrice - item.buyPrice) * item.count).toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}
-                                  </Typography>
-                                ) : (
-                                  <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
-                                    {item.currentPrice ? ((item.currentPrice - item.buyPrice) * item.count).toFixed(2) : 0} {CURRENCY_SYMBOLS[item.buyCurrency]}
-                                  </Typography>
-                                )}
-                              </Box>
-                              <Box>
-                                <Typography variant="body2" color="text.secondary">{t.boughtDate}:</Typography>
-                                <Typography variant="h6" fontWeight="bold">{item.boughtDate}</Typography>
-                              </Box>
                             </Box>
-                          </CardContent>
-                          <CardFooter>
-                            <Box display="flex" gap={0.5} flexWrap="wrap">
-                              <Tooltip title={t.edit}>
-                                <IconButton color="secondary" onClick={(e) => { e.stopPropagation(); handleEdit(item); }} size="small">
-                                  <Edit size={16} />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title={t.markAsSold}>
-                                <IconButton 
-                                  color="success" 
-                                  onClick={(e) => { e.stopPropagation(); setItemToSell(item); setSellPrice(item.buyPrice); setSellDialog(true); }} 
-                                  disabled={item.sold}
-                                  size="small"
-                                >
-                                  <TrendingUp size={16} />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title={t.delete}>
-                                <IconButton color="error" onClick={(e) => { e.stopPropagation(); confirmDelete(item); }} size="small">
-                                  <Delete size={16} />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title={t.priceHistory}>
-                                <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handlePriceHistory(item); }} size="small">
-                                  <History size={16} />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title={t.updatePrice}>
-                                <IconButton color="secondary" onClick={(e) => { e.stopPropagation(); handleCurrentPriceUpdate(item); }} size="small">
-                                  <Zap size={16} />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title={t.marketAnalysis}>
-                                <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handleMarketAnalysis(item); }} size="small">
-                                  <BarChart size={16} />
-                                </IconButton>
-                              </Tooltip>
+                            <Chip 
+                              label={item.sold ? t.sold : t.active} 
+                              color={item.sold ? "success" : "primary"} 
+                              size="small" 
+                              sx={{ ml: 1 }}
+                            />
+                          </CardHeader>
+                          <Divider sx={{ my: 1 }} />
+                          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1} sx={{ overflow: 'hidden' }}>
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">{t.count}:</Typography>
+                              <Typography variant="h6" fontWeight="bold">{item.count}</Typography>
                             </Box>
-                          </CardFooter>
-                        </Box>
-                      </StyledCard>
-                    </Grid>
-                  );
-                })
-              )}
-            </Grid>
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">{t.buyPrice}:</Typography>
+                              <Typography variant="h6" fontWeight="bold">
+                                {item.buyPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}
+                              </Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
+                              {item.sold ? (
+                                <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
+                                  {((item.sellPrice - item.buyPrice) * item.count).toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}
+                                </Typography>
+                              ) : (
+                                <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
+                                  {item.currentPrice ? ((item.currentPrice - item.buyPrice) * item.count).toFixed(2) : 0} {CURRENCY_SYMBOLS[item.buyCurrency]}
+                                </Typography>
+                              )}
+                            </Box>
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">{t.boughtDate}:</Typography>
+                              <Typography variant="h6" fontWeight="bold">{item.boughtDate}</Typography>
+                            </Box>
+                          </Box>
+                        </CardContent>
+                        <CardFooter>
+                          <Box display="flex" gap={0.5} flexWrap="wrap">
+                            <Tooltip title={t.edit}>
+                              <IconButton color="secondary" onClick={(e) => { e.stopPropagation(); handleEdit(item); }} size="small">
+                                <Edit size={16} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t.markAsSold}>
+                              <IconButton 
+                                color="success" 
+                                onClick={(e) => { e.stopPropagation(); setItemToSell(item); setSellPrice(item.buyPrice); setSellDialog(true); }} 
+                                disabled={item.sold}
+                                size="small"
+                              >
+                                <TrendingUp size={16} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t.delete}>
+                              <IconButton color="error" onClick={(e) => { e.stopPropagation(); confirmDelete(item); }} size="small">
+                                <Delete size={16} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t.priceHistory}>
+                              <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handlePriceHistory(item); }} size="small">
+                                <History size={16} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t.updatePrice}>
+                              <IconButton color="secondary" onClick={(e) => { e.stopPropagation(); handleCurrentPriceUpdate(item); }} size="small">
+                                <Zap size={16} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t.marketAnalysis}>
+                              <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handleMarketAnalysis(item); }} size="small">
+                                <BarChart size={16} />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </CardFooter>
+                      </Box>
+                    </StyledCard>
+                  </Box>
+                );
+              })
+            )}
           </Box>
   
           <Tooltip title={t.addItem} arrow>
