@@ -1005,7 +1005,7 @@ export default function App() {
             justifyContent: 'flex-start',
             px: 0,
           }}>
-            {investments.length === 0 ? (
+            {(!investments || investments.length === 0) ? (
               <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary, width: '100%' }}>
                 <Typography variant="h6">{t.noInvestmentsInCategory}</Typography>
               </Box>
@@ -1507,7 +1507,7 @@ export default function App() {
             </DialogTitle>
             <DialogContent dividers>
               <Typography variant="h6" mb={2} color="secondary">{t.totalProfit} ({CURRENCY_SYMBOLS[displayCurrency]})</Typography>
-              {cumulativeProfit.length === 0 ? (
+              {(investments || []).filter(item => item.sold).length === 0 ? (
                 <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
