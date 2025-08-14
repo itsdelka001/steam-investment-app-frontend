@@ -753,13 +753,13 @@ export default function App() {
             <Grid item xs={12} sm={6}>
               <Typography variant="body2" color="text.secondary">{t.currentPrice}</Typography>
               <Typography variant="h6" fontWeight="bold">
-                {item.currentPrice ? `${item.currentPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+                {item.currentPrice ? `${item.currentPrice.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
               </Typography>
             </Grid>
             <Grid item xs={12}>
               <Typography variant="body2" color="text.secondary">{t.profit} ({t.currentMarketProfit})</Typography>
               <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
-                {item.currentPrice ? `${itemProfit.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+                {item.currentPrice ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
               </Typography>
             </Grid>
           </Grid>
