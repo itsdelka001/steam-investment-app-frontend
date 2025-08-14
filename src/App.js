@@ -729,7 +729,7 @@ export default function App() {
     const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
 
     return (
-      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 16 } }}>
         <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant="h6" fontWeight="bold" color="primary">{t.itemDetails}</Typography>
           <IconButton onClick={onClose}>
@@ -1125,7 +1125,7 @@ export default function App() {
           </Fab>
 
           {/* Add Item Dialog */}
-          <Dialog open={addDialog} onClose={() => setAddDialog(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+          <Dialog open={addDialog} onClose={() => setAddDialog(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 16 } }}>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6" fontWeight="bold" color="primary">{t.addInvestment}</Typography>
               <IconButton onClick={() => setAddDialog(false)}>
@@ -1245,7 +1245,7 @@ export default function App() {
           </Dialog>
 
           {/* Edit Item Dialog */}
-          <Dialog open={editDialog} onClose={() => setEditDialog(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+          <Dialog open={editDialog} onClose={() => setEditDialog(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 16 } }}>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6" fontWeight="bold" color="primary">{t.editInvestment}</Typography>
               <IconButton onClick={() => setEditDialog(false)}>
@@ -1314,7 +1314,7 @@ export default function App() {
           </Dialog>
 
           {/* Sell Dialog */}
-          <Dialog open={sellDialog} onClose={() => setSellDialog(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+          <Dialog open={sellDialog} onClose={() => setSellDialog(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 16 } }}>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6" fontWeight="bold" color="primary">{t.markAsSold}</Typography>
               <IconButton onClick={() => setSellDialog(false)}>
@@ -1357,7 +1357,7 @@ export default function App() {
           </Dialog>
 
           {/* Delete Dialog */}
-          <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+          <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 16 } }}>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6" fontWeight="bold" color="error">{t.deleteInvestment}</Typography>
               <IconButton onClick={() => setDeleteDialogOpen(false)}>
@@ -1380,7 +1380,7 @@ export default function App() {
           </Dialog>
 
           {/* Price History Dialog */}
-          <Dialog open={priceHistoryOpen} onClose={() => setPriceHistoryOpen(false)} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+          <Dialog open={priceHistoryOpen} onClose={() => setPriceHistoryOpen(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 16 } }}>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6" fontWeight="bold" color="primary">{t.priceHistory}</Typography>
               <IconButton onClick={() => setPriceHistoryOpen(false)}>
@@ -1412,7 +1412,7 @@ export default function App() {
           </Dialog>
 
           {/* Market Analysis Dialog */}
-          <Dialog open={marketAnalysisDialog} onClose={() => setMarketAnalysisDialog(false)} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+          <Dialog open={marketAnalysisDialog} onClose={() => setMarketAnalysisDialog(false)} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 16 } }}>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6" fontWeight="bold" color="primary">{t.marketAnalysis}</Typography>
               <IconButton onClick={() => setMarketAnalysisDialog(false)}>
@@ -1442,7 +1442,7 @@ export default function App() {
           </Dialog>
 
           {/* Analytics Dialog */}
-          <Dialog open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} maxWidth="lg" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+          <Dialog open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} maxWidth="lg" fullWidth PaperProps={{ sx: { borderRadius: 16 } }}>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6" fontWeight="bold" color="primary">{t.analytics}</Typography>
               <IconButton onClick={() => setAnalyticsOpen(false)}>
@@ -1516,3 +1516,4 @@ export default function App() {
       </Snackbar>
     </ThemeProvider>
   );
+}
