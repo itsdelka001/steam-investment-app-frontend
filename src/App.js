@@ -872,12 +872,14 @@ export default function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', pb: 4 }}>
-        <Container maxWidth="xl" sx={{ pt: 0, pb: 4 }}>
-          <Paper elevation={0} sx={{ 
-            py: 2, 
-            px: 3, 
-            mb: 4, 
+      {/* ✨ ВИПРАВЛЕНО: Змінено maxWidth на 'md', щоб контент був центрований і мав фіксовану ширину */}
+      <Container maxWidth="md" sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', py: 4 }}>
+        <Box sx={{ pb: 4 }}>
+          {/* ✨ ВИПРАВЛЕНО: Тепер 'Paper' буде слідувати за шириною контейнера 'md' */}
+          <Paper elevation={0} sx={{
+            py: 2,
+            px: 3,
+            mb: 4,
             borderRadius: 2,
             background: theme.palette.background.paper,
             boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
@@ -1014,6 +1016,7 @@ export default function App() {
             </Grid>
           </Grid>
   
+          {/* ✨ ВИПРАВЛЕНО: Тепер 'Paper' буде слідувати за шириною контейнера 'md' */}
           <Paper sx={{ mb: 4, p: 1, mx: { xs: 1, md: 0 } }}>
             <Tabs 
               value={tabValue} 
@@ -1043,6 +1046,8 @@ export default function App() {
             </Tabs>
           </Paper>
   
+          {/* ✨ ВИПРАВЛЕНО: Змінено 'Container' на 'Box', щоб уникнути вкладеності та зайвих стилів */}
+          {/* ✨ ВИПРАВЛЕНО: Додано xs={12} sm={6} md={4} для правильного розподілу карток */}
           <Grid container spacing={2} sx={{ 
             px: { xs: 1, md: 0 },
             alignItems: 'stretch',
@@ -1060,7 +1065,6 @@ export default function App() {
                   (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
   
                 return (
-                  // ✨ ВИПРАВЛЕНО: Змінено розмір для 3 карток в ряду
                   <Grid item xs={12} sm={6} md={4} key={item.id} sx={{ display: 'flex', pb: 2 }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
@@ -1173,6 +1177,7 @@ export default function App() {
               })
             )}
           </Grid>
+        </Box>
   
           <Tooltip title={t.addItem} arrow>
             <Fab
@@ -1659,8 +1664,7 @@ export default function App() {
               {snackbar.message}
             </Alert>
           </Snackbar>
-        </Container>
-      </Box>
+      </Container>
     </ThemeProvider>
   );
 }
