@@ -3,230 +3,112 @@ import {
   Container, Typography, Box, TextField, Button, Table, TableHead, TableBody, TableRow, TableCell,
   Select, MenuItem, FormControl, InputLabel, Dialog, DialogTitle, DialogContent, DialogActions,
   Tabs, Tab, IconButton, Snackbar, Alert, Grid, Card, CardContent, Chip, Tooltip,
-  Autocomplete, CircularProgress, Divider, LinearProgress, Paper, Fab, Menu
+  Autocomplete, CircularProgress, Divider, LinearProgress, Paper, Fab, Menu, Switch,
+  Skeleton
 } from '@mui/material';
 import {
   TrendingUp, Delete, Check, BarChart, Plus, Globe, X, ArrowUp, Edit,
   History, Settings, Tag, Palette, Rocket, Zap, DollarSign, Percent, TrendingDown,
-  ArrowDown, Menu as MenuIcon, Eye
+  ArrowDown, Menu as MenuIcon, Eye, Sun, Moon
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie,
   Cell
 } from 'recharts';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
-
-const theme = createTheme({
-  breakpoints: {
-    values: {
-      xs: 0,
-      sm: 600,
-      md: 900,
-      lg: 1200,
-      xl: 1920,
-    },
-  },
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#4A148C',
-    },
-    secondary: {
-      main: '#007BFF',
-    },
-    background: {
-      default: '#F8F9FA',
-      paper: '#FFFFFF',
-    },
-    text: {
-      primary: '#212529',
-      secondary: '#6C757D',
-    },
-    divider: '#DEE2E6',
-    success: {
-      main: '#28A745',
-      light: '#D4EDDA',
-    },
-    error: {
-      main: '#DC3545',
-      light: '#F8D7DA',
-    },
-    warning: {
-      main: '#FFC107',
-      light: '#FFF3CD',
-    }
-  },
-  typography: {
-    fontFamily: ['"Inter"', 'sans-serif'].join(','),
-    h4: {
-      fontWeight: 700,
-    },
-    h5: {
-      fontWeight: 600,
-    },
-    h6: {
-      fontWeight: 600,
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          textTransform: 'none',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-          transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
-          '&:hover': {
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            transform: 'translateY(-2px)',
-          },
-        },
-        containedPrimary: {
-          background: 'linear-gradient(45deg, #4A148C 30%, #4A148C 90%)',
-        },
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          background: '#FFFFFF',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        },
-      },
-    },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 8,
-            backgroundColor: '#F1F3F5',
-            '&.Mui-focused fieldset': {
-              borderColor: '#007BFF',
-            },
-          },
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-          background: '#FFFFFF',
-          transition: 'box-shadow 0.3s, transform 0.3s',
-          '&:hover': {
-            boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
-            transform: 'scale(1.01)',
-          },
-        },
-      },
-    },
-    MuiDialog: {
-      styleOverrides: {
-        paper: {
-          borderRadius: 16,
-          background: '#F8F9FA',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
-        },
-      },
-    },
-    MuiTabs: {
-      styleOverrides: {
-        indicator: {
-          height: 3,
-          borderRadius: '4px 4px 0 0',
-        },
-      },
-    },
-    MuiTab: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-          fontWeight: 600,
-          color: '#6C757D',
-          '&.Mui-selected': {
-            color: '#4A148C',
-          },
-        },
-      },
-    },
-    MuiTooltip: {
-      styleOverrides: {
-        tooltip: {
-          backgroundColor: '#212529',
-          color: '#E0E0E0',
-          borderRadius: 8,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-          fontSize: '0.875rem',
-        },
-      },
-    },
-  },
-});
-
-const StyledCard = styled(Card)(({ theme }) => ({
-  height: '100%',
-  minHeight: '320px',
-  width: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'space-between',
-  padding: theme.spacing(1.5),
-  overflow: 'hidden',
-  [theme.breakpoints.down('sm')]: {
-    minHeight: '280px',
-    padding: theme.spacing(1),
-    '& .MuiTypography-h6': {
-      fontSize: '0.9rem',
-    },
-    '& .MuiTypography-body2': {
-      fontSize: '0.7rem',
-    }
-  }
-}));
-
-const StyledMetricCard = styled(Card)(({ theme, bgcolor }) => ({
-  padding: theme.spacing(2),
-  borderRadius: 16,
-  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-  backgroundColor: bgcolor || theme.palette.background.paper,
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    transform: 'translateY(-3px)',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-  },
-  textAlign: 'center',
-  minHeight: 160,
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-}));
-
-const CardHeader = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  paddingBottom: theme.spacing(1),
-  minHeight: '64px',
-}));
-
-const CardFooter = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  paddingTop: theme.spacing(1),
-}));
+import { getGameFromItemName, updateInvestment, deleteInvestment, fetchExchangeRates, getInvestments as fetchAllInvestments, 
+  fetchAndUpdateAllPrices, getMarketAnalysis, getPriceHistory, updateCurrentPrice } from './utils/api';
 
 const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
 const CURRENCIES = ["EUR", "USD", "UAH"];
 const CURRENCY_SYMBOLS = { "EUR": "€", "USD": "$", "UAH": "₴" };
 const EXCHANGERATE_API_KEY = "61a8a12c18b1b14a645ebc37";
-
 const BACKEND_URL = 'https://steam-proxy-server-lues.onrender.com';
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
 
 export default function App() {
+  const [mode, setMode] = useState('light');
+  const theme = createTheme({
+    breakpoints: { values: { xs: 0, sm: 600, md: 900, lg: 1200, xl: 1920, }, },
+    palette: {
+      mode: mode,
+      primary: { main: '#4A148C', },
+      secondary: { main: '#007BFF', },
+      background: {
+        default: mode === 'light' ? '#F8F9FA' : '#121212',
+        paper: mode === 'light' ? '#FFFFFF' : '#1D1D1D',
+      },
+      text: {
+        primary: mode === 'light' ? '#212529' : '#E0E0E0',
+        secondary: mode === 'light' ? '#6C757D' : '#A0A0A0',
+      },
+      divider: mode === 'light' ? '#DEE2E6' : '#424242',
+      success: { main: '#28A745', light: '#D4EDDA', },
+      error: { main: '#DC3545', light: '#F8D7DA', },
+      warning: { main: '#FFC107', light: '#FFF3CD', }
+    },
+    typography: { fontFamily: ['"Inter"', 'sans-serif'].join(','), h4: { fontWeight: 700, }, h5: { fontWeight: 600, }, h6: { fontWeight: 600, }, },
+    components: {
+      MuiButton: { styleOverrides: { root: { borderRadius: 8, textTransform: 'none', boxShadow: '0 2px 6px rgba(0,0,0,0.1)', transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)', '&:hover': { boxShadow: '0 4px 12px rgba(0,0,0,0.15)', transform: 'translateY(-2px)', }, }, containedPrimary: { background: `linear-gradient(45deg, ${mode === 'light' ? '#4A148C' : '#6A1B9A'} 30%, ${mode === 'light' ? '#4A148C' : '#6A1B9A'} 90%)`, }, }, },
+      MuiPaper: { styleOverrides: { root: { borderRadius: 12, background: mode === 'light' ? '#FFFFFF' : '#1D1D1D', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', }, }, },
+      MuiTextField: { styleOverrides: { root: { '& .MuiOutlinedInput-root': { borderRadius: 8, backgroundColor: mode === 'light' ? '#F1F3F5' : '#2C2C2C', '&.Mui-focused fieldset': { borderColor: '#007BFF', }, }, }, }, },
+      MuiCard: { styleOverrides: { root: { borderRadius: 12, boxShadow: '0 4px 12px rgba(0,0,0,0.08)', background: mode === 'light' ? '#FFFFFF' : '#1D1D1D', transition: 'box-shadow 0.3s, transform 0.3s', '&:hover': { boxShadow: '0 8px 20px rgba(0,0,0,0.12)', transform: 'scale(1.01)', }, }, }, },
+      MuiDialog: { styleOverrides: { paper: { borderRadius: 16, background: mode === 'light' ? '#F8F9FA' : '#1D1D1D', boxShadow: '0 8px 30px rgba(0,0,0,0.15)', }, }, },
+      MuiTabs: { styleOverrides: { indicator: { height: 3, borderRadius: '4px 4px 0 0', }, }, },
+      MuiTab: { styleOverrides: { root: { textTransform: 'none', fontWeight: 600, color: mode === 'light' ? '#6C757D' : '#A0A0A0', '&.Mui-selected': { color: '#4A148C', }, }, }, },
+      MuiTooltip: { styleOverrides: { tooltip: { backgroundColor: mode === 'light' ? '#212529' : '#E0E0E0', color: mode === 'light' ? '#E0E0E0' : '#212529', borderRadius: 8, boxShadow: '0 2px 10px rgba(0,0,0,0.1)', fontSize: '0.875rem', }, }, },
+    },
+  });
+
+  const StyledCard = styled(Card)(({ theme }) => ({
+    height: '100%',
+    minHeight: '320px',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    padding: theme.spacing(1.5),
+    overflow: 'hidden',
+    [theme.breakpoints.down('sm')]: {
+      minHeight: '280px',
+      padding: theme.spacing(1),
+      '& .MuiTypography-h6': { fontSize: '0.9rem', },
+      '& .MuiTypography-body2': { fontSize: '0.7rem', }
+    }
+  }));
+
+  const StyledMetricCard = styled(Card)(({ theme, bgcolor }) => ({
+    padding: theme.spacing(2),
+    borderRadius: 16,
+    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+    backgroundColor: bgcolor || theme.palette.background.paper,
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-3px)',
+      boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+    },
+    textAlign: 'center',
+    minHeight: 160,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+  }));
+
+  const CardHeader = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: theme.spacing(1),
+    minHeight: '64px',
+  }));
+
+  const CardFooter = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: theme.spacing(1),
+  }));
+
   const [investments, setInvestments] = useState([]);
   const [name, setName] = useState("");
   const [count, setCount] = useState(1);
@@ -267,7 +149,7 @@ export default function App() {
   const [isUpdatingAllPrices, setIsUpdatingAllPrices] = useState(false);
   const [t, setT] = useState({});
   const [exchangeRates, setExchangeRates] = useState({});
-  const [exchangeRatesDialogOpen, setExchangeRatesDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Новий стан для завантаження даних
 
 
   useEffect(() => {
@@ -283,8 +165,7 @@ export default function App() {
   }, [lang]);
 
   useEffect(() => {
-    // Fetch exchange rates on component mount
-    const fetchExchangeRates = async () => {
+    const fetchRates = async () => {
       try {
         const response = await fetch(`https://v6.exchangerate-api.com/v6/${EXCHANGERATE_API_KEY}/latest/EUR`);
         const data = await response.json();
@@ -299,7 +180,7 @@ export default function App() {
         showSnackbar("Помилка підключення до API курсів валют.", "error");
       }
     };
-    fetchExchangeRates();
+    fetchRates();
   }, []);
 
   const convertCurrency = (value, fromCurrency) => {
@@ -312,6 +193,7 @@ export default function App() {
   };
 
   const getInvestments = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch(`${BACKEND_URL}/api/investments`);
       if (!response.ok) {
@@ -322,6 +204,8 @@ export default function App() {
     } catch (error) {
       console.error("Error fetching investments:", error);
       showSnackbar(t.fetchError, "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -335,6 +219,10 @@ export default function App() {
 
   const handleSettingsMenuClose = () => {
     setSettingsAnchorEl(null);
+  };
+  
+  const handleThemeChange = () => {
+    setMode(mode === 'light' ? 'dark' : 'light');
   };
 
   const updateInvestment = async (id, data) => {
@@ -462,7 +350,7 @@ export default function App() {
       if (data.success) {
         const historyData = data.prices.map(([date, price]) => ({
           date: new Date(date).toLocaleDateString(),
-          price: convertCurrency(parseFloat(price), "EUR"), // Steam prices are in EUR, converting to displayCurrency
+          price: convertCurrency(parseFloat(price), "EUR"),
         })).sort((a, b) => new Date(a.date) - new Date(b.date));
         setPriceHistory(historyData);
       } else {
@@ -863,7 +751,6 @@ export default function App() {
                       </FormControl>
                     </Box>
                   </MenuItem>
-                  {/* Залишаємо лише один селектор для валюти відображення */}
                   <MenuItem onClick={handleSettingsMenuClose}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <DollarSign size={18} />
@@ -881,6 +768,13 @@ export default function App() {
                       </FormControl>
                     </Box>
                   </MenuItem>
+                  <MenuItem onClick={handleSettingsMenuClose}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      {mode === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+                      <Typography>{mode === 'light' ? 'Темна тема' : 'Світла тема'}</Typography>
+                      <Switch checked={mode === 'dark'} onChange={handleThemeChange} color="primary" />
+                    </Box>
+                  </MenuItem>
                 </Menu>
               </Box>
             </Box>
@@ -895,7 +789,7 @@ export default function App() {
                     {t.totalInvestment}
                   </Typography>
                   <Typography variant="h4" fontWeight="bold" color="primary">
-                    {totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                    {isLoading ? <Skeleton width="100px" /> : `${totalInvestment.toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}`}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
@@ -911,7 +805,7 @@ export default function App() {
                     {t.totalProfit}
                   </Typography>
                   <Typography variant="h4" fontWeight="bold" sx={{ color: profitColor }}>
-                    {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                    {isLoading ? <Skeleton width="100px" /> : `${totalSoldProfit.toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}`}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
@@ -924,7 +818,7 @@ export default function App() {
                     {t.currentMarketValue}
                   </Typography>
                   <Typography variant="h4" fontWeight="bold" color="secondary">
-                    {totalMarketValue.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                    {isLoading ? <Skeleton width="100px" /> : `${totalMarketValue.toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}`}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
@@ -940,7 +834,7 @@ export default function App() {
                     {t.currentMarketProfit}
                   </Typography>
                   <Typography variant="h4" fontWeight="bold" sx={{ color: currentProfitColor }}>
-                    {currentMarketProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                    {isLoading ? <Skeleton width="100px" /> : `${currentMarketProfit.toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}`}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
@@ -991,7 +885,13 @@ export default function App() {
             justifyContent: 'flex-start',
             px: 0,
           }}>
-            {filteredInvestments.length === 0 ? (
+            {isLoading ? (
+                Array.from(new Array(6)).map((_, index) => (
+                  <Box key={index} sx={{ width: '30%', minWidth: '280px' }}>
+                    <Skeleton variant="rectangular" width="100%" height={320} sx={{ borderRadius: 12 }} />
+                  </Box>
+                ))
+            ) : filteredInvestments.length === 0 ? (
               <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary, width: '100%' }}>
                 <Typography variant="h6">{t.noInvestmentsInCategory}</Typography>
               </Box>
