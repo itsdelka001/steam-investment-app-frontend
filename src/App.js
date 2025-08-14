@@ -262,8 +262,6 @@ export default function App() {
   const abortControllerRef = useRef(null);
   const [autocompleteValue, setAutocompleteValue] = useState(null);
   const [selectedItemDetails, setSelectedItemDetails] = useState(null);
-  const [priceHistory, setPriceHistory] = useState([]);
-  const [priceHistoryLoading, setPriceHistoryLoading] = useState(false);
   const [marketAnalysisDialog, setMarketAnalysisDialog] = useState(false);
   const [analysisLoading, setAnalysisLoading] = useState(false);
   const [analysisText, setAnalysisText] = useState("");
@@ -481,31 +479,6 @@ export default function App() {
     } else {
       setName(newValue || '');
       setSelectedItemDetails(null);
-    }
-  };
-
-  const handlePriceHistory = async (item) => {
-    setPriceHistoryLoading(true);
-    try {
-      const url = `${PROXY_SERVER_URL}/price_history?item_name=${encodeURIComponent(item.market_hash_name)}&game=${encodeURIComponent(item.game)}`;
-      const response = await fetch(url);
-      const data = await response.json();
-
-      if (data.success) {
-        const historyData = data.prices.map(([date, price]) => ({
-          date: new Date(date).toLocaleDateString(),
-          price: convertCurrency(parseFloat(price), "EUR"), // Steam prices are in EUR, converting to displayCurrency
-        })).sort((a, b) => new Date(a.date) - new Date(b.date));
-        setPriceHistory(historyData);
-      } else {
-        setPriceHistory([]);
-        showSnackbar('Не вдалося отримати історію ціни.', 'warning');
-      }
-    } catch (error) {
-      console.error('Error fetching price history:', error);
-      showSnackbar('Помилка при отриманні історії ціни.', 'error');
-    } finally {
-      setPriceHistoryLoading(false);
     }
   };
 
@@ -736,7 +709,6 @@ export default function App() {
   const handleItemDetailsOpen = async (item) => {
     setItemToDisplayDetails(item);
     setItemDetailsDialogOpen(true);
-    await handlePriceHistory(item);
   };
 
   const filteredInvestments = tabValue === 0 ? investments : investments.filter((item) => item.game === GAMES[tabValue]);
@@ -854,9 +826,8 @@ export default function App() {
                   sx={{ mt: 1, fontWeight: 'bold' }}
                 />
               </Box>
-              
-              <Divider sx={{ my: 3 }} />
-
+            </Grid>
+            <Grid item xs={12} md={7}>
               <Typography variant="h6" color="secondary" fontWeight="bold" mb={2}>Статистика</Typography>
               <Grid container spacing={2}>
                 <Grid item xs={6}>
@@ -882,31 +853,16 @@ export default function App() {
                   </Typography>
                 </Grid>
               </Grid>
-
               <Divider sx={{ my: 3 }} />
-            </Grid>
-            <Grid item xs={12} md={7}>
-              <Box>
-                <Typography variant="h6" color="secondary" fontWeight="bold" mb={2}>{t.priceHistory}</Typography>
-                {priceHistoryLoading ? (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                    <CircularProgress />
-                  </Box>
-                ) : priceHistory.length === 0 ? (
-                  <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
-                ) : (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={priceHistory} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
-                      <XAxis dataKey="date" stroke={theme.palette.text.secondary} />
-                      <YAxis stroke={theme.palette.text.secondary} />
-                      <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, border: '1px solid #ccc', borderRadius: 8 }} />
-                      <Legend />
-                      <Line type="monotone" dataKey="price" stroke={theme.palette.secondary.main} activeDot={{ r: 8 }} name="Ціна" />
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
-              </Box>
+              <Typography variant="h6" color="secondary" fontWeight="bold" mb={2}>Нотатки</Typography>
+              <TextField 
+                label="Ваші нотатки" 
+                multiline 
+                rows={3} 
+                fullWidth 
+                variant="outlined" 
+                placeholder="Залиште нотатку до цієї інвестиції..."
+              />
             </Grid>
           </Grid>
         </DialogContent>
@@ -1285,11 +1241,6 @@ export default function App() {
                             <Tooltip title={t.delete}>
                               <IconButton color="error" onClick={(e) => { e.stopPropagation(); confirmDelete(item); }} size="small">
                                 <Delete size={16} />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={t.priceHistory}>
-                              <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handlePriceHistory(item); }} size="small">
-                                <History size={16} />
                               </IconButton>
                             </Tooltip>
                             <Tooltip title={t.updatePrice}>
