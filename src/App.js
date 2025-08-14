@@ -942,8 +942,8 @@ export default function App() {
   
           {/* !!! Цей контейнер Grid було оновлено !!! */}
           <Grid container spacing={2} sx={{ 
-			mx: { xs: 1, md: 0 }
-            alignItems: 'stretch'
+			mx: { xs: 1, md: 0 },
+            alignItems: 'stretch',
 			justifyContent: 'flex-start'
           }}>
             {filteredInvestments.length === 0 ? (
