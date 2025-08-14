@@ -371,7 +371,6 @@ export default function App() {
     }
   };
 
-  // Функція для автоматичного визначення гри за назвою предмета
   const getGameFromItemName = (itemName) => {
     const cs2Keywords = ["case", "sticker", "skin", "glove", "knife", "pin", "key", "capsule", "souvenir", "weapon"];
     const dota2Keywords = ["treasure", "immortal", "arcana", "set", "courier", "chest", "hero"];
@@ -443,10 +442,8 @@ export default function App() {
     if (newValue && typeof newValue === 'object') {
       setName(newValue.label);
       setSelectedItemDetails({ ...newValue, image: newValue.image });
-      // Використовуємо функцію для автоматичного визначення гри
       const detectedGame = getGameFromItemName(newValue.label);
       setGame(detectedGame);
-      setTabValue(GAMES.indexOf(detectedGame));
     } else {
       setName(newValue || '');
       setSelectedItemDetails(null);
@@ -852,9 +849,6 @@ export default function App() {
                   <MenuItem onClick={handleSettingsMenuClose}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <Globe size={18} />
-                      <Typography variant="body1" sx={{ minWidth: 80, mr: 1, color: 'text.primary' }}>
-                        Мова
-                      </Typography>
                       <FormControl variant="standard" size="small" sx={{ minWidth: 100 }}>
                         <Select
                           value={lang}
@@ -862,19 +856,22 @@ export default function App() {
                           displayEmpty
                           inputProps={{ 'aria-label': 'Without label' }}
                         >
-                          <MenuItem value="uk">Українська</MenuItem>
-                          <MenuItem value="en">English</MenuItem>
+                          <MenuItem value="uk">
+                            <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>Українська</Typography>
+                          </MenuItem>
+                          <MenuItem value="en">
+                            <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>English</Typography>
+                          </MenuItem>
                         </Select>
                       </FormControl>
                     </Box>
                   </MenuItem>
+                  {/* Залишаємо лише один селектор для валюти відображення */}
                   <MenuItem onClick={handleSettingsMenuClose}>
                     <Box display="flex" alignItems="center" gap={1}>
                       <DollarSign size={18} />
-                      <Typography variant="body1" sx={{ minWidth: 80, mr: 1, color: 'text.primary' }}>
-                        Валюта відображення
-                      </Typography>
                       <FormControl variant="standard" size="small" sx={{ minWidth: 100 }}>
+                        <InputLabel>Валюта відображення</InputLabel>
                         <Select
                           value={displayCurrency}
                           onChange={(e) => setDisplayCurrency(e.target.value)}
