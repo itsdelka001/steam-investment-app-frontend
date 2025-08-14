@@ -16,7 +16,17 @@ import {
 } from 'recharts';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 
+// ✨ Оновлена тема з розширеним `xl` breakpoint
 const theme = createTheme({
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      md: 900,
+      lg: 1200,
+      xl: 1920, // Збільшений максимальний розмір контейнера
+    },
+  },
   palette: {
     mode: 'light',
     primary: {
@@ -162,7 +172,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   // ✨ ВИПРАВЛЕНО: встановлено фіксовану ширину для карток на md екранах
   width: '100%',
   [theme.breakpoints.up('md')]: {
-    width: '320px', // Фіксована ширина для середніх і великих екранів
+    width: '100%', // Прибрано фіксовану ширину, щоб Grid міг розподілити простір
   },
   display: 'flex',
   flexDirection: 'column',
@@ -1014,13 +1024,7 @@ export default function App() {
             </Grid>
           </Grid>
   
-          <Paper sx={{ 
-            mb: 4, 
-            p: 1, 
-            mx: { xs: 1, md: 0 },
-            maxWidth: 'md', // 👈 Додано для обмеження ширини
-            margin: '0 auto', // 👈 Додано для центрування
-          }}>
+          <Paper sx={{ mb: 4, p: 1, mx: { xs: 1, md: 0 } }}>
             <Tabs 
               value={tabValue} 
               onChange={(e, newValue) => setTabValue(newValue)} 
@@ -1049,6 +1053,7 @@ export default function App() {
             </Tabs>
           </Paper>
   
+          {/* ✨ ВИПРАВЛЕНО: Розташування Grid */}
           <Grid container spacing={2} sx={{ 
             px: { xs: 1, md: 0 },
             alignItems: 'stretch',
@@ -1066,7 +1071,7 @@ export default function App() {
                   (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
   
                 return (
-                  // ✨ ВИПРАВЛЕНО: Змінено розмір для 3 карток в ряду
+                  // ✨ ВИПРАВЛЕНО: Змінено розмір для 3 карток в ряду (вже було 4, що дає 3 картки на md)
                   <Grid item xs={12} sm={6} md={4} key={item.id} sx={{ display: 'flex', pb: 2 }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
