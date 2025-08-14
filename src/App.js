@@ -940,11 +940,11 @@ export default function App() {
             </Tabs>
           </Paper>
   
-          {/* !!! Цей контейнер Grid було оновлено !!! */}
+          {/* Змінено `justifyContent: 'flex-start'` на `justifyContent: 'center'` для центрування карток */}
           <Grid container spacing={2} sx={{ 
 			mx: { xs: 1, md: 0 },
             alignItems: 'stretch',
-			justifyContent: 'flex-start'
+			justifyContent: 'center' // <--- Ось ця зміна!
           }}>
             {filteredInvestments.length === 0 ? (
               <Grid item xs={12}>
