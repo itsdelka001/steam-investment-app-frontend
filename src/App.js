@@ -193,7 +193,6 @@ const StyledMetricCard = styled(Card)(({ theme, bgcolor }) => ({
   justifyContent: 'center',
 }));
 
-// КОД ВИПРАВЛЕНО: Встановлено фіксовану висоту для хедера картки
 const CardHeader = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
@@ -851,13 +850,13 @@ export default function App() {
             <Grid item xs={12} sm={6}>
               <Typography variant="body2" color="text.secondary">{t.currentPrice}</Typography>
               <Typography variant="h6" fontWeight="bold">
-                {item.currentPrice ? `${item.currentPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+                {item.currentPrice ? `${item.currentPrice.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
               </Typography>
             </Grid>
             <Grid item xs={12}>
               <Typography variant="body2" color="text.secondary">{t.profit} ({t.currentMarketProfit})</Typography>
               <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
-                {item.currentPrice ? `${itemProfit.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+                {item.currentPrice ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
               </Typography>
             </Grid>
           </Grid>
@@ -1042,10 +1041,6 @@ export default function App() {
           <Grid container spacing={2} sx={{ 
             px: { xs: 1, md: 0 },
             alignItems: 'stretch',
-            '& .MuiGrid-item': {
-              pb: '16px !important',
-              mb: '0 !important'
-            }
           }}>
             {filteredInvestments.length === 0 ? (
               <Grid item xs={12}>
@@ -1060,7 +1055,8 @@ export default function App() {
                   (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
   
                 return (
-                  <Grid item xs={12} sm={6} md={4} key={item.id} sx={{ display: 'flex' }}>
+                  // ✨ ВИПРАВЛЕНО: Додано display: 'flex' та відступ знизу
+                  <Grid item xs={12} sm={6} md={4} key={item.id} sx={{ display: 'flex', pb: 2 }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
                         <CardContent sx={{ 
@@ -1069,7 +1065,7 @@ export default function App() {
                           display: 'flex',
                           flexDirection: 'column',
                           overflow: 'hidden',
-                          minHeight: '200px', // Виправлення: мінімальна висота для контенту картки
+                          minHeight: '200px',
                         }}>
                           <CardHeader>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
@@ -1108,7 +1104,6 @@ export default function App() {
                                 {item.buyPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}
                               </Typography>
                             </Box>
-                            {/* ВИПРАВЛЕННЯ: Логіка відображення поточної ціни / прибутку */}
                             {item.sold ? (
                               <Box>
                                 <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
