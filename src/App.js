@@ -179,9 +179,9 @@ const StyledCard = styled(Card)(({ theme }) => ({
   flexDirection: 'column',
   justifyContent: 'space-between',
   padding: theme.spacing(1.5),
-  overflow: 'visible', // Changed to visible to allow the commission badge to overflow
+  overflow: 'visible',
   cursor: 'pointer',
-  position: 'relative', // Added position relative for absolute positioning of the badge
+  position: 'relative',
   [theme.breakpoints.down('sm')]: {
     minHeight: '280px',
     padding: theme.spacing(1),
@@ -278,8 +278,8 @@ export default function App() {
   const [exchangeRatesDialogOpen, setExchangeRatesDialogOpen] = useState(false);
   const [themeMode, setThemeMode] = useState('light');
   const [autoUpdateEnabled, setAutoUpdateEnabled] = useState(false);
-  const [commissionRate, setCommissionRate] = useState(15);
-
+  const [globalCommissionRate, setGlobalCommissionRate] = useState(15);
+  const [commissionDialogOpen, setCommissionDialogOpen] = useState(false);
 
   // Pagination and Sorting State
   const [page, setPage] = useState(1);
@@ -590,7 +590,6 @@ export default function App() {
         sellPrice: 0,
         sellDate: null,
         image: selectedItemDetails?.image || null,
-        commissionRate: Number(commissionRate), // Added commissionRate
         createdAt: new Date().toISOString(),
       };
 
@@ -662,7 +661,6 @@ export default function App() {
     setAutocompleteValue(null);
     setItemOptions([]);
     setSelectedItemDetails(null);
-    setCommissionRate(15); // Reset commission rate
   };
 
   const handleEdit = (item) => {
@@ -672,7 +670,6 @@ export default function App() {
     setBuyPrice(item.buyPrice);
     setGame(item.game);
     setBoughtDate(item.boughtDate);
-    setCommissionRate(item.commissionRate || 0); // Set commission rate for edit
     setEditDialog(true);
   };
 
@@ -688,7 +685,6 @@ export default function App() {
       buyPrice: Number(buyPrice),
       game,
       boughtDate,
-      commissionRate: Number(commissionRate), // Added commissionRate
     };
 
     try {
@@ -739,7 +735,7 @@ export default function App() {
   const pageCount = Math.ceil(sortedInvestments.length / ITEMS_PER_PAGE);
   const paginatedInvestments = sortedInvestments.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  // Profit calculations with individual commission
+  // Profit calculations with global commission
   const getNetProfit = (grossProfit, totalValue, commissionRate) => {
     const totalCommission = totalValue * (commissionRate / 100);
     return grossProfit - totalCommission;
@@ -752,7 +748,7 @@ export default function App() {
     .reduce((sum, item) => {
         const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
         const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
-        const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissionRate);
+        const netProfit = getNetProfit(grossProfit, totalSellValue, globalCommissionRate);
         return sum + netProfit;
     }, 0);
   
@@ -775,7 +771,7 @@ export default function App() {
     .map(item => {
         const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
         const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
-        const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissionRate);
+        const netProfit = getNetProfit(grossProfit, totalSellValue, globalCommissionRate);
         return { date: item.sellDate, profit: netProfit };
     })
     .sort((a, b) => new Date(a.date) - new Date(b.date))
@@ -812,7 +808,7 @@ export default function App() {
     
     const itemGrossProfit = convertedTotalCurrentPrice - convertedTotalBuyPrice;
     const itemTotalValue = item.sold ? convertCurrency(item.sellPrice * item.count, item.buyCurrency) : convertedTotalCurrentPrice;
-    const itemProfit = getNetProfit(itemGrossProfit, itemTotalValue, item.commissionRate);
+    const itemProfit = getNetProfit(itemGrossProfit, itemTotalValue, globalCommissionRate);
     
     const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
     const profitPercentage = convertedTotalBuyPrice > 0 ? ((itemProfit / convertedTotalBuyPrice) * 100).toFixed(2) : '0.00';
@@ -879,7 +875,7 @@ export default function App() {
                     <Grid item xs={6}>
                         <Typography variant="body2" color="text.secondary">Комісія</Typography>
                         <Typography variant="h6" fontWeight="bold" >
-                            {item.commissionRate}%
+                            {globalCommissionRate}%
                         </Typography>
                     </Grid>
                     <Grid item xs={6}>
@@ -964,6 +960,11 @@ export default function App() {
                 <Tooltip title={t.analytics}>
                   <IconButton color="secondary" onClick={handleAnalyticsOpen}>
                     <BarChart />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Налаштувати комісію">
+                  <IconButton color="primary" onClick={() => setCommissionDialogOpen(true)}>
+                    <Percent />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title={t.settings}>
@@ -1180,7 +1181,7 @@ export default function App() {
                   (convertCurrency(item.sellPrice, item.buyCurrency) - convertedBuyPrice) * item.count : 
                   (convertedCurrentPrice ? convertedCurrentPrice - convertedBuyPrice : 0) * item.count;
                 const itemTotalValueForCard = item.sold ? convertCurrency(item.sellPrice, item.buyCurrency) * item.count : convertedCurrentPrice ? convertedCurrentPrice * item.count : 0;
-                const profitForCard = getNetProfit(itemGrossProfitForCard, itemTotalValueForCard, item.commissionRate);
+                const profitForCard = getNetProfit(itemGrossProfitForCard, itemTotalValueForCard, globalCommissionRate);
                 const profitColorForCard = profitForCard >= 0 ? theme.palette.success.main : theme.palette.error.main;
     
                 return (
@@ -1247,10 +1248,6 @@ export default function App() {
                             <Box>
                               <Typography variant="body2" color="text.secondary">{t.boughtDate}:</Typography>
                               <Typography variant="h6" fontWeight="bold">{item.boughtDate}</Typography>
-                            </Box>
-                            <Box>
-                              <Typography variant="body2" color="text.secondary">Комісія:</Typography>
-                              <Typography variant="h6" fontWeight="bold">{item.commissionRate}%</Typography>
                             </Box>
                           </Box>
                         </CardContent>
@@ -1461,18 +1458,7 @@ export default function App() {
                           </Select>
                         </FormControl>
                       </Grid>
-                      <Grid item xs={12} sm={6}>
-                        <TextField
-                          label="Комісія (%)"
-                          type="number"
-                          value={commissionRate}
-                          onChange={(e) => setCommissionRate(e.target.value)}
-                          fullWidth
-                          required
-                          InputProps={{ inputProps: { min: 0 } }}
-                        />
-                      </Grid>
-                      <Grid item xs={12} sm={6}>
+                      <Grid item xs={12}>
                         <TextField 
                           label={t.boughtDate} 
                           type="date" 
@@ -1589,17 +1575,6 @@ export default function App() {
                       ))}
                     </Select>
                   </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Комісія (%)"
-                    type="number"
-                    value={commissionRate}
-                    onChange={(e) => setCommissionRate(e.target.value)}
-                    fullWidth
-                    required
-                    InputProps={{ inputProps: { min: 0 } }}
-                  />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField 
@@ -1781,6 +1756,36 @@ export default function App() {
                 sx={{ borderRadius: 8 }}
               >
                 {t.cancel}
+              </Button>
+            </DialogActions>
+          </Dialog>
+
+          <Dialog open={commissionDialogOpen} onClose={() => setCommissionDialogOpen(false)} maxWidth="xs" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold" color="primary">Налаштування комісії</Typography>
+            </DialogTitle>
+            <DialogContent dividers>
+              <Typography variant="body1" color="text.secondary" mb={2}>
+                Встановіть єдиний відсоток комісії, який буде застосовуватися до всіх розрахунків прибутку.
+              </Typography>
+              <TextField
+                label="Відсоток комісії (%)"
+                type="number"
+                value={globalCommissionRate}
+                onChange={(e) => setGlobalCommissionRate(Number(e.target.value))}
+                fullWidth
+                required
+                InputProps={{ inputProps: { min: 0 } }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button 
+                onClick={() => setCommissionDialogOpen(false)} 
+                color="secondary" 
+                variant="outlined"
+                sx={{ borderRadius: 8 }}
+              >
+                Закрити
               </Button>
             </DialogActions>
           </Dialog>
