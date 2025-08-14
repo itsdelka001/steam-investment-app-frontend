@@ -179,8 +179,9 @@ const StyledCard = styled(Card)(({ theme }) => ({
   flexDirection: 'column',
   justifyContent: 'space-between',
   padding: theme.spacing(1.5),
-  overflow: 'hidden',
+  overflow: 'visible', // Changed to visible to allow the commission badge to overflow
   cursor: 'pointer',
+  position: 'relative', // Added position relative for absolute positioning of the badge
   [theme.breakpoints.down('sm')]: {
     minHeight: '280px',
     padding: theme.spacing(1),
@@ -223,6 +224,29 @@ const CardFooter = styled(Box)(({ theme }) => ({
   justifyContent: 'space-between',
   alignItems: 'center',
   paddingTop: theme.spacing(1),
+}));
+
+const CommissionBadge = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: '-12px',
+  right: '-12px',
+  width: '40px',
+  height: '40px',
+  borderRadius: '50%',
+  backgroundColor: theme.palette.secondary.main,
+  color: 'white',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontWeight: 'bold',
+  fontSize: '0.8rem',
+  cursor: 'pointer',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+  zIndex: 10,
+  transition: 'transform 0.2s',
+  '&:hover': {
+    transform: 'scale(1.1)',
+  },
 }));
 
 const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
@@ -276,6 +300,13 @@ export default function App() {
   const [exchangeRatesDialogOpen, setExchangeRatesDialogOpen] = useState(false);
   const [themeMode, setThemeMode] = useState('light');
   const [autoUpdateEnabled, setAutoUpdateEnabled] = useState(false);
+
+  // New state for commissions
+  const [commissions, setCommissions] = useState([{ id: 1, name: 'Steam', rate: 15, description: 'Стандартна комісія торговельного майданчика Steam.' }]);
+  const [commissionDialog, setCommissionDialog] = useState({ open: false, mode: 'add', commission: null });
+  const [newCommissionName, setNewCommissionName] = useState('');
+  const [newCommissionRate, setNewCommissionRate] = useState(0);
+  const [newCommissionDescription, setNewCommissionDescription] = useState('');
 
   // Pagination and Sorting State
   const [page, setPage] = useState(1);
@@ -731,10 +762,22 @@ export default function App() {
   const pageCount = Math.ceil(sortedInvestments.length / ITEMS_PER_PAGE);
   const paginatedInvestments = sortedInvestments.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
+  // Profit calculations with commission
+  const getNetProfit = (grossProfit, totalValue) => {
+    const totalCommission = totalValue * (commissions.reduce((sum, c) => sum + c.rate, 0) / 100);
+    return grossProfit - totalCommission;
+  };
+
   const totalInvestment = investments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
+  
   const totalSoldProfit = investments
     .filter(item => item.sold)
-    .reduce((sum, item) => sum + convertCurrency((item.sellPrice - item.buyPrice) * item.count, item.buyCurrency), 0);
+    .reduce((sum, item) => {
+        const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
+        const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
+        const netProfit = getNetProfit(grossProfit, totalSellValue);
+        return sum + netProfit;
+    }, 0);
   
   const totalMarketValue = investments
     .filter(item => !item.sold)
@@ -752,7 +795,12 @@ export default function App() {
 
   const profitByDate = investments
     .filter(item => item.sold)
-    .map(item => ({ date: item.sellDate, profit: convertCurrency((item.sellPrice - item.buyPrice) * item.count, item.buyCurrency) }))
+    .map(item => {
+        const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
+        const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
+        const netProfit = getNetProfit(grossProfit, totalSellValue);
+        return { date: item.sellDate, profit: netProfit };
+    })
     .sort((a, b) => new Date(a.date) - new Date(b.date))
     .reduce((acc, curr) => {
       const existing = acc.find(p => p.date === curr.date);
@@ -785,7 +833,10 @@ export default function App() {
     const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR") : null;
     const convertedTotalCurrentPrice = convertedCurrentPrice ? convertedCurrentPrice * item.count : convertedTotalBuyPrice;
     
-    const itemProfit = convertedTotalCurrentPrice - convertedTotalBuyPrice;
+    const itemGrossProfit = convertedTotalCurrentPrice - convertedTotalBuyPrice;
+    const itemTotalValue = item.sold ? convertCurrency(item.sellPrice * item.count, item.buyCurrency) : convertedTotalCurrentPrice;
+    const itemProfit = getNetProfit(itemGrossProfit, itemTotalValue);
+    
     const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
     const profitPercentage = convertedTotalBuyPrice > 0 ? ((itemProfit / convertedTotalBuyPrice) * 100).toFixed(2) : '0.00';
 
@@ -904,6 +955,105 @@ export default function App() {
     );
   };
   
+  // New functions for managing commissions
+  const handleCommissionBadgeClick = (event) => {
+      event.stopPropagation();
+      setCommissionDialog({ open: true, mode: 'view' });
+  };
+
+  const handleAddCommission = () => {
+    if (newCommissionName && newCommissionRate > 0) {
+      setCommissions(prev => [...prev, { id: Date.now(), name: newCommissionName, rate: newCommissionRate, description: newCommissionDescription }]);
+      setNewCommissionName('');
+      setNewCommissionRate(0);
+      setNewCommissionDescription('');
+      showSnackbar("Нова комісія додана", 'success');
+      setCommissionDialog({ open: false, mode: 'view' });
+    } else {
+      showSnackbar("Будь ласка, заповніть усі поля", 'error');
+    }
+  };
+
+  const handleDeleteCommission = (id) => {
+    setCommissions(prev => prev.filter(c => c.id !== id));
+    showSnackbar("Комісію видалено", 'success');
+  };
+
+  const CommissionDialog = ({ open, onClose }) => {
+    return (
+      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+        <DialogTitle>
+          <Typography variant="h6" fontWeight="bold" color="primary">Керування комісіями</Typography>
+        </DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body1" mb={2}>Комісії, що враховуються при розрахунках прибутку.</Typography>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Назва</TableCell>
+                <TableCell align="right">Відсоток</TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {commissions.map((commission) => (
+                <TableRow key={commission.id}>
+                  <TableCell>
+                    <Tooltip title={commission.description}>
+                      <Typography variant="body1">{commission.name}</Typography>
+                    </Tooltip>
+                  </TableCell>
+                  <TableCell align="right">{commission.rate}%</TableCell>
+                  <TableCell align="right">
+                    <IconButton onClick={() => handleDeleteCommission(commission.id)} size="small" color="error">
+                      <Delete size={16} />
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <Divider sx={{ my: 3 }} />
+          <Typography variant="h6" mb={2} color="secondary">Додати нову комісію</Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <TextField
+                label="Назва комісії"
+                value={newCommissionName}
+                onChange={(e) => setNewCommissionName(e.target.value)}
+                fullWidth
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Відсоток (%)"
+                type="number"
+                value={newCommissionRate}
+                onChange={(e) => setNewCommissionRate(e.target.value)}
+                fullWidth
+                InputProps={{ inputProps: { min: 0 } }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                label="Опис"
+                value={newCommissionDescription}
+                onChange={(e) => setNewCommissionDescription(e.target.value)}
+                fullWidth
+                multiline
+                rows={2}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={() => onClose()} color="secondary" variant="outlined" sx={{ borderRadius: 8 }}>Скасувати</Button>
+          <Button onClick={handleAddCommission} color="primary" variant="contained" sx={{ borderRadius: 8 }}>Додати</Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', pb: 4 }}>
@@ -1141,9 +1291,11 @@ export default function App() {
               paginatedInvestments.map((item) => {
                 const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency);
                 const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR") : null;
-                const profitForCard = item.sold ? 
+                const itemGrossProfitForCard = item.sold ? 
                   (convertCurrency(item.sellPrice, item.buyCurrency) - convertedBuyPrice) * item.count : 
                   (convertedCurrentPrice ? convertedCurrentPrice - convertedBuyPrice : 0) * item.count;
+                const itemTotalValueForCard = item.sold ? convertCurrency(item.sellPrice, item.buyCurrency) * item.count : convertedCurrentPrice ? convertedCurrentPrice * item.count : 0;
+                const profitForCard = getNetProfit(itemGrossProfitForCard, itemTotalValueForCard);
                 const profitColorForCard = profitForCard >= 0 ? theme.palette.success.main : theme.palette.error.main;
     
                 return (
@@ -1155,6 +1307,11 @@ export default function App() {
                     }}
                   >
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
+                      <Tooltip title="Натисніть для перегляду деталей комісій" arrow>
+                        <CommissionBadge onClick={handleCommissionBadgeClick}>
+                          15%
+                        </CommissionBadge>
+                      </Tooltip>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
                         <CardContent sx={{ 
                           p: 1.5,
@@ -1746,6 +1903,11 @@ export default function App() {
               {snackbar.message}
             </Alert>
           </Snackbar>
+
+          <CommissionDialog 
+            open={commissionDialog.open} 
+            onClose={() => setCommissionDialog({ open: false, mode: 'view', commission: null })} 
+          />
         </Container>
       </Box>
     </ThemeProvider>
