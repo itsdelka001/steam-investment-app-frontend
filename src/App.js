@@ -1064,6 +1064,7 @@ export default function App() {
           <Grid container spacing={2} sx={{ 
             px: { xs: 1, md: 0 },
             alignItems: 'stretch',
+			justifyContent: 'center',
           }}>
             {filteredInvestments.length === 0 ? (
               <Grid item xs={12}>
