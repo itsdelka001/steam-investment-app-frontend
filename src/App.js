@@ -165,14 +165,13 @@ const theme = createTheme({
   },
 });
 
-// Стилізована картка, яка тепер має бути завжди однакової висоти
 const StyledCard = styled(Card)(({ theme }) => ({
-  height: '100%', // Важливо, щоб картка заповнювала весь простір елемента Grid
-  minHeight: '320px', // Мінімальна висота, щоб навіть порожні картки були достатньо великими
+  height: '100%',
+  minHeight: '320px',
   width: '100%',
   display: 'flex',
   flexDirection: 'column',
-  justifyContent: 'space-between', // Розподіляє вміст вертикально
+  justifyContent: 'space-between',
   padding: theme.spacing(1.5),
   overflow: 'hidden',
   [theme.breakpoints.down('sm')]: {
