@@ -266,10 +266,8 @@ export default function App() {
   const [itemDetailsDialogOpen, setItemDetailsDialogOpen] = useState(false);
   const [itemToDisplayDetails, setItemToDisplayDetails] = useState(null);
   const [isUpdatingAllPrices, setIsUpdatingAllPrices] = useState(false);
-  // ✨ ВИПРАВЛЕНО: Стан для динамічного завантаження перекладів
   const [t, setT] = useState({});
 
-  // ✨ ВИПРАВЛЕНО: Ефект для завантаження перекладів
   useEffect(() => {
     async function loadTranslations() {
       try {
@@ -962,7 +960,7 @@ export default function App() {
                   (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
   
                 return (
-                  <Grid item xs={3} sm={3} md={3} key={item.id} sx={{ display: 'flex', pb: 2 }}>
+                  <Grid item xs={12} sm={6} md={3} key={item.id} sx={{ display: 'flex', pb: 2 }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
                         <CardContent sx={{ 
