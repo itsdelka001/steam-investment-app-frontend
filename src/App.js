@@ -195,7 +195,7 @@ const StyledMetricCard = styled(Card)(({ theme, bgcolor }) => ({
   transition: 'all 0.3s ease',
   '&:hover': {
     transform: 'translateY(-3px)',
-    box boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.15)', // Ось тут виправлено
   },
   textAlign: 'center',
   minHeight: 160,
