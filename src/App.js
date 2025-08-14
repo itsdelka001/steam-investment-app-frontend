@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Container, Typography, Box, TextField, Button, Table, TableHead, TableBody, TableRow, TableCell,
   Select, MenuItem, FormControl, InputLabel, Dialog, DialogTitle, DialogContent, DialogActions,
   Tabs, Tab, IconButton, Snackbar, Alert, Grid, Card, CardContent, Chip, Tooltip,
-  Autocomplete, CircularProgress, Divider, LinearProgress, Paper, Fab, Menu
+  Autocomplete, CircularProgress, Divider, LinearProgress, Paper, Fab, Menu, Skeleton
 } from '@mui/material';
 import {
   TrendingUp, Delete, Check, BarChart, Plus, Globe, X, ArrowUp, Edit,
   History, Settings, Tag, Palette, Rocket, Zap, DollarSign, Percent, TrendingDown,
-  ArrowDown, Menu as MenuIcon, Eye
+  ArrowDown, Menu as MenuIcon, Eye, Sun, Moon
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie,
@@ -16,224 +16,16 @@ import {
 } from 'recharts';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 
-const theme = createTheme({
-  breakpoints: {
-    values: {
-      xs: 0,
-      sm: 600,
-      md: 900,
-      lg: 1200,
-      xl: 1920,
-    },
-  },
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#4A148C',
-    },
-    secondary: {
-      main: '#007BFF',
-    },
-    background: {
-      default: '#F8F9FA',
-      paper: '#FFFFFF',
-    },
-    text: {
-      primary: '#212529',
-      secondary: '#6C757D',
-    },
-    divider: '#DEE2E6',
-    success: {
-      main: '#28A745',
-      light: '#D4EDDA',
-    },
-    error: {
-      main: '#DC3545',
-      light: '#F8D7DA',
-    },
-    warning: {
-      main: '#FFC107',
-      light: '#FFF3CD',
-    }
-  },
-  typography: {
-    fontFamily: ['"Inter"', 'sans-serif'].join(','),
-    h4: {
-      fontWeight: 700,
-    },
-    h5: {
-      fontWeight: 600,
-    },
-    h6: {
-      fontWeight: 600,
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          textTransform: 'none',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-          transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
-          '&:hover': {
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            transform: 'translateY(-2px)',
-          },
-        },
-        containedPrimary: {
-          background: 'linear-gradient(45deg, #4A148C 30%, #4A148C 90%)',
-        },
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          background: '#FFFFFF',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        },
-      },
-    },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 8,
-            backgroundColor: '#F1F3F5',
-            '&.Mui-focused fieldset': {
-              borderColor: '#007BFF',
-            },
-          },
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-          background: '#FFFFFF',
-          transition: 'box-shadow 0.3s, transform 0.3s',
-          '&:hover': {
-            boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
-            transform: 'scale(1.01)',
-          },
-        },
-      },
-    },
-    MuiDialog: {
-      styleOverrides: {
-        paper: {
-          borderRadius: 16,
-          background: '#F8F9FA',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
-        },
-      },
-    },
-    MuiTabs: {
-      styleOverrides: {
-        indicator: {
-          height: 3,
-          borderRadius: '4px 4px 0 0',
-        },
-      },
-    },
-    MuiTab: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-          fontWeight: 600,
-          color: '#6C757D',
-          '&.Mui-selected': {
-            color: '#4A148C',
-          },
-        },
-      },
-    },
-    MuiTooltip: {
-      styleOverrides: {
-        tooltip: {
-          backgroundColor: '#212529',
-          color: '#E0E0E0',
-          borderRadius: 8,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-          fontSize: '0.875rem',
-        },
-      },
-    },
-  },
-});
-
-const StyledCard = styled(Card)(({ theme }) => ({
-  height: '100%',
-  minHeight: '320px',
-  width: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'space-between',
-  padding: theme.spacing(1.5),
-  overflow: 'hidden',
-  [theme.breakpoints.down('sm')]: {
-    minHeight: '280px',
-    padding: theme.spacing(1),
-    '& .MuiTypography-h6': {
-      fontSize: '0.9rem',
-    },
-    '& .MuiTypography-body2': {
-      fontSize: '0.7rem',
-    }
-  }
-}));
-
-const StyledMetricCard = styled(Card)(({ theme, bgcolor }) => ({
-  padding: theme.spacing(2),
-  borderRadius: 16,
-  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-  backgroundColor: bgcolor || theme.palette.background.paper,
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    transform: 'translateY(-3px)',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-  },
-  textAlign: 'center',
-  minHeight: 160,
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-}));
-
-const CardHeader = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  paddingBottom: theme.spacing(1),
-  minHeight: '64px',
-}));
-
-const CardFooter = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  paddingTop: theme.spacing(1),
-}));
-
-const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
-const CURRENCIES = ["EUR", "USD", "UAH"];
-const CURRENCY_SYMBOLS = { "EUR": "€", "USD": "$", "UAH": "₴" };
-const EXCHANGERATE_API_KEY = "61a8a12c18b1b14a645ebc37";
-
-const BACKEND_URL = 'https://steam-proxy-server-lues.onrender.com';
-const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
-
-export default function App() {
+const App = () => {
+  const [themeMode, setThemeMode] = useState('dark');
   const [investments, setInvestments] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [name, setName] = useState("");
   const [count, setCount] = useState(1);
   const [buyPrice, setBuyPrice] = useState(0);
-  const [buyCurrency, setBuyCurrency] = useState(CURRENCIES[0]);
-  const [displayCurrency, setDisplayCurrency] = useState(CURRENCIES[0]);
-  const [game, setGame] = useState(GAMES[1]);
+  const [buyCurrency, setBuyCurrency] = useState('EUR');
+  const [displayCurrency, setDisplayCurrency] = useState('EUR');
+  const [game, setGame] = useState('CS2');
   const [boughtDate, setBoughtDate] = useState(new Date().toISOString().split('T')[0]);
   const [tabValue, setTabValue] = useState(0);
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -269,6 +61,225 @@ export default function App() {
   const [exchangeRates, setExchangeRates] = useState({});
   const [exchangeRatesDialogOpen, setExchangeRatesDialogOpen] = useState(false);
 
+  const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
+  const CURRENCIES = ["EUR", "USD", "UAH"];
+  const CURRENCY_SYMBOLS = { "EUR": "€", "USD": "$", "UAH": "₴" };
+  const EXCHANGERATE_API_KEY = "61a8a12c18b1b14a645ebc37";
+  const BACKEND_URL = 'https://steam-proxy-server-lues.onrender.com';
+  const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
+
+  const theme = useMemo(() => createTheme({
+    breakpoints: {
+      values: {
+        xs: 0,
+        sm: 600,
+        md: 900,
+        lg: 1200,
+        xl: 1920,
+      },
+    },
+    palette: {
+      mode: themeMode,
+      primary: {
+        main: themeMode === 'dark' ? '#BB86FC' : '#4A148C',
+      },
+      secondary: {
+        main: themeMode === 'dark' ? '#03DAC6' : '#007BFF',
+      },
+      background: {
+        default: themeMode === 'dark' ? '#121212' : '#F8F9FA',
+        paper: themeMode === 'dark' ? '#1E1E1E' : '#FFFFFF',
+      },
+      text: {
+        primary: themeMode === 'dark' ? '#E0E0E0' : '#212529',
+        secondary: themeMode === 'dark' ? '#A0A0A0' : '#6C757D',
+      },
+      divider: themeMode === 'dark' ? '#333333' : '#DEE2E6',
+      success: {
+        main: themeMode === 'dark' ? '#66BB6A' : '#28A745',
+        light: themeMode === 'dark' ? '#1f3320' : '#D4EDDA',
+      },
+      error: {
+        main: themeMode === 'dark' ? '#CF6679' : '#DC3545',
+        light: themeMode === 'dark' ? '#331f22' : '#F8D7DA',
+      },
+      warning: {
+        main: themeMode === 'dark' ? '#FFAB40' : '#FFC107',
+        light: themeMode === 'dark' ? '#332a18' : '#FFF3CD',
+      }
+    },
+    typography: {
+      fontFamily: ['"Inter"', 'sans-serif'].join(','),
+      h4: {
+        fontWeight: 700,
+      },
+      h5: {
+        fontWeight: 600,
+      },
+      h6: {
+        fontWeight: 600,
+      },
+    },
+    components: {
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            borderRadius: 8,
+            textTransform: 'none',
+            boxShadow: themeMode === 'dark' ? '0 2px 6px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.1)',
+            transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
+            '&:hover': {
+              boxShadow: themeMode === 'dark' ? '0 4px 12px rgba(0,0,0,0.6)' : '0 4px 12px rgba(0,0,0,0.15)',
+              transform: 'translateY(-2px)',
+            },
+          },
+          containedPrimary: {
+            background: themeMode === 'dark' ? 'linear-gradient(45deg, #BB86FC 30%, #BB86FC 90%)' : 'linear-gradient(45deg, #4A148C 30%, #4A148C 90%)',
+          },
+        },
+      },
+      MuiPaper: {
+        styleOverrides: {
+          root: {
+            borderRadius: 12,
+            background: themeMode === 'dark' ? '#1E1E1E' : '#FFFFFF',
+            boxShadow: themeMode === 'dark' ? '0 4px 12px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.08)',
+            transition: 'background 0.3s, box-shadow 0.3s',
+          },
+        },
+      },
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 8,
+              backgroundColor: themeMode === 'dark' ? '#333333' : '#F1F3F5',
+              '&.Mui-focused fieldset': {
+                borderColor: themeMode === 'dark' ? '#03DAC6' : '#007BFF',
+              },
+            },
+          },
+        },
+      },
+      MuiCard: {
+        styleOverrides: {
+          root: {
+            borderRadius: 12,
+            boxShadow: themeMode === 'dark' ? '0 4px 12px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.08)',
+            background: themeMode === 'dark' ? '#1E1E1E' : '#FFFFFF',
+            transition: 'box-shadow 0.3s, transform 0.3s, background 0.3s',
+            '&:hover': {
+              boxShadow: themeMode === 'dark' ? '0 8px 20px rgba(0,0,0,0.6)' : '0 8px 20px rgba(0,0,0,0.12)',
+              transform: 'scale(1.01)',
+            },
+          },
+        },
+      },
+      MuiDialog: {
+        styleOverrides: {
+          paper: {
+            borderRadius: 16,
+            background: themeMode === 'dark' ? '#1E1E1E' : '#F8F9FA',
+            boxShadow: themeMode === 'dark' ? '0 8px 30px rgba(0,0,0,0.4)' : '0 8px 30px rgba(0,0,0,0.15)',
+            transition: 'background 0.3s, box-shadow 0.3s',
+          },
+        },
+      },
+      MuiTabs: {
+        styleOverrides: {
+          indicator: {
+            height: 3,
+            borderRadius: '4px 4px 0 0',
+          },
+        },
+      },
+      MuiTab: {
+        styleOverrides: {
+          root: {
+            textTransform: 'none',
+            fontWeight: 600,
+            color: themeMode === 'dark' ? '#A0A0A0' : '#6C757D',
+            '&.Mui-selected': {
+              color: themeMode === 'dark' ? '#BB86FC' : '#4A148C',
+            },
+          },
+        },
+      },
+      MuiTooltip: {
+        styleOverrides: {
+          tooltip: {
+            backgroundColor: themeMode === 'dark' ? '#333333' : '#212529',
+            color: themeMode === 'dark' ? '#E0E0E0' : '#E0E0E0',
+            borderRadius: 8,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+            fontSize: '0.875rem',
+            transition: 'background 0.3s',
+          },
+        },
+      },
+      MuiChip: {
+        styleOverrides: {
+          root: {
+            transition: 'background-color 0.3s, color 0.3s',
+          },
+        },
+      },
+    },
+  }), [themeMode]);
+
+  const StyledCard = styled(Card)(({ theme }) => ({
+    height: '100%',
+    minHeight: '320px',
+    width: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    padding: theme.spacing(1.5),
+    overflow: 'hidden',
+    cursor: 'pointer',
+    [theme.breakpoints.down('sm')]: {
+      minHeight: '280px',
+      padding: theme.spacing(1),
+      '& .MuiTypography-h6': {
+        fontSize: '0.9rem',
+      },
+      '& .MuiTypography-body2': {
+        fontSize: '0.7rem',
+      }
+    }
+  }));
+  
+  const StyledMetricCard = styled(Card)(({ theme, bgcolor }) => ({
+    padding: theme.spacing(2),
+    borderRadius: 16,
+    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+    backgroundColor: bgcolor || theme.palette.background.paper,
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-3px)',
+      boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+    },
+    textAlign: 'center',
+    minHeight: 160,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+  }));
+  
+  const CardHeader = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: theme.spacing(1),
+    minHeight: '64px',
+  }));
+  
+  const CardFooter = styled(Box)(({ theme }) => ({
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: theme.spacing(1),
+  }));
 
   useEffect(() => {
     async function loadTranslations() {
@@ -312,6 +323,7 @@ export default function App() {
   };
 
   const getInvestments = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch(`${BACKEND_URL}/api/investments`);
       if (!response.ok) {
@@ -322,6 +334,8 @@ export default function App() {
     } catch (error) {
       console.error("Error fetching investments:", error);
       showSnackbar(t.fetchError, "error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -335,6 +349,10 @@ export default function App() {
 
   const handleSettingsMenuClose = () => {
     setSettingsAnchorEl(null);
+  };
+
+  const toggleTheme = () => {
+    setThemeMode(prevMode => prevMode === 'light' ? 'dark' : 'light');
   };
 
   const updateInvestment = async (id, data) => {
@@ -801,10 +819,10 @@ export default function App() {
       </Dialog>
     );
   };
-
+  
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', pb: 4 }}>
+      <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', pb: 4, transition: 'background-color 0.3s' }}>
         <Container maxWidth="xl" sx={{ pt: 0, pb: 4 }}>
           <Paper elevation={0} sx={{ 
             py: 2, 
@@ -829,6 +847,11 @@ export default function App() {
                     <BarChart />
                   </IconButton>
                 </Tooltip>
+                <Tooltip title={themeMode === 'light' ? 'Переключити на темну тему' : 'Переключити на світлу тему'}>
+                  <IconButton onClick={toggleTheme} color="primary">
+                    {themeMode === 'light' ? <Moon /> : <Sun />}
+                  </IconButton>
+                </Tooltip>
                 <Tooltip title={t.settings}>
                   <IconButton color="secondary" onClick={handleSettingsMenuClick}>
                     <Settings />
@@ -846,6 +869,7 @@ export default function App() {
                     vertical: 'top',
                     horizontal: 'right',
                   }}
+                  sx={{ '& .MuiPaper-root': { boxShadow: themeMode === 'dark' ? '0 4px 12px rgba(0,0,0,0.4)' : '0 4px 12px rgba(0,0,0,0.1)' }}}
                 >
                   <MenuItem onClick={handleSettingsMenuClose}>
                     <Box display="flex" alignItems="center" gap={1}>
@@ -895,7 +919,7 @@ export default function App() {
                     {t.totalInvestment}
                   </Typography>
                   <Typography variant="h4" fontWeight="bold" color="primary">
-                    {totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                    {isLoading ? <Skeleton width="100%" /> : `${totalInvestment.toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}`}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
@@ -911,7 +935,7 @@ export default function App() {
                     {t.totalProfit}
                   </Typography>
                   <Typography variant="h4" fontWeight="bold" sx={{ color: profitColor }}>
-                    {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                    {isLoading ? <Skeleton width="100%" /> : `${totalSoldProfit.toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}`}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
@@ -924,7 +948,7 @@ export default function App() {
                     {t.currentMarketValue}
                   </Typography>
                   <Typography variant="h4" fontWeight="bold" color="secondary">
-                    {totalMarketValue.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                    {isLoading ? <Skeleton width="100%" /> : `${totalMarketValue.toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}`}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
@@ -940,7 +964,7 @@ export default function App() {
                     {t.currentMarketProfit}
                   </Typography>
                   <Typography variant="h4" fontWeight="bold" sx={{ color: currentProfitColor }}>
-                    {currentMarketProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                    {isLoading ? <Skeleton width="100%" /> : `${currentMarketProfit.toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}`}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
@@ -991,7 +1015,15 @@ export default function App() {
             justifyContent: 'flex-start',
             px: 0,
           }}>
-            {filteredInvestments.length === 0 ? (
+            {isLoading ? (
+              [1, 2, 3, 4, 5, 6].map(i => (
+                <Box key={i} sx={{ width: '30%', minWidth: '280px' }}>
+                  <StyledCard>
+                    <Skeleton variant="rectangular" height={280} sx={{ borderRadius: 12 }} />
+                  </StyledCard>
+                </Box>
+              ))
+            ) : filteredInvestments.length === 0 ? (
               <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary, width: '100%' }}>
                 <Typography variant="h6">{t.noInvestmentsInCategory}</Typography>
               </Box>
@@ -1280,10 +1312,11 @@ export default function App() {
                       flexDirection: 'column', 
                       alignItems: 'center', 
                       p: 3, 
-                      background: '#F1F3F5', 
+                      background: themeMode === 'dark' ? '#333333' : '#F1F3F5', 
                       borderRadius: 8, 
                       height: '100%',
-                      gap: 2
+                      gap: 2,
+                      transition: 'background-color 0.3s'
                     }}>
                       <Typography variant="h6" color="secondary">{t.selectedItem}</Typography>
                       <img 
@@ -1485,15 +1518,17 @@ export default function App() {
             </DialogTitle>
             <DialogContent dividers>
               <Typography variant="h6" mb={2} color="secondary">{t.totalProfit} ({CURRENCY_SYMBOLS[displayCurrency]})</Typography>
-              {cumulativeProfit.length === 0 ? (
+              {isLoading ? (
+                <Skeleton variant="rectangular" height={300} />
+              ) : cumulativeProfit.length === 0 ? (
                 <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={cumulativeProfit} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
-                    <XAxis dataKey="date" stroke="#666" />
-                    <YAxis stroke="#666" />
-                    <ChartTooltip contentStyle={{ backgroundColor: '#F8F9FA', border: '1px solid #ccc', borderRadius: 8 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                    <XAxis dataKey="date" stroke={theme.palette.text.secondary} />
+                    <YAxis stroke={theme.palette.text.secondary} />
+                    <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, border: `1px solid ${theme.palette.divider}`, borderRadius: 8 }} />
                     <Legend />
                     <Line type="monotone" dataKey="profit" stroke={theme.palette.primary.main} activeDot={{ r: 8 }} name={t.profit} />
                   </LineChart>
@@ -1501,7 +1536,9 @@ export default function App() {
               )}
               <Divider sx={{ my: 3 }} />
               <Typography variant="h6" mb={2} color="secondary">{t.investmentDistribution}</Typography>
-              {investmentDistributionData.length === 0 ? (
+              {isLoading ? (
+                <Skeleton variant="circular" width={200} height={200} sx={{ margin: '0 auto' }} />
+              ) : investmentDistributionData.length === 0 ? (
                 <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
@@ -1511,7 +1548,7 @@ export default function App() {
                         <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                       ))}
                     </Pie>
-                    <ChartTooltip contentStyle={{ backgroundColor: '#F8F9FA', border: '1px solid #ccc', borderRadius: 8 }} />
+                    <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, border: `1px solid ${theme.palette.divider}`, borderRadius: 8 }} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
@@ -1543,10 +1580,10 @@ export default function App() {
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={priceHistory} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
-                    <XAxis dataKey="date" stroke="#666" />
-                    <YAxis stroke="#666" />
-                    <ChartTooltip contentStyle={{ backgroundColor: '#F8F9FA', border: '1px solid #ccc', borderRadius: 8 }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                    <XAxis dataKey="date" stroke={theme.palette.text.secondary} />
+                    <YAxis stroke={theme.palette.text.secondary} />
+                    <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, border: `1px solid ${theme.palette.divider}`, borderRadius: 8 }} />
                     <Legend />
                     <Line type="monotone" dataKey="price" stroke={theme.palette.secondary.main} activeDot={{ r: 8 }} name="Ціна" />
                   </LineChart>
@@ -1626,3 +1663,5 @@ export default function App() {
     </ThemeProvider>
   );
 }
+
+export default App;
