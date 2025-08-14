@@ -1250,8 +1250,8 @@ export default function App() {
                           <Box 
                             sx={{ 
                               position: 'absolute', 
-                              top: -12, 
-                              right: -12,
+                              top: -24, 
+                              right: -24,
                             }}
                           >
                             <Tooltip title={`Комісія: ${totalCommissionRate}%`}>
