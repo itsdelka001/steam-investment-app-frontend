@@ -950,7 +950,8 @@ export default function App() {
             width: '100%',
             display: 'flex',
             flexWrap: 'wrap',
-            gap: '5%',
+            gap: '5%', // Горизонтальні відступи між картками
+            rowGap: '32px', // Вертикальні відступи між рядками
             justifyContent: 'flex-start',
             px: 0,
           }}>
@@ -970,7 +971,7 @@ export default function App() {
                     sx={{ 
                       width: '30%',
                       minWidth: '280px',
-                      mb: 3,
+                      mb: 0, // Видалено, оскільки тепер є rowGap
                     }}
                   >
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
