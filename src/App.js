@@ -221,6 +221,7 @@ const CardFooter = styled(Box)(({ theme }) => ({
 const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
 const CURRENCIES = ["EUR", "USD", "UAH"];
 const CURRENCY_SYMBOLS = { "EUR": "€", "USD": "$", "UAH": "₴" };
+const EXCHANGERATE_API_KEY = "61a8a12c18b1b14a645ebc37";
 
 const BACKEND_URL = 'https://steam-proxy-server-lues.onrender.com';
 const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
@@ -231,6 +232,7 @@ export default function App() {
   const [count, setCount] = useState(1);
   const [buyPrice, setBuyPrice] = useState(0);
   const [buyCurrency, setBuyCurrency] = useState(CURRENCIES[0]);
+  const [displayCurrency, setDisplayCurrency] = useState(CURRENCIES[0]);
   const [game, setGame] = useState(GAMES[1]);
   const [boughtDate, setBoughtDate] = useState(new Date().toISOString().split('T')[0]);
   const [tabValue, setTabValue] = useState(0);
@@ -264,6 +266,9 @@ export default function App() {
   const [itemToDisplayDetails, setItemToDisplayDetails] = useState(null);
   const [isUpdatingAllPrices, setIsUpdatingAllPrices] = useState(false);
   const [t, setT] = useState({});
+  const [exchangeRates, setExchangeRates] = useState({});
+  const [exchangeRatesDialogOpen, setExchangeRatesDialogOpen] = useState(false);
+
 
   useEffect(() => {
     async function loadTranslations() {
@@ -276,6 +281,35 @@ export default function App() {
     }
     loadTranslations();
   }, [lang]);
+
+  useEffect(() => {
+    // Fetch exchange rates on component mount
+    const fetchExchangeRates = async () => {
+      try {
+        const response = await fetch(`https://v6.exchangerate-api.com/v6/${EXCHANGERATE_API_KEY}/latest/EUR`);
+        const data = await response.json();
+        if (data.result === "success") {
+          setExchangeRates(data.conversion_rates);
+          showSnackbar("Курси валют оновлено", "success");
+        } else {
+          showSnackbar("Не вдалося оновити курси валют. Використовуються застарілі дані.", "warning");
+        }
+      } catch (error) {
+        console.error("Error fetching exchange rates:", error);
+        showSnackbar("Помилка підключення до API курсів валют.", "error");
+      }
+    };
+    fetchExchangeRates();
+  }, []);
+
+  const convertCurrency = (value, fromCurrency) => {
+    if (fromCurrency === displayCurrency || !exchangeRates[fromCurrency] || !exchangeRates[displayCurrency]) {
+      return value;
+    }
+    const rateToEUR = 1 / exchangeRates[fromCurrency];
+    const rateFromEUR = exchangeRates[displayCurrency];
+    return value * rateToEUR * rateFromEUR;
+  };
 
   const getInvestments = async () => {
     try {
@@ -428,7 +462,7 @@ export default function App() {
       if (data.success) {
         const historyData = data.prices.map(([date, price]) => ({
           date: new Date(date).toLocaleDateString(),
-          price: parseFloat(price),
+          price: convertCurrency(parseFloat(price), "EUR"), // Steam prices are in EUR, converting to displayCurrency
         })).sort((a, b) => new Date(a.date) - new Date(b.date));
         setPriceHistory(historyData);
       } else {
@@ -452,7 +486,7 @@ export default function App() {
       if (data.price) {
         const currentPrice = data.price;
         await updateInvestment(item.id, { currentPrice });
-        showSnackbar(`Поточна ціна для ${item.name}: ${currentPrice.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}`, 'info');
+        showSnackbar(`Поточна ціна для ${item.name}: ${convertCurrency(currentPrice, "EUR").toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}`, 'info');
         getInvestments();
       } else {
         showSnackbar('Не вдалося отримати поточну ціну.', 'warning');
@@ -674,18 +708,18 @@ export default function App() {
 
   const filteredInvestments = tabValue === 0 ? investments : investments.filter((item) => item.game === GAMES[tabValue]);
 
-  const totalInvestment = investments.reduce((sum, item) => sum + item.buyPrice * item.count, 0);
+  const totalInvestment = investments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
   const totalSoldProfit = investments
     .filter(item => item.sold)
-    .reduce((sum, item) => sum + (item.sellPrice - item.buyPrice) * item.count, 0);
+    .reduce((sum, item) => sum + convertCurrency((item.sellPrice - item.buyPrice) * item.count, item.buyCurrency), 0);
   
   const totalMarketValue = investments
     .filter(item => !item.sold)
-    .reduce((sum, item) => sum + (item.currentPrice || item.buyPrice) * item.count, 0);
+    .reduce((sum, item) => sum + convertCurrency((item.currentPrice || item.buyPrice) * item.count, item.buyCurrency), 0);
   
   const currentMarketProfit = totalMarketValue - investments
     .filter(item => !item.sold)
-    .reduce((sum, item) => sum + item.buyPrice * item.count, 0);
+    .reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
 
   const profitColor = totalSoldProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
   const percentageProfit = totalInvestment > 0 ? (totalSoldProfit / totalInvestment) * 100 : 0;
@@ -695,7 +729,7 @@ export default function App() {
 
   const profitByDate = investments
     .filter(item => item.sold)
-    .map(item => ({ date: item.sellDate, profit: (item.sellPrice - item.buyPrice) * item.count }))
+    .map(item => ({ date: item.sellDate, profit: convertCurrency((item.sellPrice - item.buyPrice) * item.count, item.buyCurrency) }))
     .sort((a, b) => new Date(a.date) - new Date(b.date))
     .reduce((acc, curr) => {
       const existing = acc.find(p => p.date === curr.date);
@@ -715,7 +749,7 @@ export default function App() {
 
   const investmentDistributionData = Object.entries(investments.reduce((acc, item) => {
     if (!acc[item.game]) acc[item.game] = 0;
-    acc[item.game] += item.buyPrice * item.count;
+    acc[item.game] += convertCurrency(item.buyPrice * item.count, item.buyCurrency);
     return acc;
   }, {})).map(([game, value]) => ({ name: game, value }));
 
@@ -723,7 +757,9 @@ export default function App() {
 
   const ItemDetailsDialog = ({ open, onClose, item }) => {
     if (!item) return null;
-    const itemProfit = (item.currentPrice - item.buyPrice) * item.count;
+    const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency);
+    const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR") : null;
+    const itemProfit = convertedCurrentPrice ? (convertedCurrentPrice - convertedBuyPrice) * item.count : 0;
     const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
 
     return (
@@ -746,18 +782,18 @@ export default function App() {
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <Typography variant="body2" color="text.secondary">{t.buyPrice}</Typography>
-              <Typography variant="h6" fontWeight="bold">{item.buyPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}</Typography>
+              <Typography variant="h6" fontWeight="bold">{convertedBuyPrice.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}</Typography>
             </Grid>
             <Grid item xs={12} sm={6}>
               <Typography variant="body2" color="text.secondary">{t.currentPrice}</Typography>
               <Typography variant="h6" fontWeight="bold">
-                {item.currentPrice ? `${item.currentPrice.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+                {convertedCurrentPrice ? `${convertedCurrentPrice.toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}` : '—'}
               </Typography>
             </Grid>
             <Grid item xs={12}>
               <Typography variant="body2" color="text.secondary">{t.profit} ({t.currentMarketProfit})</Typography>
               <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
-                {item.currentPrice ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+                {convertedCurrentPrice ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}` : '—'}
               </Typography>
             </Grid>
           </Grid>
@@ -844,6 +880,23 @@ export default function App() {
                       </FormControl>
                     </Box>
                   </MenuItem>
+                  <MenuItem>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Palette size={18} />
+                      <FormControl variant="standard" size="small" sx={{ minWidth: 100 }}>
+                        <Select
+                          value={displayCurrency}
+                          onChange={(e) => setDisplayCurrency(e.target.value)}
+                          displayEmpty
+                          inputProps={{ 'aria-label': 'Without label' }}
+                        >
+                          {CURRENCIES.map((currency, index) => (
+                            <MenuItem key={index} value={currency}>{CURRENCY_SYMBOLS[currency]}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </MenuItem>
                 </Menu>
               </Box>
             </Box>
@@ -858,7 +911,7 @@ export default function App() {
                     {t.totalInvestment}
                   </Typography>
                   <Typography variant="h4" fontWeight="bold" color="primary">
-                    {totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
+                    {totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
@@ -874,7 +927,7 @@ export default function App() {
                     {t.totalProfit}
                   </Typography>
                   <Typography variant="h4" fontWeight="bold" sx={{ color: profitColor }}>
-                    {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
+                    {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
@@ -887,7 +940,7 @@ export default function App() {
                     {t.currentMarketValue}
                   </Typography>
                   <Typography variant="h4" fontWeight="bold" color="secondary">
-                    {totalMarketValue.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
+                    {totalMarketValue.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
@@ -903,7 +956,7 @@ export default function App() {
                     {t.currentMarketProfit}
                   </Typography>
                   <Typography variant="h4" fontWeight="bold" sx={{ color: currentProfitColor }}>
-                    {currentMarketProfit.toFixed(2)} {CURRENCY_SYMBOLS[buyCurrency]}
+                    {currentMarketProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
@@ -960,9 +1013,12 @@ export default function App() {
               </Box>
             ) : (
               filteredInvestments.map((item) => {
-                const profitColorForCard = item.sold ? 
-                  ((item.sellPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main) : 
-                  (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
+                const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency);
+                const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR") : null;
+                const profitForCard = item.sold ? 
+                  (convertCurrency(item.sellPrice, item.buyCurrency) - convertedBuyPrice) * item.count : 
+                  (convertedCurrentPrice - convertedBuyPrice) * item.count;
+                const profitColorForCard = profitForCard >= 0 ? theme.palette.success.main : theme.palette.error.main;
     
                 return (
                   <Box 
@@ -1016,20 +1072,14 @@ export default function App() {
                             <Box>
                               <Typography variant="body2" color="text.secondary">{t.buyPrice}:</Typography>
                               <Typography variant="h6" fontWeight="bold">
-                                {item.buyPrice.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}
+                                {convertedBuyPrice.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
                               </Typography>
                             </Box>
                             <Box>
                               <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
-                              {item.sold ? (
-                                <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
-                                  {((item.sellPrice - item.buyPrice) * item.count).toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}
-                                </Typography>
-                              ) : (
-                                <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
-                                  {item.currentPrice ? ((item.currentPrice - item.buyPrice) * item.count).toFixed(2) : 0} {CURRENCY_SYMBOLS[item.buyCurrency]}
-                                </Typography>
-                              )}
+                              <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
+                                {(profitForCard).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                              </Typography>
                             </Box>
                             <Box>
                               <Typography variant="body2" color="text.secondary">{t.boughtDate}:</Typography>
@@ -1074,7 +1124,6 @@ export default function App() {
                                 <BarChart size={16} />
                               </IconButton>
                             </Tooltip>
-                            {/* Нова кнопка для відкриття Steam Market */}
                             <Tooltip title="Відкрити в Steam Market">
                               <IconButton 
                                 color="primary" 
@@ -1451,7 +1500,7 @@ export default function App() {
               <Typography variant="h6" fontWeight="bold" color="primary">{t.analytics}</Typography>
             </DialogTitle>
             <DialogContent dividers>
-              <Typography variant="h6" mb={2} color="secondary">{t.totalProfit} ({CURRENCY_SYMBOLS[buyCurrency]})</Typography>
+              <Typography variant="h6" mb={2} color="secondary">{t.totalProfit} ({CURRENCY_SYMBOLS[displayCurrency]})</Typography>
               {cumulativeProfit.length === 0 ? (
                 <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
               ) : (
