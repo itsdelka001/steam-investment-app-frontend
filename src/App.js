@@ -827,7 +827,8 @@ export default function App() {
 
   const ItemDetailsDialog = ({ open, onClose, item }) => {
     if (!item) return null;
-    const itemProfit = (item.currentPrice - item.buyPrice) * item.count;
+    // ✨ ВИПРАВЛЕНО: прибуток тепер відображається лише від проданих активів
+    const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : 0;
     const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
 
     return (
@@ -859,9 +860,10 @@ export default function App() {
               </Typography>
             </Grid>
             <Grid item xs={12}>
-              <Typography variant="body2" color="text.secondary">{t.profit} ({t.currentMarketProfit})</Typography>
+              <Typography variant="body2" color="text.secondary">{t.profit}</Typography>
               <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
-                {item.currentPrice ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '—'}
+                {/* ✨ ВИПРАВЛЕНО: логіка відображення прибутку */}
+                {item.sold ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '0.00'}
               </Typography>
             </Grid>
           </Grid>
@@ -1055,9 +1057,9 @@ export default function App() {
               </Grid>
             ) : (
               filteredInvestments.map((item) => {
-                const profitColorForCard = item.sold ? 
-                  ((item.sellPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main) : 
-                  (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
+                // ✨ ВИПРАВЛЕНО: прибуток відображається тільки після продажу
+                const profit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : 0;
+                const profitColorForCard = profit >= 0 ? theme.palette.success.main : theme.palette.error.main;
   
                 return (
                   // ✨ ВИПРАВЛЕНО: Змінено розмір для 3 карток в ряду
@@ -1111,15 +1113,9 @@ export default function App() {
                             </Box>
                             <Box>
                               <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
-                              {item.sold ? (
-                                <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
-                                  {((item.sellPrice - item.buyPrice) * item.count).toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}
-                                </Typography>
-                              ) : (
-                                <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
-                                  {item.currentPrice ? ((item.currentPrice - item.buyPrice) * item.count).toFixed(2) : 0} {CURRENCY_SYMBOLS[item.buyCurrency]}
-                                </Typography>
-                              )}
+                              <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
+                                {profit.toFixed(2)} {CURRENCY_SYMBOLS[item.buyCurrency]}
+                              </Typography>
                             </Box>
                             <Box>
                               <Typography variant="body2" color="text.secondary">{t.boughtDate}:</Typography>
