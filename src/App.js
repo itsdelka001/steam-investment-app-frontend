@@ -825,61 +825,38 @@ export default function App() {
               </Box>
             </Grid>
             <Grid item xs={12} md={7}>
-              <Typography variant="h6" color="secondary" fontWeight="bold" mb={2} textAlign="center">Статистика</Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">{t.totalInvestment}</Typography>
-                  <Typography variant="h6" fontWeight="bold">{convertedTotalBuyPrice.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}</Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">{t.totalCurrentValue}</Typography>
-                  <Typography variant="h6" fontWeight="bold">
-                    {convertedTotalCurrentPrice.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">{t.profit}</Typography>
-                  <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
-                    {itemProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
-                  </Typography>
-                </Grid>
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">ROI (%)</Typography>
-                  <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
-                    {profitPercentage}%
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Grid>
-          </Grid>
-          <Divider sx={{ my: 3 }} />
-          <Box textAlign="center">
-            <Typography variant="h6" color="secondary" fontWeight="bold" mb={2}>Деталізація активу</Typography>
-            <Grid container spacing={2} justifyContent="center">
-                <Grid item xs={12} sm={4}>
-                    <Box textAlign="center">
+                <Grid container spacing={2}>
+                    <Grid item xs={6}>
                         <Typography variant="body2" color="text.secondary">Ціна за одиницю</Typography>
                         <Typography variant="h6" fontWeight="bold">{convertCurrency(item.buyPrice, item.buyCurrency).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}</Typography>
-                    </Box>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                    <Box textAlign="center">
+                    </Grid>
+                    <Grid item xs={6}>
                         <Typography variant="body2" color="text.secondary">Поточна ціна</Typography>
                         <Typography variant="h6" fontWeight="bold">
                             {item.currentPrice ? convertCurrency(item.currentPrice, 'EUR').toFixed(2) : '-'} {item.currentPrice ? CURRENCY_SYMBOLS[displayCurrency] : ''}
                         </Typography>
-                    </Box>
-                </Grid>
-                <Grid item xs={12} sm={4}>
-                    <Box textAlign="center">
+                    </Grid>
+                    <Grid item xs={6}>
                         <Typography variant="body2" color="text.secondary">Ціна продажу</Typography>
                         <Typography variant="h6" fontWeight="bold">
                             {item.sold ? convertCurrency(item.sellPrice, item.buyCurrency).toFixed(2) : '-'} {item.sold ? CURRENCY_SYMBOLS[displayCurrency] : ''}
                         </Typography>
-                    </Box>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">{t.profit}</Typography>
+                        <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
+                            {itemProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">ROI (%)</Typography>
+                        <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
+                            {profitPercentage}%
+                        </Typography>
+                    </Grid>
                 </Grid>
             </Grid>
-          </Box>
+          </Grid>
         </DialogContent>
         <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
           <Box>
