@@ -1060,7 +1060,7 @@ export default function App() {
           }}>
             {filteredInvestments.length === 0 ? (
               <Grid item xs={12}>
-                <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary }}>
+                <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary' }}>
                   <Typography variant="h6">{t.noInvestmentsInCategory}</Typography>
                 </Box>
               </Grid>
@@ -1071,8 +1071,8 @@ export default function App() {
                   (item.currentPrice && (item.currentPrice - item.buyPrice) * item.count >= 0 ? theme.palette.success.main : theme.palette.error.main);
   
                 return (
-                  // ✨ ВИПРАВЛЕНО: Змінено розмір для 3 карток в ряду (вже було 4, що дає 3 картки на md)
-                  <Grid item xs={12} sm={6} md={4} key={item.id} sx={{ display: 'flex', pb: 2 }}>
+                  // ✨ ВИПРАВЛЕНО: Встановлено `xs={4}` та `sm={4}` для примусового відображення 3-х карток на всіх екранах
+                  <Grid item **xs={4} sm={4} md={4}** key={item.id} sx={{ display: 'flex', pb: 2 }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
                         <CardContent sx={{ 
