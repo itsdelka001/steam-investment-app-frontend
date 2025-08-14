@@ -945,13 +945,12 @@ export default function App() {
             </Tabs>
           </Paper>
 
-          {/* Контейнер для карток з flexbox та gap */}
           <Box sx={{ 
             width: '100%',
             display: 'flex',
             flexWrap: 'wrap',
-            gap: '5%', // Горизонтальні відступи між картками
-            rowGap: '32px', // Вертикальні відступи між рядками
+            gap: '5%',
+            rowGap: '32px',
             justifyContent: 'flex-start',
             px: 0,
           }}>
@@ -971,7 +970,6 @@ export default function App() {
                     sx={{ 
                       width: '30%',
                       minWidth: '280px',
-                      mb: 0, // Видалено, оскільки тепер є rowGap
                     }}
                   >
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
@@ -1074,6 +1072,25 @@ export default function App() {
                             <Tooltip title={t.marketAnalysis}>
                               <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handleMarketAnalysis(item); }} size="small">
                                 <BarChart size={16} />
+                              </IconButton>
+                            </Tooltip>
+                            {/* Нова кнопка для відкриття Steam Market */}
+                            <Tooltip title="Відкрити в Steam Market">
+                              <IconButton 
+                                color="primary" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (item.game === "CS2") {
+                                    window.open(`https://steamcommunity.com/market/listings/730/${encodeURIComponent(item.market_hash_name)}`, '_blank');
+                                  } else if (item.game === "Dota 2") {
+                                    window.open(`https://steamcommunity.com/market/listings/570/${encodeURIComponent(item.market_hash_name)}`, '_blank');
+                                  } else if (item.game === "PUBG") {
+                                    window.open(`https://steamcommunity.com/market/listings/578080/${encodeURIComponent(item.market_hash_name)}`, '_blank');
+                                  }
+                                }}
+                                size="small"
+                              >
+                                <Globe size={16} />
                               </IconButton>
                             </Tooltip>
                           </Box>
