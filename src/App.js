@@ -158,12 +158,9 @@ const theme = createTheme({
 
 const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
-  minHeight: '320px',
-  // ✨ ВИПРАВЛЕНО: встановлено фіксовану ширину для карток на md екранах
+  // ✨ ВИПРАВЛЕНО: Прибрано фіксовану ширину, дозволяємо Grid контролювати розмір
   width: '100%',
-  [theme.breakpoints.up('md')]: {
-    width: '320px', // Фіксована ширина для середніх і великих екранів
-  },
+  minHeight: '320px',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'space-between',
@@ -827,7 +824,6 @@ export default function App() {
 
   const ItemDetailsDialog = ({ open, onClose, item }) => {
     if (!item) return null;
-    // ✨ ВИПРАВЛЕНО: прибуток тепер відображається лише від проданих активів
     const itemProfit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : 0;
     const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
 
@@ -862,7 +858,6 @@ export default function App() {
             <Grid item xs={12}>
               <Typography variant="body2" color="text.secondary">{t.profit}</Typography>
               <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
-                {/* ✨ ВИПРАВЛЕНО: логіка відображення прибутку */}
                 {item.sold ? `${itemProfit.toFixed(2)} ${CURRENCY_SYMBOLS[item.buyCurrency]}` : '0.00'}
               </Typography>
             </Grid>
@@ -874,8 +869,8 @@ export default function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', pb: 4 }}>
-        <Container maxWidth="xl" sx={{ pt: 0, pb: 4 }}>
+      <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', py: 4 }}>
+        <Container maxWidth="xl">
           <Paper elevation={0} sx={{ 
             py: 2, 
             px: 3, 
@@ -883,6 +878,8 @@ export default function App() {
             borderRadius: 2,
             background: theme.palette.background.paper,
             boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            // ✨ ВИПРАВЛЕНО: Додано однаковий відступ для вирівнювання
+            mx: { xs: 1, md: 0 }
           }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
               <Typography variant="h4" color="primary" fontWeight="bold">
@@ -1016,8 +1013,8 @@ export default function App() {
             </Grid>
           </Grid>
   
-          {/* ✨ ВИПРАВЛЕНО: Додано стилі для вирівнювання білої смужки */}
-          <Paper sx={{ mb: 4, p: 1, mx: { xs: 1, md: -1 } }}> 
+          {/* ✨ ВИПРАВЛЕНО: Додано відступи для вирівнювання з картками */}
+          <Paper sx={{ mb: 4, p: 1, mx: { xs: 1, md: 0 } }}> 
             <Tabs 
               value={tabValue} 
               onChange={(e, newValue) => setTabValue(newValue)} 
@@ -1046,9 +1043,9 @@ export default function App() {
             </Tabs>
           </Paper>
   
-          {/* ✨ ВИПРАВЛЕНО: Додано стилі для вирівнювання карток */}
+          {/* ✨ ВИПРАВЛЕНО: Виправлено відступи та розміри Grid для кращого вирівнювання */}
           <Grid container spacing={2} sx={{ 
-            px: { xs: 1, md: -1 },
+            px: { xs: 1, md: 0 },
             alignItems: 'stretch',
           }}>
             {filteredInvestments.length === 0 ? (
@@ -1059,12 +1056,11 @@ export default function App() {
               </Grid>
             ) : (
               filteredInvestments.map((item) => {
-                // ✨ ВИПРАВЛЕНО: прибуток відображається тільки після продажу
                 const profit = item.sold ? (item.sellPrice - item.buyPrice) * item.count : 0;
                 const profitColorForCard = profit >= 0 ? theme.palette.success.main : theme.palette.error.main;
   
                 return (
-                  <Grid item xs={12} sm={6} md={6} lg={4} key={item.id} sx={{ display: 'flex', pb: 2 }}>
+                  <Grid item xs={12} sm={6} md={6} lg={4} key={item.id} sx={{ display: 'flex' }}>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
                         <CardContent sx={{ 
