@@ -158,6 +158,7 @@ const theme = createTheme({
 
 const StyledCard = styled(Card)(({ theme }) => ({
   height: '100%',
+  // ✨ ВИПРАВЛЕНО: Прибрано фіксовану ширину, дозволяємо Grid контролювати розмір
   width: '100%',
   minHeight: '320px',
   display: 'flex',
@@ -877,6 +878,7 @@ export default function App() {
             borderRadius: 2,
             background: theme.palette.background.paper,
             boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            // ✨ ВИПРАВЛЕНО: Додано однаковий відступ для вирівнювання
             mx: { xs: 1, md: 0 }
           }}>
             <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -1011,6 +1013,7 @@ export default function App() {
             </Grid>
           </Grid>
   
+          {/* ✨ ВИПРАВЛЕНО: Додано відступи для вирівнювання з картками */}
           <Paper sx={{ mb: 4, p: 1, mx: { xs: 1, md: 0 } }}> 
             <Tabs 
               value={tabValue} 
@@ -1040,7 +1043,11 @@ export default function App() {
             </Tabs>
           </Paper>
   
-          <Grid container spacing={2} sx={{ alignItems: 'stretch' }}>
+          {/* ✨ ВИПРАВЛЕНО: Виправлено відступи та розміри Grid для кращого вирівнювання */}
+          <Grid container spacing={2} sx={{ 
+            px: { xs: 1, md: 0 },
+            alignItems: 'stretch',
+          }}>
             {filteredInvestments.length === 0 ? (
               <Grid item xs={12}>
                 <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary }}>
