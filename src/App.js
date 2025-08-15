@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import {
   Container, Typography, Box, TextField, Button, Table, TableHead, TableBody, TableRow, TableCell,
   Select, MenuItem, FormControl, InputLabel, Dialog, DialogTitle, DialogContent, DialogActions,
@@ -237,6 +237,170 @@ const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
 
 const ITEMS_PER_PAGE = 9;
 
+// ===== ВИПРАВЛЕННЯ 2: ПЕРЕМІЩЕННЯ КОМПОНЕНТА ЗА МЕЖІ ОСНОВНОГО КОМПОНЕНТА =====
+const CommissionManagerDialog = ({ open, onClose, item, updateInvestment, showSnackbar, theme }) => {
+  if (!item) return null;
+
+  const [newCommissionRate, setNewCommissionRate] = useState(0);
+  const [newCommissionNote, setNewCommissionNote] = useState("");
+  const [editingCommissionIndex, setEditingCommissionIndex] = useState(null);
+
+  const isEditing = editingCommissionIndex !== null;
+  const totalCommissionRate = (item.commissions || []).reduce((sum, c) => sum + c.rate, 0);
+
+  const handleAddCommission = () => {
+    if (newCommissionRate <= 0) {
+      showSnackbar("Комісія має бути більше 0", "error");
+      return;
+    }
+    const updatedCommissions = [...(item.commissions || []), { id: Date.now(), rate: Number(newCommissionRate), note: newCommissionNote }];
+    updateInvestment(item.id, { commissions: updatedCommissions });
+    setNewCommissionRate(0);
+    setNewCommissionNote("");
+  };
+
+  const handleEditCommission = (commission, index) => {
+    setNewCommissionRate(commission.rate);
+    setNewCommissionNote(commission.note);
+    setEditingCommissionIndex(index);
+  };
+
+  const handleUpdateCommission = () => {
+    if (newCommissionRate <= 0) {
+      showSnackbar("Комісія має бути більше 0", "error");
+      return;
+    }
+    if (editingCommissionIndex !== null) {
+      const updatedCommissions = [...(item.commissions || [])];
+      updatedCommissions[editingCommissionIndex] = { ...updatedCommissions[editingCommissionIndex], rate: Number(newCommissionRate), note: newCommissionNote };
+      updateInvestment(item.id, { commissions: updatedCommissions });
+      setNewCommissionRate(0);
+      setNewCommissionNote("");
+      setEditingCommissionIndex(null);
+    }
+  };
+
+  const handleDeleteCommission = (id) => {
+    const updatedCommissions = (item.commissions || []).filter(c => c.id !== id);
+    updateInvestment(item.id, { commissions: updatedCommissions });
+  };
+  
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+      <DialogTitle sx={{ textAlign: 'center', pb: 0 }}>
+        <Typography variant="h6" fontWeight="bold" color="primary">Управління комісіями</Typography>
+      </DialogTitle>
+      <DialogContent dividers>
+        <Box mb={2}>
+          <Typography variant="body1" color="text.secondary" textAlign="center">
+            Комісії для предмета: <br/> **{item.name}**
+          </Typography>
+          <Typography variant="h5" fontWeight="bold" textAlign="center" mt={1}>
+            Загальна комісія: {totalCommissionRate.toFixed(2)}%
+          </Typography>
+        </Box>
+        <Divider sx={{ my: 2 }} />
+        <Typography variant="body1" fontWeight="bold" mb={1}>Існуючі комісії:</Typography>
+        {(item.commissions || []).length > 0 ? (
+          <List dense>
+            {(item.commissions || []).map((commission, index) => (
+              <ListItem 
+                key={commission.id || index} 
+                disablePadding 
+                secondaryAction={
+                  <ListItemSecondaryAction>
+                    <Tooltip title="Редагувати">
+                      <IconButton 
+                        edge="end" 
+                        aria-label="edit" 
+                        onClick={() => handleEditCommission(commission, index)}
+                        size="small"
+                      >
+                        <Edit size={16} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Видалити">
+                      <IconButton 
+                        edge="end" 
+                        aria-label="delete" 
+                        onClick={() => handleDeleteCommission(commission.id)}
+                        size="small"
+                        color="error"
+                      >
+                        <Delete size={16} />
+                      </IconButton>
+                    </Tooltip>
+                  </ListItemSecondaryAction>
+                }
+                sx={{ 
+                  '&:hover': { backgroundColor: theme.palette.action.hover },
+                  borderRadius: 8,
+                  mb: 1,
+                  backgroundColor: editingCommissionIndex === index ? theme.palette.action.selected : 'transparent'
+                }}
+              >
+                <ListItemButton>
+                  <ListItemText
+                    primary={`${commission.rate}%`}
+                    secondary={commission.note}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <Typography variant="body2" color="text.secondary" align="center">
+            Для цього предмета немає комісій.
+          </Typography>
+        )}
+        <Divider sx={{ my: 2 }} />
+        <Typography variant="body1" fontWeight="bold" mb={1}>{isEditing ? "Редагувати комісію" : "Додати нову комісію"}:</Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Відсоток комісії (%)"
+              type="number"
+              value={newCommissionRate}
+              onChange={(e) => setNewCommissionRate(e.target.value)}
+              fullWidth
+              required
+              InputProps={{ inputProps: { min: 0 } }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Примітка"
+              value={newCommissionNote}
+              onChange={(e) => setNewCommissionNote(e.target.value)}
+              fullWidth
+            />
+          </Grid>
+        </Grid>
+      </DialogContent>
+      <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
+        <Button 
+          onClick={onClose} 
+          color="secondary" 
+          variant="outlined"
+          sx={{ borderRadius: 8 }}
+        >
+          Закрити
+        </Button>
+        <Button 
+          onClick={isEditing ? handleUpdateCommission : handleAddCommission} 
+          color="primary" 
+          variant="contained"
+          sx={{ borderRadius: 8 }}
+        >
+          {isEditing ? "Зберегти зміни" : "Додати"}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+// ======================================================================================
+
+
 export default function App() {
   const [investments, setInvestments] = useState([]);
   const [name, setName] = useState("");
@@ -280,9 +444,10 @@ export default function App() {
 
   const [commissionManagerDialogOpen, setCommissionManagerDialogOpen] = useState(false);
   const [commissionItemToManage, setCommissionItemToManage] = useState(null);
-  const [newCommissionRate, setNewCommissionRate] = useState(0);
-  const [newCommissionNote, setNewCommissionNote] = useState("");
-  const [editingCommissionIndex, setEditingCommissionIndex] = useState(null);
+  // States for commission manager are moved to the dialog component itself
+  // const [newCommissionRate, setNewCommissionRate] = useState(0);
+  // const [newCommissionNote, setNewCommissionNote] = useState("");
+  // const [editingCommissionIndex, setEditingCommissionIndex] = useState(null);
 
   const [page, setPage] = useState(1);
   const [sortOrder, setSortOrder] = useState('asc');
@@ -571,15 +736,17 @@ export default function App() {
   };
 
   const addItem = async () => {
-    if (!name || count <= 0 || buyPrice <= 0 || !boughtDate) {
+    // ===== ВИПРАВЛЕННЯ 1: ПРАВИЛЬНА ПЕРЕВІРКА ІМЕНІ ПРЕДМЕТА =====
+    const finalName = autocompleteValue?.label || name;
+    if (!finalName || finalName.trim() === '' || count <= 0 || buyPrice <= 0 || !boughtDate) {
       showSnackbar("СИСТЕМНА ПОМИЛКА: ВВЕДІТЬ ПОВНІ ДАНІ", "error");
       return;
     }
 
     try {
       const newItem = {
-        name,
-        market_hash_name: selectedItemDetails?.market_hash_name || name,
+        name: finalName, // Використовуємо виправлене значення
+        market_hash_name: selectedItemDetails?.market_hash_name || finalName, // Використовуємо виправлене значення
         count: Number(count),
         buyPrice: Number(buyPrice),
         currentPrice: 0,
@@ -704,47 +871,7 @@ export default function App() {
   const handleCommissionManagerOpen = (event, item) => {
     event.stopPropagation();
     setCommissionItemToManage(item);
-    setNewCommissionRate(0);
-    setNewCommissionNote("");
-    setEditingCommissionIndex(null);
     setCommissionManagerDialogOpen(true);
-  };
-
-  const handleAddCommission = () => {
-    if (newCommissionRate <= 0) {
-      showSnackbar("Комісія має бути більше 0", "error");
-      return;
-    }
-    const updatedCommissions = [...(commissionItemToManage.commissions || []), { id: Date.now(), rate: Number(newCommissionRate), note: newCommissionNote }];
-    updateInvestment(commissionItemToManage.id, { commissions: updatedCommissions });
-    setNewCommissionRate(0);
-    setNewCommissionNote("");
-  };
-
-  const handleEditCommission = (commission, index) => {
-    setNewCommissionRate(commission.rate);
-    setNewCommissionNote(commission.note);
-    setEditingCommissionIndex(index);
-  };
-
-  const handleUpdateCommission = () => {
-    if (newCommissionRate <= 0) {
-      showSnackbar("Комісія має бути більше 0", "error");
-      return;
-    }
-    if (editingCommissionIndex !== null) {
-      const updatedCommissions = [...(commissionItemToManage.commissions || [])];
-      updatedCommissions[editingCommissionIndex] = { ...updatedCommissions[editingCommissionIndex], rate: Number(newCommissionRate), note: newCommissionNote };
-      updateInvestment(commissionItemToManage.id, { commissions: updatedCommissions });
-      setNewCommissionRate(0);
-      setNewCommissionNote("");
-      setEditingCommissionIndex(null);
-    }
-  };
-
-  const handleDeleteCommission = (id) => {
-    const updatedCommissions = (commissionItemToManage.commissions || []).filter(c => c.id !== id);
-    updateInvestment(commissionItemToManage.id, { commissions: updatedCommissions });
   };
 
   const showSnackbar = (message, severity) => {
@@ -977,126 +1104,6 @@ export default function App() {
               {t.edit}
             </Button>
           </Box>
-        </DialogActions>
-      </Dialog>
-    );
-  };
-  
-  const CommissionManagerDialog = ({ open, onClose, item }) => {
-    if (!item) return null;
-  
-    const isEditing = editingCommissionIndex !== null;
-    const totalCommissionRate = (item.commissions || []).reduce((sum, c) => sum + c.rate, 0);
-  
-    return (
-      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
-        <DialogTitle sx={{ textAlign: 'center', pb: 0 }}>
-          <Typography variant="h6" fontWeight="bold" color="primary">Управління комісіями</Typography>
-        </DialogTitle>
-        <DialogContent dividers>
-          <Box mb={2}>
-            <Typography variant="body1" color="text.secondary" textAlign="center">
-              Комісії для предмета: <br/> **{item.name}**
-            </Typography>
-            <Typography variant="h5" fontWeight="bold" textAlign="center" mt={1}>
-              Загальна комісія: {totalCommissionRate.toFixed(2)}%
-            </Typography>
-          </Box>
-          <Divider sx={{ my: 2 }} />
-          <Typography variant="body1" fontWeight="bold" mb={1}>Існуючі комісії:</Typography>
-          {(item.commissions || []).length > 0 ? (
-            <List dense>
-              {(item.commissions || []).map((commission, index) => (
-                <ListItem 
-                  key={commission.id || index} 
-                  disablePadding 
-                  secondaryAction={
-                    <ListItemSecondaryAction>
-                      <Tooltip title="Редагувати">
-                        <IconButton 
-                          edge="end" 
-                          aria-label="edit" 
-                          onClick={() => handleEditCommission(commission, index)}
-                          size="small"
-                        >
-                          <Edit size={16} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Видалити">
-                        <IconButton 
-                          edge="end" 
-                          aria-label="delete" 
-                          onClick={() => handleDeleteCommission(commission.id)}
-                          size="small"
-                          color="error"
-                        >
-                          <Delete size={16} />
-                        </IconButton>
-                      </Tooltip>
-                    </ListItemSecondaryAction>
-                  }
-                  sx={{ 
-                    '&:hover': { backgroundColor: theme.palette.action.hover },
-                    borderRadius: 8,
-                    mb: 1,
-                    backgroundColor: editingCommissionIndex === index ? theme.palette.action.selected : 'transparent'
-                  }}
-                >
-                  <ListItemButton>
-                    <ListItemText
-                      primary={`${commission.rate}%`}
-                      secondary={commission.note}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              ))}
-            </List>
-          ) : (
-            <Typography variant="body2" color="text.secondary" align="center">
-              Для цього предмета немає комісій.
-            </Typography>
-          )}
-          <Divider sx={{ my: 2 }} />
-          <Typography variant="body1" fontWeight="bold" mb={1}>{isEditing ? "Редагувати комісію" : "Додати нову комісію"}:</Typography>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Відсоток комісії (%)"
-                type="number"
-                value={newCommissionRate}
-                onChange={(e) => setNewCommissionRate(e.target.value)}
-                fullWidth
-                required
-                InputProps={{ inputProps: { min: 0 } }}
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Примітка"
-                value={newCommissionNote}
-                onChange={(e) => setNewCommissionNote(e.target.value)}
-                fullWidth
-              />
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
-          <Button 
-            onClick={onClose} 
-            color="secondary" 
-            variant="outlined"
-            sx={{ borderRadius: 8 }}
-          >
-            Закрити
-          </Button>
-          <Button 
-            onClick={isEditing ? handleUpdateCommission : handleAddCommission} 
-            color="primary" 
-            variant="contained"
-            sx={{ borderRadius: 8 }}
-          >
-            {isEditing ? "Зберегти зміни" : "Додати"}
-          </Button>
         </DialogActions>
       </Dialog>
     );
@@ -1367,7 +1374,7 @@ export default function App() {
                           position: 'absolute',
                           top: 0,
                           right: 0,
-                          transform: 'translate(33px, 3px)', // <-- Виправлено
+                          transform: 'translate(-20px, -20px)',
                           backgroundColor: theme.palette.primary.main,
                           color: 'white',
                           width: 40,
@@ -1375,7 +1382,7 @@ export default function App() {
                           boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                           '&:hover': { 
                             backgroundColor: theme.palette.primary.dark,
-                            transform: 'translate(33px, 3px) scale(1.1) rotate(15deg)',
+                            transform: 'translate(-20px, -20px) scale(1.1) rotate(15deg)',
                           },
                           transition: 'all 0.3s ease',
                           background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
@@ -1958,6 +1965,9 @@ export default function App() {
             open={commissionManagerDialogOpen}
             onClose={() => setCommissionManagerDialogOpen(false)}
             item={commissionItemToManage}
+            updateInvestment={updateInvestment}
+            showSnackbar={showSnackbar}
+            theme={theme}
           />
 
           <ItemDetailsDialog 
