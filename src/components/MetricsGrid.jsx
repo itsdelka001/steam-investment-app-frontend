@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Typography, Tooltip } from '@mui/material';
+import { Grid, Typography, Tooltip, Box } from '@mui/material';
 import { 
   StyledMetricCard, 
   StyledCombinedCard 
