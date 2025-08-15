@@ -17,200 +17,179 @@ import {
   Cell, BarChart as RechartsBarChart, Bar
 } from 'recharts';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
-import CommissionManagerDialog from './components/CommissionManagerDialog';
 
-const getTheme = (mode) => createTheme({
-  breakpoints: {
-    values: {
-      xs: 0,
-      sm: 600,
-      md: 900,
-      lg: 1200,
-      xl: 1920,
-    },
-  },
-  palette: {
-    mode: mode,
-    primary: {
-      main: mode === 'dark' ? '#9575CD' : '#4A148C',
-    },
-    secondary: {
-      main: mode === 'dark' ? '#4FC3F7' : '#007BFF',
-    },
-    background: {
-      default: mode === 'dark' ? '#121212' : '#F8F9FA',
-      paper: mode === 'dark' ? '#1E1E1E' : '#FFFFFF',
-    },
-    text: {
-      primary: mode === 'dark' ? '#E0E0E0' : '#212529',
-      secondary: mode === 'dark' ? '#A0A0A0' : '#6C757D',
-    },
-    divider: mode === 'dark' ? '#333333' : '#DEE2E6',
-    success: {
-      main: '#28A745',
-      light: mode === 'dark' ? '#213324' : '#D4EDDA',
-    },
-    error: {
-      main: '#DC3545',
-      light: mode === 'dark' ? '#3B2022' : '#F8D7DA',
-    },
-    warning: {
-      main: '#FFC107',
-      light: mode === 'dark' ? '#3B331A' : '#FFF3CD',
-    }
-  },
-  typography: {
-    fontFamily: ['"Inter"', 'sans-serif'].join(','),
-    h4: {
-      fontWeight: 700,
-    },
-    h5: {
-      fontWeight: 600,
-    },
-    h6: {
-      fontWeight: 600,
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: ({ ownerState, theme }) => ({
-          borderRadius: 8,
-          textTransform: 'none',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-          transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
-          '&:hover': {
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            transform: 'translateY(-2px)',
-          },
-          ...(ownerState.variant === 'contained' && ownerState.color === 'primary' && {
-            background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.primary.dark} 90%)`,
-            color: '#fff',
-          }),
-        }),
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: ({ theme }) => ({
-          borderRadius: 12,
-          background: theme.palette.background.paper,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-        }),
-      },
-    },
-    MuiTextField: {
-      styleOverrides: {
-        root: ({ theme }) => ({
-          '& .MuiOutlinedInput-root': {
-            borderRadius: 8,
-            backgroundColor: theme.palette.mode === 'dark' ? '#333' : '#F1F3F5',
-            '&.Mui-focused fieldset': {
-              borderColor: theme.palette.secondary.main,
-            },
-            '&:hover fieldset': {
-              borderColor: theme.palette.secondary.main,
-            },
-          },
-        }),
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-          transition: 'box-shadow 0.3s, transform 0.3s',
-          '&:hover': {
-            boxShadow: '0 8px 20px rgba(0,0,0,0.12)',
-            transform: 'scale(1.01)',
-          },
-        },
-      },
-    },
-    MuiDialog: {
-      styleOverrides: {
-        paper: ({ theme }) => ({
-          borderRadius: 16,
-          background: theme.palette.background.paper,
-          boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
-        }),
-      },
-    },
-    MuiTabs: {
-      styleOverrides: {
-        indicator: ({ theme }) => ({
-          height: 3,
-          borderRadius: '4px 4px 0 0',
-          backgroundColor: theme.palette.primary.main,
-        }),
-      },
-    },
-    MuiTab: {
-      styleOverrides: {
-        root: ({ theme }) => ({
-          textTransform: 'none',
-          fontWeight: 600,
-          color: theme.palette.text.secondary,
-          '&.Mui-selected': {
-            color: theme.palette.primary.main,
-          },
-        }),
-      },
-    },
-    MuiTooltip: {
-      styleOverrides: {
-        tooltip: ({ theme }) => ({
-          backgroundColor: theme.palette.text.primary,
-          color: theme.palette.background.paper,
-          borderRadius: 8,
-          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-          fontSize: '0.875rem',
-        }),
-      },
-    },
-  },
-});
+const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
+const CURRENCIES = ["EUR", "USD", "UAH"];
+const CURRENCY_SYMBOLS = { "EUR": "€", "USD": "$", "UAH": "₴" };
+const EXCHANGERATE_API_KEY = "61a8a12c18b1b14a645ebc37";
 
-const StyledCard = styled(Card)(({ theme }) => ({
-  height: '100%',
-  minHeight: '320px',
-  width: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'space-between',
-  padding: theme.spacing(1.5),
-  overflow: 'visible',
-  cursor: 'pointer',
-  position: 'relative',
-  [theme.breakpoints.down('sm')]: {
-    minHeight: '280px',
-    padding: theme.spacing(1),
-    '& .MuiTypography-h6': {
-      fontSize: '0.9rem',
-    },
-    '& .MuiTypography-body2': {
-      fontSize: '0.7rem',
-    }
+const BACKEND_URL = 'https://steam-proxy-server-lues.onrender.com';
+const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
+
+const ITEMS_PER_PAGE = 9;
+
+const CommissionManagerDialog = ({ open, onClose, item, updateInvestment, showSnackbar, theme }) => {
+  const [newCommissionRate, setNewCommissionRate] = useState(0);
+  const [newCommissionNote, setNewCommissionNote] = useState("");
+  const [editingCommissionIndex, setEditingCommissionIndex] = useState(null);
+
+  if (!item) {
+    return null;
   }
-}));
+  
+  const isEditing = editingCommissionIndex !== null;
+  const totalCommissionRate = (item.commissions || []).reduce((sum, c) => sum + c.rate, 0);
 
-const StyledMetricCard = styled(Card)(({ theme, bgcolor }) => ({
-  padding: theme.spacing(2),
-  borderRadius: 16,
-  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-  backgroundColor: bgcolor || theme.palette.background.paper,
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    transform: 'translateY(-3px)',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-  },
-  textAlign: 'center',
-  minHeight: 160,
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-}));
+  const handleAddCommission = () => {
+    if (newCommissionRate <= 0) {
+      showSnackbar("Комісія має бути більше 0", "error");
+      return;
+    }
+    const updatedCommissions = [...(item.commissions || []), { id: Date.now(), rate: Number(newCommissionRate), note: newCommissionNote }];
+    updateInvestment(item.id, { commissions: updatedCommissions });
+    setNewCommissionRate(0);
+    setNewCommissionNote("");
+  };
+
+  const handleEditCommission = (commission, index) => {
+    setNewCommissionRate(commission.rate);
+    setNewCommissionNote(commission.note);
+    setEditingCommissionIndex(index);
+  };
+
+  const handleUpdateCommission = () => {
+    if (newCommissionRate <= 0) {
+      showSnackbar("Комісія має бути більше 0", "error");
+      return;
+    }
+    if (editingCommissionIndex !== null) {
+      const updatedCommissions = [...(item.commissions || [])];
+      updatedCommissions[editingCommissionIndex] = { ...updatedCommissions[editingCommissionIndex], rate: Number(newCommissionRate), note: newCommissionNote };
+      updateInvestment(item.id, { commissions: updatedCommissions });
+      setNewCommissionRate(0);
+      setNewCommissionNote("");
+      setEditingCommissionIndex(null);
+    }
+  };
+
+  const handleDeleteCommission = (id) => {
+    const updatedCommissions = (item.commissions || []).filter(c => c.id !== id);
+    updateInvestment(item.id, { commissions: updatedCommissions });
+  };
+  
+  return (
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+      <DialogTitle sx={{ textAlign: 'center', pb: 0 }}>
+        <Typography variant="h6" fontWeight="bold" color="primary">Управління комісіями</Typography>
+      </DialogTitle>
+      <DialogContent dividers>
+        <Box mb={2}>
+          <Typography variant="body1" color="text.secondary" textAlign="center">
+            Комісії для предмета: <br/> **{item.name}**
+          </Typography>
+          <Typography variant="h5" fontWeight="bold" textAlign="center" mt={1}>
+            Загальна комісія: {totalCommissionRate.toFixed(2)}%
+          </Typography>
+        </Box>
+        <Divider sx={{ my: 2 }} />
+        <Typography variant="body1" fontWeight="bold" mb={1}>Існуючі комісії:</Typography>
+        {(item.commissions || []).length > 0 ? (
+          <List dense>
+            {(item.commissions || []).map((commission, index) => (
+              <ListItem 
+                key={commission.id || index} 
+                disablePadding 
+                secondaryAction={
+                  <ListItemSecondaryAction>
+                    <Tooltip title="Редагувати">
+                      <IconButton 
+                        edge="end" 
+                        aria-label="edit" 
+                        onClick={() => handleEditCommission(commission, index)}
+                        size="small"
+                      >
+                        <Edit size={16} />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Видалити">
+                      <IconButton 
+                        edge="end" 
+                        aria-label="delete" 
+                        onClick={() => handleDeleteCommission(commission.id)}
+                        size="small"
+                        color="error"
+                      >
+                        <Delete size={16} />
+                      </IconButton>
+                    </Tooltip>
+                  </ListItemSecondaryAction>
+                }
+                sx={{ 
+                  '&:hover': { backgroundColor: theme.palette.action.hover },
+                  borderRadius: 8,
+                  mb: 1,
+                  backgroundColor: editingCommissionIndex === index ? theme.palette.action.selected : 'transparent'
+                }}
+              >
+                <ListItemButton>
+                  <ListItemText
+                    primary={`${commission.rate}%`}
+                    secondary={commission.note}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <Typography variant="body2" color="text.secondary" align="center">
+            Для цього предмета немає комісій.
+          </Typography>
+        )}
+        <Divider sx={{ my: 2 }} />
+        <Typography variant="body1" fontWeight="bold" mb={1}>{isEditing ? "Редагувати комісію" : "Додати нову комісію"}:</Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Відсоток комісії (%)"
+              type="number"
+              value={newCommissionRate}
+              onChange={(e) => setNewCommissionRate(e.target.value)}
+              fullWidth
+              required
+              InputProps={{ inputProps: { min: 0 } }}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              label="Примітка"
+              value={newCommissionNote}
+              onChange={(e) => setNewCommissionNote(e.target.value)}
+              fullWidth
+            />
+          </Grid>
+        </Grid>
+      </DialogContent>
+      <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
+        <Button 
+          onClick={onClose} 
+          color="secondary" 
+          variant="outlined"
+          sx={{ borderRadius: 8 }}
+        >
+          Закрити
+        </Button>
+        <Button 
+          onClick={isEditing ? handleUpdateCommission : handleAddCommission} 
+          color="primary" 
+          variant="contained"
+          sx={{ borderRadius: 8 }}
+        >
+          {isEditing ? "Зберегти зміни" : "Додати"}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
