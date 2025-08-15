@@ -660,11 +660,12 @@ export default function App() {
             <MetricsGrid
               theme={theme}
               displayCurrency={displayCurrency}
-              totalInvestment={totalInvestment}
+              totalInvestment={totalInvestmentInActiveItems} // Тепер тільки активні
               totalSoldProfit={totalSoldProfit}
               currentMarketProfit={currentMarketProfit}
               realizedROI={realizedROI}
               unrealizedROI={unrealizedROI}
+              totalTurnover={totalTurnover} // Новий параметр
               t={t}
             />
 
