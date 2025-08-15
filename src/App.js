@@ -20,16 +20,11 @@ import { ThemeProvider } from '@mui/material/styles';
 import { getTheme, StyledCard, StyledMetricCard, StyledCombinedCard, CardHeader, CardFooter } from './theme';
 import CommissionManagerDialog from './components/CommissionManagerDialog';
 import ItemDetailsDialog from './components/ItemDetailsDialog';
-
-const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
-const CURRENCIES = ["EUR", "USD", "UAH"];
-const CURRENCY_SYMBOLS = { "EUR": "€", "USD": "$", "UAH": "₴" };
-const EXCHANGERATE_API_KEY = "61a8a12c18b1b14a645ebc37";
-
-const BACKEND_URL = 'https://steam-proxy-server-lues.onrender.com';
-const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
-
-const ITEMS_PER_PAGE = 9;
+import {
+  GAMES, CURRENCIES, CURRENCY_SYMBOLS,
+  EXCHANGERATE_API_KEY, BACKEND_URL, PROXY_SERVER_URL,
+  ITEMS_PER_PAGE, PIE_COLORS
+} from './constants';
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
@@ -628,8 +623,6 @@ export default function App() {
     }
     return acc;
   }, {})).map(([game, value]) => ({ name: game, profit: value }));
-
-  const PIE_COLORS = ['#4A148C', '#007BFF', '#DC3545', '#FFC107', '#28A745'];
   
   return (
     <ThemeProvider theme={theme}>
