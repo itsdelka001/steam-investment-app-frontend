@@ -257,7 +257,7 @@ export default function App() {
   const [sellDialog, setSellDialog] = useState(false);
   const [itemToSell, setItemToSell] = useState(null);
   const [sellPrice, setSellPrice] = useState(0);
-  const [sellDate, setSellDate] = useState(new Date().toISOString().split('T')[0]);
+  const [sellDate, setSellDate] = new Date().toISOString().split('T')[0];
   const [lang, setLang] = useState('uk');
   const [autocompleteLoading, setAutocompleteLoading] = useState(false);
   const [itemOptions, setItemOptions] = useState([]);
@@ -278,14 +278,12 @@ export default function App() {
   const [themeMode, setThemeMode] = useState('light');
   const [autoUpdateEnabled, setAutoUpdateEnabled] = useState(false);
 
-  // New commission state
   const [commissionManagerDialogOpen, setCommissionManagerDialogOpen] = useState(false);
   const [commissionItemToManage, setCommissionItemToManage] = useState(null);
   const [newCommissionRate, setNewCommissionRate] = useState(0);
   const [newCommissionNote, setNewCommissionNote] = useState("");
   const [editingCommissionIndex, setEditingCommissionIndex] = useState(null);
 
-  // Pagination and Sorting State
   const [page, setPage] = useState(1);
   const [sortOrder, setSortOrder] = useState('asc');
   const [sortBy, setSortBy] = useState('boughtDate');
@@ -305,7 +303,6 @@ export default function App() {
   }, [lang]);
 
   useEffect(() => {
-    // Fetch exchange rates on component mount
     const fetchExchangeRates = async () => {
       try {
         const response = await fetch(`https://v6.exchangerate-api.com/v6/${EXCHANGERATE_API_KEY}/latest/EUR`);
@@ -325,12 +322,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // Auto-update prices every 15 minutes if enabled
     let intervalId;
     if (autoUpdateEnabled) {
       intervalId = setInterval(() => {
         fetchAndUpdateAllPrices();
-      }, 15 * 60 * 1000); // 15 minutes
+      }, 15 * 60 * 1000);
     }
     return () => clearInterval(intervalId);
   }, [autoUpdateEnabled, investments]);
@@ -595,7 +591,7 @@ export default function App() {
         sellDate: null,
         image: selectedItemDetails?.image || null,
         createdAt: new Date().toISOString(),
-        commissions: [ // Initial commission list
+        commissions: [
           { id: Date.now(), rate: 15, note: "Steam Market" }
         ],
       };
@@ -770,7 +766,6 @@ export default function App() {
 
   const filteredInvestments = tabValue === 0 ? investments : investments.filter((item) => item.game === GAMES[tabValue]);
   
-  // Sorting logic
   const sortedInvestments = [...filteredInvestments].sort((a, b) => {
     const aValue = a[sortBy];
     const bValue = b[sortBy];
@@ -784,11 +779,9 @@ export default function App() {
     return 0;
   });
 
-  // Pagination logic
   const pageCount = Math.ceil(sortedInvestments.length / ITEMS_PER_PAGE);
   const paginatedInvestments = sortedInvestments.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  // Profit calculations with individual commission
   const getNetProfit = (grossProfit, totalValue, commissions) => {
     const totalRate = (commissions || []).reduce((sum, c) => sum + c.rate, 0);
     const totalCommission = totalValue * (totalRate / 100);
@@ -1282,7 +1275,7 @@ export default function App() {
                 value={tabValue} 
                 onChange={(e, newValue) => {
                   setTabValue(newValue);
-                  setPage(1); // Reset page on tab change
+                  setPage(1);
                 }} 
                 aria-label="game tabs" 
                 sx={{
@@ -1314,7 +1307,7 @@ export default function App() {
                     value={sortBy}
                     onChange={(e) => {
                       setSortBy(e.target.value);
-                      setPage(1); // Reset page on sort change
+                      setPage(1);
                     }}
                     label="Сортувати за"
                   >
@@ -1374,7 +1367,7 @@ export default function App() {
                           position: 'absolute',
                           top: 0,
                           right: 0,
-                          transform: 'translate(0, 0)',
+                          transform: 'translate(50%, -50%)',
                           backgroundColor: theme.palette.primary.main,
                           color: 'white',
                           width: 40,
@@ -1382,7 +1375,7 @@ export default function App() {
                           boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                           '&:hover': { 
                             backgroundColor: theme.palette.primary.dark,
-                            transform: 'scale(1.1) rotate(15deg)',
+                            transform: 'translate(50%, -50%) scale(1.1) rotate(15deg)',
                           },
                           transition: 'all 0.3s ease',
                           background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
