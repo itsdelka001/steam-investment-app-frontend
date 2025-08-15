@@ -263,7 +263,7 @@ const CommissionManagerDialog = ({ open, onClose, item, updateInvestment, showSn
   if (!item) {
     return null;
   }
-
+  
   const isEditing = editingCommissionIndex !== null;
   const totalCommissionRate = (item.commissions || []).reduce((sum, c) => sum + c.rate, 0);
 
@@ -303,7 +303,7 @@ const CommissionManagerDialog = ({ open, onClose, item, updateInvestment, showSn
     const updatedCommissions = (item.commissions || []).filter(c => c.id !== id);
     updateInvestment(item.id, { commissions: updatedCommissions });
   };
-
+  
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
       <DialogTitle sx={{ textAlign: 'center', pb: 0 }}>
@@ -323,15 +323,15 @@ const CommissionManagerDialog = ({ open, onClose, item, updateInvestment, showSn
         {(item.commissions || []).length > 0 ? (
           <List dense>
             {(item.commissions || []).map((commission, index) => (
-              <ListItem
-                key={commission.id || index}
-                disablePadding
+              <ListItem 
+                key={commission.id || index} 
+                disablePadding 
                 secondaryAction={
                   <ListItemSecondaryAction>
                     <Tooltip title="Редагувати">
-                      <IconButton
-                        edge="end"
-                        aria-label="edit"
+                      <IconButton 
+                        edge="end" 
+                        aria-label="edit" 
                         onClick={() => handleEditCommission(commission, index)}
                         size="small"
                       >
@@ -339,9 +339,9 @@ const CommissionManagerDialog = ({ open, onClose, item, updateInvestment, showSn
                       </IconButton>
                     </Tooltip>
                     <Tooltip title="Видалити">
-                      <IconButton
-                        edge="end"
-                        aria-label="delete"
+                      <IconButton 
+                        edge="end" 
+                        aria-label="delete" 
                         onClick={() => handleDeleteCommission(commission.id)}
                         size="small"
                         color="error"
@@ -351,7 +351,7 @@ const CommissionManagerDialog = ({ open, onClose, item, updateInvestment, showSn
                     </Tooltip>
                   </ListItemSecondaryAction>
                 }
-                sx={{
+                sx={{ 
                   '&:hover': { backgroundColor: theme.palette.action.hover },
                   borderRadius: 8,
                   mb: 1,
@@ -397,17 +397,17 @@ const CommissionManagerDialog = ({ open, onClose, item, updateInvestment, showSn
         </Grid>
       </DialogContent>
       <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
-        <Button
-          onClick={onClose}
-          color="secondary"
+        <Button 
+          onClick={onClose} 
+          color="secondary" 
           variant="outlined"
           sx={{ borderRadius: 8 }}
         >
           Закрити
         </Button>
-        <Button
-          onClick={isEditing ? handleUpdateCommission : handleAddCommission}
-          color="primary"
+        <Button 
+          onClick={isEditing ? handleUpdateCommission : handleAddCommission} 
+          color="primary" 
           variant="contained"
           sx={{ borderRadius: 8 }}
         >
@@ -458,7 +458,7 @@ export default function App() {
   const [exchangeRates, setExchangeRates] = useState({});
   const [themeMode, setThemeMode] = useState('light');
   const [autoUpdateEnabled, setAutoUpdateEnabled] = useState(false);
-  
+
   const [commissionManagerDialogOpen, setCommissionManagerDialogOpen] = useState(false);
   const [commissionItemToManage, setCommissionItemToManage] = useState(null);
 
@@ -479,20 +479,7 @@ export default function App() {
     }
     loadTranslations();
   }, [lang]);
-  
-  // Додавання useEffect для завантаження інвестицій з локального сховища
-  useEffect(() => {
-    const savedInvestments = localStorage.getItem('investments');
-    if (savedInvestments) {
-      setInvestments(JSON.parse(savedInvestments));
-    }
-  }, []);
 
-  // Додавання useEffect для збереження інвестицій в локальне сховище
-  useEffect(() => {
-    localStorage.setItem('investments', JSON.stringify(investments));
-  }, [investments]);
-  
   useEffect(() => {
     const fetchExchangeRates = async () => {
       try {
@@ -601,7 +588,9 @@ export default function App() {
     const cs2Keywords = ["case", "sticker", "skin", "glove", "knife", "pin", "key", "capsule", "souvenir", "weapon"];
     const dota2Keywords = ["treasure", "immortal", "arcana", "set", "courier", "chest", "hero"];
     const pubgKeywords = ["crate", "box", "outfit", "skin", "key", "g-coin"];
+  
     const lowerItemName = itemName.toLowerCase();
+  
     if (cs2Keywords.some(keyword => lowerItemName.includes(keyword))) {
       return "CS2";
     }
@@ -613,7 +602,7 @@ export default function App() {
     }
     return "CS2";
   };
-
+  
   const handleItemNameChange = async (event, newInputValue) => {
     setName(newInputValue);
     if (newInputValue && newInputValue.length > 2) {
@@ -623,15 +612,34 @@ export default function App() {
       abortControllerRef.current = new AbortController();
       const signal = abortControllerRef.current.signal;
       setAutocompleteLoading(true);
+
       try {
-        const selectedGame = tabValue === 0 ? getGameFromItemName(newInputValue) : GAMES[tabValue];
-        const response = await fetch(`${BACKEND_URL}/search?q=${newInputValue}&game=${selectedGame}`, { signal });
+        const selectedGame = tabValue === 0 ? game : GAMES[tabValue];
+        const url = `${PROXY_SERVER_URL}/search?query=${encodeURIComponent(newInputValue)}&game=${encodeURIComponent(selectedGame)}`;
+        const response = await fetch(url, { signal });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
         const data = await response.json();
-        setItemOptions(data);
+        if (Array.isArray(data)) {
+            const formattedOptions = data.map(item => ({
+                label: item.name,
+                image: item.icon_url,
+                market_hash_name: item.market_hash_name,
+            }));
+            setItemOptions(formattedOptions);
+        } else {
+            console.error('API did not return an array:', data);
+            setItemOptions([]);
+        }
       } catch (error) {
-        if (error.name !== 'AbortError') {
-          console.error("Помилка автозаповнення:", error);
-          showSnackbar("Помилка автозаповнення. Спробуйте пізніше.", "error");
+        if (error.name === 'AbortError') {
+          console.log('Fetch aborted');
+        } else {
+          console.error('Error fetching autocomplete options:', error);
+          showSnackbar(t.fetchError, "error");
         }
       } finally {
         setAutocompleteLoading(false);
@@ -643,893 +651,1036 @@ export default function App() {
   };
 
   const handleAutocompleteChange = (event, newValue) => {
-    if (newValue) {
-      setSelectedItemDetails(newValue);
-      setName(newValue.name);
-      setGame(getGameFromItemName(newValue.name));
-      setBuyPrice(newValue.price);
-    } else {
-      setSelectedItemDetails(null);
-      setName("");
-      setBuyPrice(0);
-    }
     setAutocompleteValue(newValue);
-  };
-
-  const calculateTotalValue = () => {
-    return investments.reduce((sum, item) => sum + convertCurrency(item.price * item.count, item.currency), 0);
-  };
-
-  const calculateTotalProfitLoss = () => {
-    const totalBuyValue = investments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
-    const totalCurrentValue = calculateTotalValue();
-    return totalCurrentValue - totalBuyValue;
-  };
-
-  const calculateTotalCommissions = () => {
-    return investments.reduce((sum, item) => {
-      const commissionAmount = item.commissions.reduce((total, comm) => total + (comm.rate / 100) * item.buyPrice * item.count, 0);
-      return sum + convertCurrency(commissionAmount, item.buyCurrency);
-    }, 0);
-  };
-
-  const calculateTotalDividends = () => {
-    // В цьому додатку немає дивідендів, тому ця функція не потрібна
-    return 0;
-  };
-  
-  const addInvestment = async () => {
-    if (!name || count <= 0 || buyPrice <= 0) {
-      showSnackbar("Будь ласка, заповніть всі поля. Кількість і ціна мають бути більше 0.", "error");
-      return;
-    }
-
-    const newInvestment = {
-      name,
-      count: Number(count),
-      buyPrice: Number(buyPrice),
-      buyCurrency,
-      boughtDate,
-      game,
-      commissions: [],
-    };
-
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/investments`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newInvestment),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to add investment');
-      }
-      const addedInvestment = await response.json();
-      setInvestments(prev => [...prev, addedInvestment]);
-      showSnackbar(t.investmentAdded, 'success');
-      setAddDialog(false);
-      setName("");
-      setCount(1);
-      setBuyPrice(0);
-      setBuyCurrency(CURRENCIES[0]);
-      setGame(GAMES[1]);
-      setBoughtDate(new Date().toISOString().split('T')[0]);
-      setAutocompleteValue(null);
+    if (newValue && typeof newValue === 'object') {
+      setName(newValue.label);
+      setSelectedItemDetails({ ...newValue, image: newValue.image });
+      const detectedGame = getGameFromItemName(newValue.label);
+      setGame(detectedGame);
+      setTabValue(GAMES.indexOf(detectedGame));
+    } else {
+      setName(newValue || '');
       setSelectedItemDetails(null);
-    } catch (error) {
-      console.error("Error adding investment:", error);
-      showSnackbar("Помилка при додаванні інвестиції", "error");
     }
   };
 
-  const handleEditInvestment = () => {
-    if (!itemToEdit || name === "" || count <= 0 || buyPrice <= 0) {
-      showSnackbar("Будь ласка, заповніть всі поля. Кількість і ціна мають бути більше 0.", "error");
-      return;
-    }
-    const updatedInvestment = {
-      ...itemToEdit,
-      name,
-      count: Number(count),
-      buyPrice: Number(buyPrice),
-      buyCurrency,
-      game,
-    };
-    updateInvestment(updatedInvestment.id, updatedInvestment);
-    setEditDialog(false);
-    setItemToEdit(null);
-  };
-
-  const handleSellInvestment = async () => {
-    if (!itemToSell || sellPrice <= 0) {
-      showSnackbar("Будь ласка, введіть ціну продажу.", "error");
-      return;
-    }
-  
-    // Calculate commissions on sell
-    const sellCommissionRate = itemToSell.commissions.reduce((sum, comm) => sum + comm.rate, 0);
-    const sellCommissionAmount = (sellPrice * itemToSell.count * sellCommissionRate) / 100;
-  
-    const soldInvestment = {
-      ...itemToSell,
-      sellPrice: Number(sellPrice),
-      sellDate,
-      sellCommission: sellCommissionAmount
-    };
-  
+  const handleCurrentPriceUpdate = async (item) => {
     try {
-      const response = await fetch(`${BACKEND_URL}/api/investments/${itemToSell.id}/sell`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(soldInvestment),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to sell investment');
-      }
+      const url = `${PROXY_SERVER_URL}/current_price?item_name=${encodeURIComponent(item.market_hash_name)}&game=${encodeURIComponent(item.game)}`;
+      const response = await fetch(url);
       const data = await response.json();
-      setInvestments(prev => prev.map(item => (item.id === itemToSell.id ? data : item)));
-      showSnackbar(t.itemSold, 'success');
-      setSellDialog(false);
-      setItemToSell(null);
-    } catch (error) {
-      console.error("Error selling investment:", error);
-      showSnackbar("Помилка при продажу активу", "error");
-    }
-  };
 
-  const getAnalytics = () => {
-    setAnalyticsOpen(true);
-  };
-  
-  const filteredInvestments = investments.filter(item => {
-    const matchesGame = tabValue === 0 || item.game === GAMES[tabValue];
-    const matchesSearch = item.name.toLowerCase().includes(name.toLowerCase());
-    return matchesGame && matchesSearch;
-  });
-
-  const sortedInvestments = filteredInvestments.sort((a, b) => {
-    const aValue = a[sortBy];
-    const bValue = b[sortBy];
-
-    if (aValue === undefined || bValue === undefined) {
-      return 0; // Don't sort if values are missing
-    }
-
-    if (typeof aValue === 'string') {
-      return sortOrder === 'asc' ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
-    }
-    return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
-  });
-
-  const paginatedInvestments = sortedInvestments.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-
-  const totalPages = Math.ceil(filteredInvestments.length / ITEMS_PER_PAGE);
-
-  const fetchItemDetails = async (name) => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/item_price?name=${encodeURIComponent(name)}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch item details');
+      if (data.price) {
+        const currentPrice = data.price;
+        await updateInvestment(item.id, { currentPrice });
+        showSnackbar(`Поточна ціна для ${item.name}: ${convertCurrency(currentPrice, "EUR").toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}`, 'info');
+        getInvestments();
+      } else {
+        showSnackbar('Не вдалося отримати поточну ціну.', 'warning');
       }
-      const data = await response.json();
-      return data;
     } catch (error) {
-      console.error("Error fetching item details:", error);
-      return null;
+      console.error('Error fetching current price:', error);
+      showSnackbar('Помилка при оновленні ціни.', 'error');
     }
   };
 
   const fetchAndUpdateAllPrices = async () => {
     setIsUpdatingAllPrices(true);
-    const updatedInvestments = [...investments];
-    for (const item of updatedInvestments) {
-      try {
-        const itemDetails = await fetchItemDetails(item.name);
-        if (itemDetails && itemDetails.price) {
-          item.price = itemDetails.price;
+    showSnackbar(t.updateAllPrices, 'info');
+    try {
+      const activeInvestments = investments.filter(item => !item.sold);
+      for (const item of activeInvestments) {
+        const url = `${PROXY_SERVER_URL}/current_price?item_name=${encodeURIComponent(item.market_hash_name)}&game=${encodeURIComponent(item.game)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.price) {
+          const currentPrice = data.price;
+          await fetch(`${BACKEND_URL}/api/investments/${item.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPrice }),
+          });
         }
-      } catch (error) {
-        console.error(`Failed to update price for ${item.name}:`, error);
       }
+      showSnackbar("Усі ціни оновлено!", 'success');
+      getInvestments();
+    } catch (error) {
+      console.error('Error fetching and updating all prices:', error);
+      showSnackbar('Помилка при масовому оновленні цін.', 'error');
+    } finally {
+      setIsUpdatingAllPrices(false);
     }
-    setInvestments(updatedInvestments);
-    setIsUpdatingAllPrices(false);
-    showSnackbar("Всі ціни оновлено!", "success");
   };
-  
-  const handleAnalyzeItem = async (item) => {
+
+  const handleMarketAnalysis = async (item) => {
     setItemToAnalyze(item);
     setMarketAnalysisDialog(true);
     setAnalysisLoading(true);
     setAnalysisText("");
-  
-    const prompt = `Високопрофесійний аналітик ринку Steam. Надайте повний аналіз ринку для предмета "${item.name}" у форматі 500-600 слів.
-    Аналіз повинен містити:
-    1.  **Опис предмета**: Короткий опис, до якої гри належить, тип, рідкість, зовнішній вигляд (якщо це скін), чи є кейсом.
-    2.  **Історична динаміка цін**: Використовуйте історичні дані для аналізу тенденцій, зазначте ключові цінові піки та падіння, та можливі причини (наприклад, вихід нової колекції, оновлення гри, зміна мета).
-    3.  **Поточний стан ринку**: Оцінка поточної вартості, обсягу торгів, попиту та пропозиції.
-    4.  **Прогноз на майбутнє**: На основі аналізу історичних даних та поточних тенденцій, надайте короткий прогноз (зростання, падіння, стабільність) на 6-12 місяців.
-    5.  **Фактори впливу**: Перелічіть та коротко опишіть фактори, які можуть вплинути на ціну предмета (наприклад, оновлення гри, зміна популярності гри, вихід нових кейсів/колекцій).
-    `;
-    
+
     try {
-        const payload = {
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-                // Використовуємо gemini-2.5-flash-preview-05-20 для генерації тексту
-                model: 'gemini-2.5-flash-preview-05-20',
-            },
-        };
-        const apiKey = "";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-        
-        if (result.candidates && result.candidates.length > 0 && result.candidates[0].content && result.candidates[0].content.parts && result.candidates[0].content.parts.length > 0) {
-            setAnalysisText(result.candidates[0].content.parts[0].text);
-        } else {
-            setAnalysisText("Вибачте, не вдалося згенерувати аналіз. Спробуйте ще раз пізніше.");
-        }
+      const url = `${PROXY_SERVER_URL}/market_analysis`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          itemName: item.name,
+          game: item.game,
+        }),
+      });
+      const data = await response.json();
+
+      if (data.analysis) {
+        setAnalysisText(data.analysis);
+      } else {
+        setAnalysisText("Неможливо згенерувати аналіз. Спробуйте пізніше.");
+        showSnackbar('Помилка генерації аналізу.', 'error');
+      }
     } catch (error) {
-        console.error("Error generating analysis:", error);
-        setAnalysisText("Виникла помилка під час генерації аналізу. Будь ласка, перевірте ваше підключення до Інтернету.");
+      console.error('Error fetching market analysis:', error);
+      setAnalysisText("Помилка зв'язку з системою аналізу. Перевірте з'єднання.");
+      showSnackbar('Критична помилка аналізу.', 'error');
     } finally {
-        setAnalysisLoading(false);
+      setAnalysisLoading(false);
     }
   };
-  
-  const openItemDetailsDialog = (item) => {
+
+  const addItem = async () => {
+    const finalName = autocompleteValue?.label || name;
+    if (!finalName || finalName.trim() === '' || count <= 0 || buyPrice <= 0 || !boughtDate) {
+      showSnackbar("СИСТЕМНА ПОМИЛКА: ВВЕДІТЬ ПОВНІ ДАНІ", "error");
+      return;
+    }
+
+    try {
+      const newItem = {
+        name: finalName,
+        market_hash_name: selectedItemDetails?.market_hash_name || finalName,
+        count: Number(count),
+        buyPrice: Number(buyPrice),
+        currentPrice: 0,
+        game,
+        boughtDate,
+        buyCurrency,
+        sold: false,
+        sellPrice: 0,
+        sellDate: null,
+        image: selectedItemDetails?.image || null,
+        createdAt: new Date().toISOString(),
+        commissions: [
+          { id: Date.now(), rate: 15, note: "Steam Market" }
+        ],
+      };
+
+      const response = await fetch(`${BACKEND_URL}/api/investments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newItem),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to add investment');
+      }
+
+      showSnackbar(t.itemAdded, "success");
+      resetForm();
+      setAddDialog(false);
+      getInvestments();
+      
+    } catch (error) {
+      console.error("Error adding investment:", error);
+      showSnackbar("Помилка при додаванні активу", "error");
+    }
+  };
+
+  const markAsSold = async () => {
+    if (!itemToSell || sellPrice <= 0 || !sellDate) {
+      showSnackbar("СИСТЕМНА ПОМИЛКА: ВВЕДІТЬ ЦІНУ ВИХОДУ", "error");
+      return;
+    }
+
+    try {
+      await updateInvestment(itemToSell.id, {
+        sold: true,
+        sellPrice: Number(sellPrice),
+        sellDate: sellDate,
+      });
+      setSellDialog(false);
+      resetForm();
+      getInvestments();
+    } catch (error) {
+      console.error("Error marking item as sold:", error);
+      showSnackbar("Помилка при закритті операції", "error");
+    }
+  };
+
+  const confirmDelete = (item) => {
+    setItemToDelete(item);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deleteInvestment(itemToDelete.id);
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
+    } catch (error) {
+      console.error("Error in handleDelete:", error);
+    }
+  };
+
+  const resetForm = () => {
+    setName("");
+    setCount(1);
+    setBuyPrice(0);
+    setGame(GAMES[1]);
+    setBoughtDate(new Date().toISOString().split('T')[0]);
+    setSellPrice(0);
+    setSellDate(new Date().toISOString().split('T')[0]);
+    setAutocompleteValue(null);
+    setItemOptions([]);
+    setSelectedItemDetails(null);
+  };
+
+  const handleEdit = (item) => {
+    setItemToEdit(item);
+    setName(item.name);
+    setCount(item.count);
+    setBuyPrice(item.buyPrice);
+    setGame(item.game);
+    setBoughtDate(item.boughtDate);
+    setEditDialog(true);
+  };
+
+  const saveEditedItem = async () => {
+    if (!itemToEdit || !name || count <= 0 || buyPrice <= 0 || !boughtDate) {
+      showSnackbar("СИСТЕМНА ПОМИЛКА: ВВЕДІТЬ ПОВНІ ДАНІ", "error");
+      return;
+    }
+
+    const updatedData = {
+      name,
+      count: Number(count),
+      buyPrice: Number(buyPrice),
+      game,
+      boughtDate,
+    };
+
+    try {
+      await updateInvestment(itemToEdit.id, updatedData);
+      setEditDialog(false);
+      resetForm();
+      getInvestments();
+    } catch (error) {
+      console.error("Error saving edited item:", error);
+      showSnackbar("Помилка при збереженні змін", "error");
+    }
+  };
+
+  const handleCommissionManagerOpen = (event, item) => {
+    event.stopPropagation();
+    setCommissionItemToManage(item);
+    setCommissionManagerDialogOpen(true);
+  };
+
+  const showSnackbar = (message, severity) => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const closeSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const handleAnalyticsOpen = () => {
+    setAnalyticsOpen(true);
+  };
+
+  const handleItemDetailsOpen = async (item) => {
     setItemToDisplayDetails(item);
     setItemDetailsDialogOpen(true);
   };
+
+  const filteredInvestments = tabValue === 0 ? investments : investments.filter((item) => item.game === GAMES[tabValue]);
   
+  const sortedInvestments = [...filteredInvestments].sort((a, b) => {
+    const aValue = a[sortBy];
+    const bValue = b[sortBy];
+
+    if (aValue < bValue) {
+      return sortOrder === 'asc' ? -1 : 1;
+    }
+    if (aValue > bValue) {
+      return sortOrder === 'asc' ? 1 : -1;
+    }
+    return 0;
+  });
+
+  const pageCount = Math.ceil(sortedInvestments.length / ITEMS_PER_PAGE);
+  const paginatedInvestments = sortedInvestments.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  const getNetProfit = (grossProfit, totalValue, commissions) => {
+    const totalRate = (commissions || []).reduce((sum, c) => sum + c.rate, 0);
+    const totalCommission = totalValue * (totalRate / 100);
+    return grossProfit - totalCommission;
+  };
+
+  // РОЗРАХУНОК НОВИХ ФІНАНСОВИХ ПОКАЗНИКІВ
+  const soldInvestments = investments.filter(item => item.sold);
+  const activeInvestments = investments.filter(item => !item.sold);
+  
+  const totalInvestment = investments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
+  
+  const totalInvestmentInSoldItems = soldInvestments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
+  const totalInvestmentInActiveItems = activeInvestments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
+  
+  const totalSoldProfit = soldInvestments.reduce((sum, item) => {
+      const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
+      const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
+      const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissions);
+      return sum + netProfit;
+  }, 0);
+
+  const totalMarketValue = activeInvestments.reduce((sum, item) => sum + convertCurrency((item.currentPrice || item.buyPrice) * item.count, item.buyCurrency), 0);
+  
+  const currentMarketProfit = totalMarketValue - totalInvestmentInActiveItems;
+
+  const totalFeesPaid = soldInvestments.reduce((sum, item) => {
+    const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
+    const totalRate = (item.commissions || []).reduce((rate, c) => rate + c.rate, 0);
+    return sum + (totalSellValue * totalRate / 100);
+  }, 0);
+  
+  const realizedROI = totalInvestmentInSoldItems > 0 ? (totalSoldProfit / totalInvestmentInSoldItems) * 100 : 0;
+  const unrealizedROI = totalInvestmentInActiveItems > 0 ? (currentMarketProfit / totalInvestmentInActiveItems) * 100 : 0;
+  
+  const averageHoldingPeriod = soldInvestments.length > 0
+    ? soldInvestments.reduce((sum, item) => {
+        const bought = new Date(item.boughtDate);
+        const sold = new Date(item.sellDate);
+        const diffTime = Math.abs(sold - bought);
+        return sum + Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      }, 0) / soldInvestments.length
+    : 0;
+
+  const profitColor = totalSoldProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
+  const currentProfitColor = currentMarketProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
+  const realizedROIColor = realizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main;
+  const unrealizedROIColor = unrealizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main;
+
+  const profitByDate = soldInvestments
+    .map(item => {
+        const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
+        const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
+        const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissions);
+        return { date: item.sellDate, profit: netProfit };
+    })
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .reduce((acc, curr) => {
+      const existing = acc.find(p => p.date === curr.date);
+      if (existing) {
+        existing.profit += curr.profit;
+      } else {
+        acc.push(curr);
+      }
+      return acc;
+    }, []);
+
+  const cumulativeProfit = profitByDate.reduce((acc, curr) => {
+    const lastProfit = acc.length > 0 ? acc[acc.length - 1].profit : 0;
+    acc.push({ ...curr, profit: lastProfit + curr.profit });
+    return acc;
+  }, []);
+
+  const investmentDistributionData = Object.entries(investments.reduce((acc, item) => {
+    if (!acc[item.game]) acc[item.game] = 0;
+    acc[item.game] += convertCurrency(item.buyPrice * item.count, item.buyCurrency);
+    return acc;
+  }, {})).map(([game, value]) => ({ name: game, value }));
+
+  const profitByGameData = Object.entries(investments.reduce((acc, item) => {
+    if (!acc[item.game]) acc[item.game] = 0;
+    if (item.sold) {
+      const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
+      const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
+      const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissions);
+      acc[item.game] += netProfit;
+    } else {
+      const grossProfit = (convertCurrency(item.currentPrice || item.buyPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
+      const totalCurrentValue = convertCurrency((item.currentPrice || item.buyPrice), item.buyCurrency) * item.count;
+      const netProfit = getNetProfit(grossProfit, totalCurrentValue, item.commissions);
+      acc[item.game] += netProfit;
+    }
+    return acc;
+  }, {})).map(([game, value]) => ({ name: game, profit: value }));
+
+  const PIE_COLORS = ['#4A148C', '#007BFF', '#DC3545', '#FFC107', '#28A745'];
+
   const ItemDetailsDialog = ({ open, onClose, item }) => {
     if (!item) return null;
-    const itemGame = getGameFromItemName(item.name);
-    const profitLoss = (convertCurrency(item.price * item.count, item.currency) - convertCurrency(item.buyPrice * item.count, item.buyCurrency));
-    const profitLossPercent = (profitLoss / convertCurrency(item.buyPrice * item.count, item.buyCurrency)) * 100;
-  
-    const isProfit = profitLoss >= 0;
-    const profitLossColor = isProfit ? theme.palette.success.main : theme.palette.error.main;
-  
+    
+    const convertedTotalBuyPrice = convertCurrency(item.buyPrice * item.count, item.buyCurrency);
+    const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR") : null;
+    const convertedTotalCurrentPrice = convertedCurrentPrice ? convertedCurrentPrice * item.count : convertedTotalBuyPrice;
+    
+    const itemGrossProfit = item.sold ? 
+      (convertCurrency(item.sellPrice, item.buyCurrency) * item.count) - convertedTotalBuyPrice : 
+      convertedTotalCurrentPrice - convertedTotalBuyPrice;
+    const itemTotalValue = item.sold ? convertCurrency(item.sellPrice * item.count, item.buyCurrency) : convertedTotalCurrentPrice;
+    const itemProfit = getNetProfit(itemGrossProfit, itemTotalValue, item.commissions);
+    
+    const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
+    const profitPercentage = convertedTotalBuyPrice > 0 ? ((itemProfit / convertedTotalBuyPrice) * 100).toFixed(2) : '0.00';
+    const totalCommissionRate = (item.commissions || []).reduce((sum, c) => sum + c.rate, 0);
+
+    const handleOpenMarketLink = () => {
+      let url = '';
+      if (item.game === "CS2") {
+        url = `https://steamcommunity.com/market/listings/730/${encodeURIComponent(item.market_hash_name)}`;
+      } else if (item.game === "Dota 2") {
+        url = `https://steamcommunity.com/market/listings/570/${encodeURIComponent(item.market_hash_name)}`;
+      } else if (item.game === "PUBG") {
+        url = `https://steamcommunity.com/market/listings/578080/${encodeURIComponent(item.market_hash_name)}`;
+      }
+      if (url) {
+        window.open(url, '_blank');
+      }
+    };
+    
     return (
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
         <DialogTitle sx={{ textAlign: 'center' }}>
-          <Typography variant="h5" fontWeight="bold">{item.name}</Typography>
+          <Typography variant="h6" fontWeight="bold" color="primary">{t.itemDetails}</Typography>
         </DialogTitle>
         <DialogContent dividers>
-          <Grid container spacing={2}>
-            <Grid item xs={12} md={6}>
-              <Box sx={{ p: 2, textAlign: 'center' }}>
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  style={{ width: '100%', maxWidth: '300px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
-                  onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/300x300"; }}
+          <Grid container spacing={3} alignItems="center">
+            <Grid item xs={12} md={5}>
+              <Box display="flex" flexDirection="column" alignItems="center">
+                {item.image && (
+                  <img src={item.image} alt={item.name} style={{ width: '100%', maxWidth: 200, borderRadius: 8, marginBottom: 16 }} />
+                )}
+                <Typography variant="h5" fontWeight="bold" textAlign="center">{item.name.replace(/\*/g, '')}</Typography>
+                <Chip 
+                  label={item.sold ? t.sold : t.active} 
+                  color={item.sold ? "success" : "primary"} 
+                  size="small" 
+                  sx={{ mt: 1, fontWeight: 'bold' }}
                 />
               </Box>
             </Grid>
-            <Grid item xs={12} md={6}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <Box>
-                  <Typography variant="body1" color="text.secondary">Гра:</Typography>
-                  <StyledChip label={itemGame} color="primary" />
-                </Box>
-                <Box>
-                  <Typography variant="body1" color="text.secondary">Дата покупки:</Typography>
-                  <Typography variant="body1">{new Date(item.boughtDate).toLocaleDateString()}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="body1" color="text.secondary">Кількість:</Typography>
-                  <Typography variant="body1">{item.count}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="body1" color="text.secondary">Ціна покупки:</Typography>
-                  <Typography variant="body1">{convertCurrency(item.buyPrice, item.buyCurrency).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="body1" color="text.secondary">Поточна ціна:</Typography>
-                  <Typography variant="body1">{convertCurrency(item.price, item.currency).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}</Typography>
-                </Box>
-                <Box>
-                  <Typography variant="body1" color="text.secondary">Прибуток/Збиток:</Typography>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <Typography variant="body1" fontWeight="bold" sx={{ color: profitLossColor }}>
-                      {profitLoss.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]} ({profitLossPercent.toFixed(2)}%)
-                    </Typography>
-                    {isProfit ? <TrendingUp color="success" size={20} /> : <TrendingDown color="error" size={20} />}
-                  </Box>
-                </Box>
-                <Box>
-                  <Typography variant="body1" color="text.secondary">Комісії:</Typography>
-                  <Typography variant="body1">{item.commissions.reduce((sum, c) => sum + c.rate, 0).toFixed(2)}%</Typography>
-                </Box>
-              </Box>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ p: 3, justifyContent: 'center' }}>
-          <StyledButton onClick={onClose} variant="contained" color="primary">Закрити</StyledButton>
-        </DialogActions>
-      </Dialog>
-    );
-  };
-  
-  // Компонент SellDialog
-  const SellDialog = ({ open, onClose, item, sellPrice, setSellPrice, handleSellInvestment, t, theme, convertCurrency, displayCurrency, CURRENCY_SYMBOLS, getGameFromItemName }) => {
-    if (!item) return null;
-    const profitLossOnSale = (convertCurrency(sellPrice * item.count, item.currency) - convertCurrency(item.buyPrice * item.count, item.buyCurrency));
-    const profitLossPercentOnSale = (profitLossOnSale / convertCurrency(item.buyPrice * item.count, item.buyCurrency)) * 100;
-  
-    const isProfit = profitLossOnSale >= 0;
-    const profitLossColor = isProfit ? theme.palette.success.main : theme.palette.error.main;
-  
-    return (
-      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
-        <DialogTitle sx={{ textAlign: 'center', pb: 0 }}>
-          <Typography variant="h6" fontWeight="bold" color="primary">{t.sellItem}</Typography>
-        </DialogTitle>
-        <DialogContent dividers>
-          <Box mb={2}>
-            <Typography variant="body1" color="text.secondary" textAlign="center">
-              Продати предмет: <br/> **{item.name}**
-            </Typography>
-          </Box>
-          <Grid container spacing={2} sx={{ mt: 2 }}>
-            <Grid item xs={12}>
-              <TextField
-                label={t.sellPrice}
-                type="number"
-                value={sellPrice}
-                onChange={(e) => setSellPrice(e.target.value)}
-                fullWidth
-                required
-                InputProps={{ inputProps: { min: 0 } }}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body1" color="text.secondary">{t.buyPrice}:</Typography>
-                  <Typography variant="body1">{convertCurrency(item.buyPrice, item.buyCurrency).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body1" color="text.secondary">{t.currentPrice}:</Typography>
-                  <Typography variant="body1">{convertCurrency(item.price, item.currency).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body1" color="text.secondary">{t.profitLossOnSale}:</Typography>
-                  <Typography variant="body1" fontWeight="bold" sx={{ color: profitLossColor }}>
-                    {profitLossOnSale.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]} ({profitLossPercentOnSale.toFixed(2)}%)
-                  </Typography>
-                </Box>
-              </Box>
+            <Grid item xs={12} md={7}>
+                <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">Ціна за одиницю</Typography>
+                        <Typography variant="h6" fontWeight="bold">{convertCurrency(item.buyPrice, item.buyCurrency).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}</Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">Поточна ціна</Typography>
+                        <Typography variant="h6" fontWeight="bold">
+                            {item.currentPrice ? convertCurrency(item.currentPrice, 'EUR').toFixed(2) : '-'} {item.currentPrice ? CURRENCY_SYMBOLS[displayCurrency] : ''}
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">Ціна продажу</Typography>
+                        <Typography variant="h6" fontWeight="bold">
+                            {item.sold ? convertCurrency(item.sellPrice, item.buyCurrency).toFixed(2) : '-'} {item.sold ? CURRENCY_SYMBOLS[displayCurrency] : ''}
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">{t.profit}</Typography>
+                        <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
+                            {itemProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">Загальна комісія</Typography>
+                        <Typography variant="h6" fontWeight="bold" >
+                            {totalCommissionRate.toFixed(2)}%
+                        </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <Typography variant="body2" color="text.secondary">ROI (%)</Typography>
+                        <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
+                            {profitPercentage}%
+                        </Typography>
+                    </Grid>
+                </Grid>
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
-          <StyledButton onClick={onClose} variant="outlined" color="secondary">
-            {t.cancel}
-          </StyledButton>
-          <StyledButton onClick={handleSellInvestment} variant="contained" color="primary">
-            {t.sell}
-          </StyledButton>
-        </DialogActions>
-      </Dialog>
-    );
-  };
-  
-  // Додавання існуючих компонентів тут, оскільки вони були в оригінальному коді
-  const ItemCard = ({ item, openItemDetails, handleEditClick, setItemToDelete, setDeleteDialogOpen, setItemToSell, setSellDialog, setCommissionItemToManage, setCommissionManagerDialogOpen, handleAnalyzeItem, theme, t, convertCurrency, displayCurrency, CURRENCY_SYMBOLS, getGameFromItemName }) => {
-    const profitLoss = (convertCurrency(item.price, item.currency) * item.count) - (convertCurrency(item.buyPrice, item.buyCurrency) * item.count);
-    const profitLossPercent = ((profitLoss / (convertCurrency(item.buyPrice, item.buyCurrency) * item.count)) * 100).toFixed(2);
-    const profitLossColor = profitLoss >= 0 ? theme.palette.success.main : theme.palette.error.main;
-    const commissionRate = item.commissions ? item.commissions.reduce((sum, c) => sum + c.rate, 0) : 0;
-  
-    const commissionAmount = (convertCurrency(item.buyPrice, item.buyCurrency) * item.count) * (commissionRate / 100);
-  
-    return (
-      <StyledCard>
-        <CardHeader>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <img src={item.image || "https://placehold.co/40x40"} alt={item.name} style={{ width: '40px', height: '40px', borderRadius: '4px' }} />
-            <Box>
-              <Typography variant="h6" component="h3" noWrap>
-                {item.name}
-              </Typography>
-              <StyledChip label={getGameFromItemName(item.name)} size="small" color="secondary" />
-            </Box>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Tooltip title={t.details}>
-              <IconButton onClick={() => openItemDetails(item)}>
-                <Eye size={18} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={t.edit}>
-              <IconButton onClick={() => handleEditClick(item)}>
-                <Edit size={18} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title={t.delete}>
-              <IconButton onClick={() => { setItemToDelete(item); setDeleteDialogOpen(true); }}>
-                <Delete size={18} color="error" />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </CardHeader>
-        <CardContent sx={{ flexGrow: 1, p: 1, '&:last-child': { pb: 1 } }}>
-          <Grid container spacing={1}>
-            <Grid item xs={6}>
-              <Typography variant="body2" color="text.secondary">{t.buyPrice}:</Typography>
-              <Typography variant="body1" fontWeight="bold">
-                {convertCurrency(item.buyPrice, item.buyCurrency).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
-              </Typography>
-            </Grid>
-            <Grid item xs={6}>
-              <Typography variant="body2" color="text.secondary">{t.currentPrice}:</Typography>
-              <Typography variant="body1" fontWeight="bold">
-                {convertCurrency(item.price, item.currency).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
-              </Typography>
-            </Grid>
-            <Grid item xs={6}>
-              <Typography variant="body2" color="text.secondary">{t.quantity}:</Typography>
-              <Typography variant="body1" fontWeight="bold">{item.count}</Typography>
-            </Grid>
-            <Grid item xs={6}>
-              <Typography variant="body2" color="text.secondary">{t.commissions}:</Typography>
-              <Typography variant="body1" fontWeight="bold">{commissionRate.toFixed(2)}%</Typography>
-            </Grid>
-            <Grid item xs={12}>
-              <Typography variant="body2" color="text.secondary">{t.profitLoss}:</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography variant="body1" fontWeight="bold" sx={{ color: profitLossColor }}>
-                  {profitLoss.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
-                </Typography>
-                {profitLoss >= 0 ? <TrendingUp color="success" size={20} /> : <TrendingDown color="error" size={20} />}
-                <Typography variant="body2" sx={{ color: profitLossColor, ml: 'auto' }}>
-                  ({profitLossPercent}%)
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
-        </CardContent>
-        <CardFooter>
           <Box>
-            <StyledButton
-              variant="outlined"
-              size="small"
-              onClick={() => { setCommissionItemToManage(item); setCommissionManagerDialogOpen(true); }}
-              startIcon={<Percent size={16} />}
-              sx={{ mr: 1 }}
+            <Button 
+              onClick={() => { onClose(); confirmDelete(item); }} 
+              color="error" 
+              variant="text" 
+              startIcon={<Delete />}
+              sx={{ borderRadius: 8 }}
             >
-              {t.commissions}
-            </StyledButton>
-            <StyledButton
-              variant="outlined"
-              size="small"
-              onClick={() => handleAnalyzeItem(item)}
-              startIcon={<BarChart size={16} />}
-              sx={{ mr: 1 }}
+              {t.delete}
+            </Button>
+          </Box>
+          <Box display="flex" gap={1}>
+            <Button 
+              onClick={() => { onClose(); handleCurrentPriceUpdate(item); }} 
+              color="info" 
+              variant="outlined" 
+              startIcon={<Zap />}
+              sx={{ borderRadius: 8 }}
             >
-              {t.analyze}
-            </StyledButton>
+              {t.updatePrice}
+            </Button>
+            <Button 
+              onClick={() => { onClose(); handleOpenMarketLink(); }} 
+              color="secondary" 
+              variant="outlined" 
+              startIcon={<Globe />}
+              sx={{ borderRadius: 8 }}
+            >
+              {t.openMarket}
+            </Button>
+            <Button 
+              onClick={() => { onClose(); handleEdit(item); }} 
+              color="primary" 
+              variant="contained" 
+              startIcon={<Edit />}
+              sx={{ borderRadius: 8 }}
+            >
+              {t.edit}
+            </Button>
           </Box>
-          <StyledButton
-            variant="contained"
-            color="secondary"
-            size="small"
-            startIcon={<DollarSign size={16} />}
-            onClick={() => { setItemToSell(item); setSellDialog(true); }}
-          >
-            {t.sell}
-          </StyledButton>
-        </CardFooter>
-      </StyledCard>
-    );
-  };
-  
-  const MarketAnalysisDialog = ({ open, onClose, analysisText, analysisLoading, t, theme, item }) => (
-    <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
-      <DialogTitle sx={{ textAlign: 'center', pb: 0 }}>
-        <Typography variant="h5" fontWeight="bold" color="primary">{t.marketAnalysis}</Typography>
-        <Typography variant="subtitle1" color="text.secondary">{item?.name}</Typography>
-      </DialogTitle>
-      <DialogContent dividers>
-        {analysisLoading ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '300px' }}>
-            <CircularProgress color="primary" />
-            <Typography variant="body1" sx={{ mt: 2 }}>{t.generatingAnalysis}</Typography>
-          </Box>
-        ) : (
-          <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-            {analysisText}
-          </Typography>
-        )}
-      </DialogContent>
-      <DialogActions sx={{ p: 3, justifyContent: 'center' }}>
-        <StyledButton onClick={onClose} variant="contained" color="primary">{t.close}</StyledButton>
-      </DialogActions>
-    </Dialog>
-  );
-
-  const getAnalyticsData = () => {
-    // Дані для графіків
-    // Ця частина коду є імітацією, оскільки немає реального бекенду для отримання історичних даних
-    const today = new Date();
-    const last30Days = Array.from({ length: 30 }, (_, i) => {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      return date.toISOString().split('T')[0];
-    }).reverse();
-
-    const priceHistory = last30Days.map(date => {
-      const value = Math.random() * 100 + 100; // Імітація ціни
-      return { date, value };
-    });
-
-    const totalPortfolioValue = [{ name: 'Портфель', value: calculateTotalValue() }];
-    const totalProfitLossData = [{ name: 'Прибуток/Збиток', value: calculateTotalProfitLoss() }];
-
-    const gameDistribution = investments.reduce((acc, item) => {
-      const game = item.game;
-      const index = acc.findIndex(d => d.name === game);
-      if (index > -1) {
-        acc[index].value += convertCurrency(item.price * item.count, item.currency);
-      } else {
-        acc.push({ name: game, value: convertCurrency(item.price * item.count, item.currency) });
-      }
-      return acc;
-    }, []);
-
-    const investmentsPerGame = investments.reduce((acc, item) => {
-      const game = item.game;
-      const index = acc.findIndex(d => d.name === game);
-      if (index > -1) {
-        acc[index].investments += 1;
-      } else {
-        acc.push({ name: game, investments: 1 });
-      }
-      return acc;
-    }, []);
-
-    return {
-      priceHistory,
-      totalPortfolioValue,
-      totalProfitLossData,
-      gameDistribution,
-      investmentsPerGame
-    };
-  };
-
-  const AnalyticsDialog = ({ open, onClose, t, theme, data }) => {
-    const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#FF8042', '#00C49F', '#0088FE'];
-    return (
-      <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
-        <DialogTitle sx={{ textAlign: 'center', pb: 0 }}>
-          <Typography variant="h5" fontWeight="bold" color="primary">{t.analytics}</Typography>
-        </DialogTitle>
-        <DialogContent dividers>
-          <Grid container spacing={3}>
-            <Grid item xs={12} md={6}>
-              <StyledCombinedCard>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>{t.portfolioValue}</Typography>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={data.priceHistory}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <ChartTooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="value" stroke="#8884d8" name={t.portfolioValue} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </StyledCombinedCard>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <StyledCombinedCard>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>{t.profitLossDistribution}</Typography>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={data.totalProfitLossData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <ChartTooltip />
-                      <Legend />
-                      <Bar dataKey="value" name={t.profitOrLoss} fill="#82ca9d" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </StyledCombinedCard>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <StyledCombinedCard>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>{t.gameDistribution}</Typography>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={data.gameDistribution}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        label
-                      >
-                        {data.gameDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <ChartTooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </StyledCombinedCard>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <StyledCombinedCard>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>{t.investmentsPerGame}</Typography>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={data.investmentsPerGame}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <ChartTooltip />
-                      <Legend />
-                      <Bar dataKey="investments" name={t.investments} fill="#ffc658" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </StyledCombinedCard>
-            </Grid>
-          </Grid>
-        </DialogContent>
-        <DialogActions sx={{ p: 3, justifyContent: 'center' }}>
-          <StyledButton onClick={onClose} variant="contained" color="primary">{t.close}</StyledButton>
         </DialogActions>
       </Dialog>
     );
   };
-
-  const analyticsData = getAnalyticsData();
   
+
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', py: 4, px: { xs: 2, sm: 4, md: 6 } }}>
-        <Container maxWidth="lg">
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Rocket size={48} color={theme.palette.primary.main} />
-              <Typography variant="h4" component="h1" fontWeight="bold">
+      <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', pb: 4 }}>
+        <Container maxWidth="xl" sx={{ pt: 0, pb: 4 }}>
+          <Paper elevation={0} sx={{ 
+            py: 2, 
+            px: 3, 
+            mb: 4, 
+            borderRadius: 2,
+            background: theme.palette.background.paper,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+          }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="h4" color="primary" fontWeight="bold">
                 {t.portfolio}
               </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Tooltip title={isUpdatingAllPrices ? t.updatingPrices : t.updatePrices}>
-                <IconButton onClick={fetchAndUpdateAllPrices} disabled={isUpdatingAllPrices}>
-                  <Clock size={24} color={theme.palette.secondary.main} />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title={t.analytics}>
-                <IconButton onClick={getAnalytics}>
-                  <BarChart size={24} color={theme.palette.secondary.main} />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title={t.settings}>
-                <IconButton onClick={handleSettingsMenuClick}>
-                  <Settings size={24} color={theme.palette.secondary.main} />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Box>
-          <Menu
-            anchorEl={settingsAnchorEl}
-            open={settingsMenuOpen}
-            onClose={handleSettingsMenuClose}
-            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-          >
-            <Box sx={{ p: 2, minWidth: '200px' }}>
-              <Typography variant="h6" mb={2}>{t.settings}</Typography>
-              <Divider sx={{ mb: 2 }} />
-              <Typography variant="body1" color="text.secondary">{t.displayCurrency}</Typography>
-              <FormControl fullWidth size="small" sx={{ mt: 1, mb: 2 }}>
-                <InputLabel>{t.currency}</InputLabel>
-                <Select value={displayCurrency} label={t.currency} onChange={(e) => setDisplayCurrency(e.target.value)}>
-                  {CURRENCIES.map(curr => (
-                    <MenuItem key={curr} value={curr}>{curr} {CURRENCY_SYMBOLS[curr]}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <Typography variant="body1" color="text.secondary">{t.language}</Typography>
-              <FormControl fullWidth size="small" sx={{ mt: 1, mb: 2 }}>
-                <InputLabel>{t.language}</InputLabel>
-                <Select value={lang} label={t.language} onChange={(e) => setLang(e.target.value)}>
-                  <MenuItem value="en">English</MenuItem>
-                  <MenuItem value="uk">Українська</MenuItem>
-                </Select>
-              </FormControl>
-              <Typography variant="body1" color="text.secondary" mb={1}>{t.theme}</Typography>
-              <FormControlLabel
-                control={<Switch checked={themeMode === 'dark'} onChange={() => setThemeMode(themeMode === 'light' ? 'dark' : 'light')} />}
-                label={themeMode === 'dark' ? t.darkMode : t.lightMode}
-                sx={{ mb: 2 }}
-              />
-              <Typography variant="body1" color="text.secondary" mb={1}>{t.autoUpdatePrices}</Typography>
-              <FormControlLabel
-                control={<Switch checked={autoUpdateEnabled} onChange={(e) => setAutoUpdateEnabled(e.target.checked)} />}
-                label={autoUpdateEnabled ? t.enabled : t.disabled}
-              />
-            </Box>
-          </Menu>
-
-          <Paper elevation={0} sx={{ p: 3, mb: 4, borderRadius: 16 }}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6} md={3}>
-                <StyledMetricCard>
-                  <Typography variant="h6" color="text.secondary" gutterBottom>{t.totalValue}</Typography>
-                  <Typography variant="h4" fontWeight="bold" color="primary">
-                    {calculateTotalValue().toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
-                  </Typography>
-                </StyledMetricCard>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <StyledMetricCard>
-                  <Typography variant="h6" color="text.secondary" gutterBottom>{t.totalProfitLoss}</Typography>
-                  <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <Typography variant="h4" fontWeight="bold" sx={{ color: calculateTotalProfitLoss() >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
-                      {calculateTotalProfitLoss().toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                      <Typography variant="body2" fontWeight="bold" sx={{ color: calculateTotalProfitLoss() >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
-                        ({((calculateTotalProfitLoss() / calculateTotalValue()) * 100).toFixed(2)}%)
-                      </Typography>
-                      {calculateTotalProfitLoss() >= 0 ? <TrendingUp color="success" size={20} /> : <TrendingDown color="error" size={20} />}
-                    </Box>
-                  </Box>
-                </StyledMetricCard>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <StyledMetricCard>
-                  <Typography variant="h6" color="text.secondary" gutterBottom>{t.totalCommissions}</Typography>
-                  <Typography variant="h4" fontWeight="bold" color="text.primary">
-                    {calculateTotalCommissions().toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
-                  </Typography>
-                </StyledMetricCard>
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <StyledMetricCard>
-                  <Typography variant="h6" color="text.secondary" gutterBottom>{t.totalInvestments}</Typography>
-                  <Typography variant="h4" fontWeight="bold" color="text.primary">
-                    {investments.length}
-                  </Typography>
-                </StyledMetricCard>
-              </Grid>
-            </Grid>
-          </Paper>
-
-          <Box sx={{ mb: 4 }}>
-            <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)} variant="scrollable" scrollButtons="auto">
-              {GAMES.map((gameName, index) => (
-                <Tab key={index} label={gameName} />
-              ))}
-            </Tabs>
-          </Box>
-
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexDirection: { xs: 'column', md: 'row' }, gap: { xs: 2, md: 0 } }}>
-            <Autocomplete
-              freeSolo
-              fullWidth
-              options={itemOptions}
-              getOptionLabel={(option) => option.name || ""}
-              loading={autocompleteLoading}
-              value={autocompleteValue}
-              onChange={handleAutocompleteChange}
-              onInputChange={handleItemNameChange}
-              renderInput={(params) => (
-                <StyledTextField
-                  {...params}
-                  label={t.searchItem}
-                  placeholder={t.searchPlaceholder}
-                  InputProps={{
-                    ...params.InputProps,
-                    endAdornment: (
-                      <React.Fragment>
-                        {autocompleteLoading ? <CircularProgress color="inherit" size={20} /> : null}
-                        {params.InputProps.endAdornment}
-                      </React.Fragment>
-                    ),
+              <Box display="flex" gap={1}>
+                <Tooltip title={t.updateAllPrices}>
+                  <IconButton color="primary" onClick={fetchAndUpdateAllPrices} disabled={isUpdatingAllPrices}>
+                    {isUpdatingAllPrices ? <CircularProgress size={24} /> : <Zap />}
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={t.analytics}>
+                  <IconButton color="secondary" onClick={handleAnalyticsOpen}>
+                    <BarChart />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={t.settings}>
+                  <IconButton color="secondary" onClick={handleSettingsMenuClick}>
+                    <Settings />
+                  </IconButton>
+                </Tooltip>
+                <Menu
+                  anchorEl={settingsAnchorEl}
+                  open={settingsMenuOpen}
+                  onClose={handleSettingsMenuClose}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
                   }}
-                  sx={{ width: { xs: '100%', md: '50%' } }}
-                />
-              )}
-            />
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <StyledButton
-                variant="contained"
-                startIcon={<Plus size={18} />}
-                onClick={() => setAddDialog(true)}
-              >
-                {t.addInvestment}
-              </StyledButton>
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                >
+                  <MenuItem onClick={(e) => e.stopPropagation()}>
+                    <FormGroup>
+                      <FormControlLabel
+                        control={<Switch checked={themeMode === 'dark'} onChange={() => setThemeMode(themeMode === 'dark' ? 'light' : 'dark')} />}
+                        label="Темна тема"
+                      />
+                    </FormGroup>
+                  </MenuItem>
+                  <MenuItem onClick={(e) => e.stopPropagation()}>
+                    <FormGroup>
+                      <FormControlLabel
+                        control={<Switch checked={autoUpdateEnabled} onChange={() => setAutoUpdateEnabled(!autoUpdateEnabled)} />}
+                        label="Автоматичне оновлення"
+                      />
+                    </FormGroup>
+                  </MenuItem>
+                  <MenuItem onClick={handleSettingsMenuClose}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Globe size={18} />
+                      <FormControl variant="standard" size="small" sx={{ minWidth: 100 }}>
+                        <InputLabel>Мова</InputLabel>
+                        <Select
+                          value={lang}
+                          onChange={(e) => setLang(e.target.value)}
+                          label="Мова"
+                        >
+                          <MenuItem value="uk">Українська</MenuItem>
+                          <MenuItem value="en">English</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </MenuItem>
+                  <MenuItem onClick={handleSettingsMenuClose}>
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <DollarSign size={18} />
+                      <FormControl variant="standard" size="small" sx={{ minWidth: 100 }}>
+                        <InputLabel>Валюта відображення</InputLabel>
+                        <Select
+                          value={displayCurrency}
+                          onChange={(e) => setDisplayCurrency(e.target.value)}
+                          label="Валюта відображення"
+                        >
+                          {CURRENCIES.map((currency, index) => (
+                            <MenuItem key={index} value={currency}>{currency}</MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Box>
+                  </MenuItem>
+                </Menu>
+              </Box>
             </Box>
-          </Box>
+          </Paper>
+  
+          {/* ОНОВЛЕНА СІТКА ФІНАНСОВИХ ПОКАЗНИКІВ */}
+          <Grid container spacing={2} mb={4} justifyContent="center" sx={{ px: { xs: 1, md: 0 } }}>
+            {/* Загальний капітал */}
+            <Grid item xs={12} sm={6} md={4} lg={2}>
+              <Tooltip title={t.totalInvestmentTooltip} arrow>
+                <StyledMetricCard>
+                  <DollarSign size={36} color={theme.palette.primary.main} sx={{ mb: 1 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    {t.totalInvestment}
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold" color="primary">
+                    {totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                  </Typography>
+                </StyledMetricCard>
+              </Tooltip>
+            </Grid>
+            
+            {/* Реалізований прибуток */}
+            <Grid item xs={12} sm={6} md={4} lg={2}>
+              <Tooltip title={t.totalProfitTooltip} arrow>
+                <StyledMetricCard bgcolor={profitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
+                  {totalSoldProfit >= 0 ? 
+                    <TrendingUp size={36} color={theme.palette.success.main} sx={{ mb: 1 }} /> : 
+                    <TrendingDown size={36} color={theme.palette.error.main} sx={{ mb: 1 }} />
+                  }
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    {t.totalProfit}
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold" sx={{ color: profitColor }}>
+                    {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                  </Typography>
+                </StyledMetricCard>
+              </Tooltip>
+            </Grid>
 
-          <Grid container spacing={3}>
-            {paginatedInvestments.length > 0 ? (
-              paginatedInvestments.map(item => (
-                <Grid item xs={12} sm={6} md={4} key={item.id}>
-                  <ItemCard
-                    item={item}
-                    openItemDetails={openItemDetailsDialog}
-                    handleEditClick={(i) => { setItemToEdit(i); setName(i.name); setCount(i.count); setBuyPrice(i.buyPrice); setBuyCurrency(i.buyCurrency); setEditDialog(true); }}
-                    setItemToDelete={setItemToDelete}
-                    setDeleteDialogOpen={setDeleteDialogOpen}
-                    setItemToSell={setItemToSell}
-                    setSellDialog={setSellDialog}
-                    setCommissionItemToManage={setCommissionItemToManage}
-                    setCommissionManagerDialogOpen={setCommissionManagerDialogOpen}
-                    handleAnalyzeItem={handleAnalyzeItem}
-                    theme={theme}
-                    t={t}
-                    convertCurrency={convertCurrency}
-                    displayCurrency={displayCurrency}
-                    CURRENCY_SYMBOLS={CURRENCY_SYMBOLS}
-                    getGameFromItemName={getGameFromItemName}
-                  />
-                </Grid>
-              ))
-            ) : (
-              <Grid item xs={12}>
-                <Box sx={{ textAlign: 'center', py: 5 }}>
-                  <Typography variant="h6" color="text.secondary">{t.noInvestments}</Typography>
-                  <Typography variant="body1" color="text.secondary">{t.addFirstInvestment}</Typography>
+            {/* Нереалізований прибуток */}
+            <Grid item xs={12} sm={6} md={4} lg={2}>
+              <Tooltip title="Потенційний прибуток від активних інвестицій." arrow>
+                <StyledMetricCard bgcolor={currentProfitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
+                  {currentMarketProfit >= 0 ?
+                    <TrendingUp size={36} color={theme.palette.success.main} sx={{ mb: 1 }} /> :
+                    <TrendingDown size={36} color={theme.palette.error.main} sx={{ mb: 1 }} />
+                  }
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    Поточний прибуток
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold" sx={{ color: currentProfitColor }}>
+                    {currentMarketProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                  </Typography>
+                </StyledMetricCard>
+              </Tooltip>
+            </Grid>
+
+            {/* ОБ'ЄДНАНА КАРТКА ROI */}
+            <Grid item xs={12} sm={6} md={4} lg={2}>
+              <StyledCombinedCard>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Percent size={36} color={theme.palette.primary.main} />
+                  <Typography variant="h6" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+                    ROI (%)
+                  </Typography>
                 </Box>
-              </Grid>
-            )}
+                <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography variant="body1" fontWeight="bold" color="text.secondary">
+                    Реалізований:
+                    <Typography component="span" fontWeight="bold" sx={{ color: realizedROIColor, ml: 1 }}>
+                      {realizedROI.toFixed(2)}%
+                    </Typography>
+                  </Typography>
+                  <Typography variant="body1" fontWeight="bold" color="text.secondary">
+                    Нереалізований:
+                    <Typography component="span" fontWeight="bold" sx={{ color: unrealizedROIColor, ml: 1 }}>
+                      {unrealizedROI.toFixed(2)}%
+                    </Typography>
+                  </Typography>
+                </Box>
+              </StyledCombinedCard>
+            </Grid>
+
+
+            {/* Сумарні комісії */}
+            <Grid item xs={12} sm={6} md={4} lg={2}>
+              <Tooltip title="Загальна сума сплачених комісій під час продажу." arrow>
+                <StyledMetricCard>
+                  <Tag size={36} color={theme.palette.warning.main} sx={{ mb: 1 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    Загальні комісії
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold" color="text.primary">
+                    {totalFeesPaid.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                  </Typography>
+                </StyledMetricCard>
+              </Tooltip>
+            </Grid>
+             {/* Середня тривалість утримання */}
+             <Grid item xs={12} sm={6} md={4} lg={2}>
+              <Tooltip title="Середня кількість днів, які ви тримаєте активи до продажу." arrow>
+                <StyledMetricCard>
+                  <Clock size={36} color={theme.palette.secondary.main} sx={{ mb: 1 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    Середній термін
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold" color="text.primary">
+                    {averageHoldingPeriod.toFixed(1)} {t.days}
+                  </Typography>
+                </StyledMetricCard>
+              </Tooltip>
+            </Grid>
           </Grid>
           
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <Pagination
-              count={totalPages}
-              page={page}
-              onChange={(e, value) => setPage(value)}
-              color="primary"
-              shape="rounded"
-            />
+          <Paper sx={{ 
+            mb: 4, 
+            p: 1, 
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+            width: '100%', 
+            mx: 'auto',
+          }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap">
+              <Tabs 
+                value={tabValue} 
+                onChange={(e, newValue) => {
+                  setTabValue(newValue);
+                  setPage(1);
+                }} 
+                aria-label="game tabs" 
+                sx={{
+                  '& .MuiTabs-indicator': {
+                    backgroundColor: theme.palette.primary.main,
+                  }
+                }}
+              >
+                {GAMES.map((gameName, index) => (
+                  <Tab 
+                    key={index} 
+                    label={gameName === "Усі" ? t.total : gameName} 
+                    sx={{
+                      minWidth: 0,
+                      padding: '6px 12px',
+                      fontSize: '0.875rem',
+                      '&.Mui-selected': {
+                        color: theme.palette.primary.main,
+                      }
+                    }}
+                  />
+                ))}
+              </Tabs>
+              
+              <Box display="flex" alignItems="center" gap={1} flexWrap="wrap" mt={{ xs: 2, sm: 0 }}>
+                <FormControl variant="standard" size="small" sx={{ minWidth: 120 }}>
+                  <InputLabel>Сортувати за</InputLabel>
+                  <Select
+                    value={sortBy}
+                    onChange={(e) => {
+                      setSortBy(e.target.value);
+                      setPage(1);
+                    }}
+                    label="Сортувати за"
+                  >
+                    <MenuItem value="name">Назвою</MenuItem>
+                    <MenuItem value="boughtDate">Датою покупки</MenuItem>
+                    <MenuItem value="buyPrice">Ціною покупки</MenuItem>
+                  </Select>
+                </FormControl>
+                <IconButton onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>
+                  {sortOrder === 'asc' ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
+                </IconButton>
+              </Box>
+            </Box>
+          </Paper>
+
+          <Box sx={{ 
+            width: '100%',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '5%',
+            rowGap: '32px',
+            justifyContent: 'flex-start',
+            px: 0,
+          }}>
+            {paginatedInvestments.length === 0 ? (
+              <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary, width: '100%' }}>
+                <Typography variant="h6">{t.noInvestmentsInCategory}</Typography>
+              </Box>
+            ) : (
+              paginatedInvestments.map((item) => {
+                const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency);
+                const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR") : null;
+                const itemGrossProfitForCard = item.sold ? 
+                  (convertCurrency(item.sellPrice, item.buyCurrency) - convertedBuyPrice) * item.count : 
+                  (convertedCurrentPrice ? convertedCurrentPrice - convertedBuyPrice : 0) * item.count;
+                const itemTotalValueForCard = item.sold ? convertCurrency(item.sellPrice, item.buyCurrency) * item.count : convertedCurrentPrice ? convertedCurrentPrice * item.count : 0;
+                const profitForCard = getNetProfit(itemGrossProfitForCard, itemTotalValueForCard, item.commissions);
+                const profitColorForCard = profitForCard >= 0 ? theme.palette.success.main : theme.palette.error.main;
+                const totalCommissionRate = (item.commissions || []).reduce((sum, c) => sum + c.rate, 0);
+    
+                return (
+                  <Box 
+                    key={item.id} 
+                    sx={{ 
+                      width: '30%',
+                      minWidth: '280px',
+                      overflow: 'visible',
+                      position: 'relative',
+                      paddingTop: '16px',
+                    }}
+                  >
+                    <Tooltip title={`Комісія: ${totalCommissionRate.toFixed(2)}%`}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => { e.stopPropagation(); handleCommissionManagerOpen(e, item); }}
+                        sx={{
+                          position: 'absolute',
+                          top: 0,
+                          right: 0,
+                          transform: 'translate(33px, 3px)',
+                          backgroundColor: theme.palette.primary.main,
+                          color: 'white',
+                          width: 40,
+                          height: 40,
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                          '&:hover': { 
+                            backgroundColor: theme.palette.primary.dark,
+                            transform: 'translate(33px, 3px) scale(1.1) rotate(15deg)',
+                          },
+                          transition: 'all 0.3s ease',
+                          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                          zIndex: 3,
+                          border: `2px solid ${theme.palette.background.paper}`,
+                        }}
+                      >
+                        <Percent size={20} />
+                      </IconButton>
+                    </Tooltip>
+                    <StyledCard onClick={() => handleItemDetailsOpen(item)}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', position: 'relative' }}>
+                        <CardHeader>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
+                            {item.image && (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }}
+                              />
+                            )}
+                            <Box sx={{ overflow: 'hidden' }}>
+                              <Typography variant="subtitle1" fontWeight="bold" noWrap sx={{ textOverflow: 'ellipsis' }}>
+                                {item.name.replace(/\*/g, '')}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary" noWrap>
+                                {item.game}
+                              </Typography>
+                            </Box>
+                          </Box>
+                          <Chip 
+                            label={item.sold ? t.sold : t.active} 
+                            color={item.sold ? "success" : "primary"} 
+                            size="small" 
+                            sx={{ ml: 1 }}
+                          />
+                        </CardHeader>
+                        <Divider sx={{ my: 1 }} />
+                        <CardContent sx={{ 
+                          p: 1.5,
+                          flexGrow: 1,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          overflow: 'hidden',
+                          minHeight: '200px',
+                        }}>
+                          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1} sx={{ overflow: 'hidden' }}>
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">{t.count}:</Typography>
+                              <Typography variant="h6" fontWeight="bold">{item.count}</Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">{t.buyPrice}:</Typography>
+                              <Typography variant="h6" fontWeight="bold">
+                                {convertedBuyPrice.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                              </Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
+                              <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
+                                {(profitForCard).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                              </Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">{t.boughtDate}:</Typography>
+                              <Typography variant="h6" fontWeight="bold">{item.boughtDate}</Typography>
+                            </Box>
+                          </Box>
+                        </CardContent>
+                        <CardFooter>
+                          <Box display="flex" gap={0.5} flexWrap="wrap">
+                            <Tooltip title={t.edit}>
+                              <IconButton color="secondary" onClick={(e) => { e.stopPropagation(); handleEdit(item); }} size="small">
+                                <Edit size={16} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t.markAsSold}>
+                              <IconButton 
+                                color="success" 
+                                onClick={(e) => { e.stopPropagation(); setItemToSell(item); setSellPrice(item.buyPrice); setSellDialog(true); }} 
+                                disabled={item.sold}
+                                size="small"
+                              >
+                                <TrendingUp size={16} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t.delete}>
+                              <IconButton color="error" onClick={(e) => { e.stopPropagation(); confirmDelete(item); }} size="small">
+                                <Delete size={16} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t.updatePrice}>
+                              <IconButton color="secondary" onClick={(e) => { e.stopPropagation(); handleCurrentPriceUpdate(item); }} size="small">
+                                <Zap size={16} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title={t.marketAnalysis}>
+                              <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handleMarketAnalysis(item); }} size="small">
+                                <BarChart size={16} />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Відкрити в Steam Market">
+                              <IconButton 
+                                color="primary" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (item.game === "CS2") {
+                                    window.open(`https://steamcommunity.com/market/listings/730/${encodeURIComponent(item.market_hash_name)}`, '_blank');
+                                  } else if (item.game === "Dota 2") {
+                                    window.open(`https://steamcommunity.com/market/listings/570/${encodeURIComponent(item.market_hash_name)}`, '_blank');
+                                  } else if (item.game === "PUBG") {
+                                    window.open(`https://steamcommunity.com/market/listings/578080/${encodeURIComponent(item.market_hash_name)}`, '_blank');
+                                  }
+                                }}
+                                size="small"
+                              >
+                                <Globe size={16} />
+                              </IconButton>
+                            </Tooltip>
+                          </Box>
+                        </CardFooter>
+                      </Box>
+                    </StyledCard>
+                  </Box>
+                );
+              })
+            )}
           </Box>
           
-          {/* Main Dialogs */}
-          <Dialog open={addDialog} onClose={() => setAddDialog(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
-            <DialogTitle sx={{ textAlign: 'center', pb: 0 }}>
+          <Box mt={4} display="flex" justifyContent="center">
+            {paginatedInvestments.length > 0 && (
+              <Pagination
+                count={pageCount}
+                page={page}
+                onChange={(event, value) => setPage(value)}
+                color="primary"
+                size="large"
+                sx={{
+                  '& .MuiPaginationItem-root': {
+                    color: theme.palette.text.primary,
+                    '&.Mui-selected': {
+                      backgroundColor: theme.palette.primary.main,
+                      color: 'white',
+                    },
+                    '&.Mui-selected:hover': {
+                      backgroundColor: theme.palette.primary.dark,
+                    },
+                  },
+                }}
+              />
+            )}
+          </Box>
+  
+          <Tooltip title={t.addItem} arrow>
+            <Fab
+              color="primary"
+              aria-label="add"
+              sx={{ 
+                position: 'fixed', 
+                bottom: 32, 
+                right: 32,
+                width: 56,
+                height: 56,
+                boxShadow: '0 8px 20px rgba(74, 20, 140, 0.3)',
+                '&:hover': {
+                  transform: 'scale(1.1) rotate(90deg)',
+                  boxShadow: '0 12px 24px rgba(74, 20, 140, 0.4)',
+                },
+                transition: 'all 0.3s ease',
+                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+              }}
+              onClick={() => setAddDialog(true)}
+            >
+              <Plus size={24} />
+            </Fab>
+          </Tooltip>
+  
+          <Dialog
+            open={addDialog}
+            onClose={() => setAddDialog(false)}
+            PaperProps={{ style: { maxWidth: 'md', width: '90%', margin: 16 } }}
+          >
+            <DialogTitle sx={{ textAlign: "center" }}>
               <Typography variant="h6" fontWeight="bold" color="primary">{t.addInvestment}</Typography>
             </DialogTitle>
             <DialogContent dividers>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={selectedItemDetails ? 6 : 12}>
                   <Autocomplete
-                    freeSolo
-                    fullWidth
                     options={itemOptions}
-                    getOptionLabel={(option) => option.name || ""}
-                    loading={autocompleteLoading}
+                    getOptionLabel={(option) => option.label || ""}
                     value={autocompleteValue}
-                    onChange={handleAutocompleteChange}
                     onInputChange={handleItemNameChange}
+                    onChange={handleAutocompleteChange}
+                    loading={autocompleteLoading}
                     renderInput={(params) => (
-                      <StyledTextField
+                      <TextField
                         {...params}
-                        label={t.itemName}
-                        placeholder={t.searchPlaceholder}
+                        label={t.name}
+                        variant="outlined"
+                        fullWidth
+                        required
                         InputProps={{
                           ...params.InputProps,
                           endAdornment: (
@@ -1541,181 +1692,387 @@ export default function App() {
                         }}
                       />
                     )}
+                    renderOption={(props, option) => (
+                      <Box component="li" {...props} sx={{ '& > img': { mr: 2, flexShrink: 0 } }}>
+                        {option.image && (
+                          <img loading="lazy" width="30" src={option.image} alt={option.label} style={{borderRadius: 4}} />
+                        )}
+                        {option.label}
+                      </Box>
+                    )}
                   />
+                  <Box mt={2}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={6}>
+                        <TextField 
+                          label={t.count} 
+                          type="number" 
+                          value={count} 
+                          onChange={(e) => setCount(e.target.value)} 
+                          fullWidth 
+                          required 
+                          InputProps={{ inputProps: { min: 1 } }} 
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth required>
+                          <InputLabel>{t.game}</InputLabel>
+                          <Select 
+                            value={game} 
+                            label={t.game} 
+                            onChange={(e) => setGame(e.target.value)}
+                            sx={{ borderRadius: 8 }}
+                          >
+                            {GAMES.slice(1).map((gameName, index) => (
+                              <MenuItem key={index} value={gameName}>{gameName}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <TextField 
+                          label={t.buyPrice} 
+                          type="number" 
+                          value={buyPrice} 
+                          onChange={(e) => setBuyPrice(e.target.value)} 
+                          fullWidth 
+                          required 
+                          InputProps={{ inputProps: { min: 0 } }} 
+                        />
+                      </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <FormControl fullWidth required>
+                          <InputLabel>{t.currency}</InputLabel>
+                          <Select 
+                            value={buyCurrency} 
+                            label={t.currency} 
+                            onChange={(e) => setBuyCurrency(e.target.value)}
+                            sx={{ borderRadius: 8 }}
+                          >
+                            {CURRENCIES.map((currency, index) => (
+                              <MenuItem key={index} value={currency}>{currency}</MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <TextField 
+                          label={t.boughtDate} 
+                          type="date" 
+                          value={boughtDate} 
+                          onChange={(e) => setBoughtDate(e.target.value)} 
+                          fullWidth 
+                          required 
+                          InputLabelProps={{ shrink: true }} 
+                        />
+                      </Grid>
+                    </Grid>
+                  </Box>
                 </Grid>
-                <Grid item xs={12}>
-                  <StyledTextField
-                    label={t.quantity}
-                    type="number"
-                    value={count}
-                    onChange={(e) => setCount(e.target.value)}
-                    fullWidth
-                    required
-                    InputProps={{ inputProps: { min: 1 } }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <StyledTextField
-                    label={t.buyPrice}
-                    type="number"
-                    value={buyPrice}
-                    onChange={(e) => setBuyPrice(e.target.value)}
-                    fullWidth
-                    required
-                    InputProps={{ inputProps: { min: 0 } }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel>{t.buyCurrency}</InputLabel>
-                    <Select
-                      value={buyCurrency}
-                      label={t.buyCurrency}
-                      onChange={(e) => setBuyCurrency(e.target.value)}
-                    >
-                      {CURRENCIES.map(curr => (
-                        <MenuItem key={curr} value={curr}>{curr} {CURRENCY_SYMBOLS[curr]}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                  <StyledTextField
-                    label={t.boughtDate}
-                    type="date"
-                    value={boughtDate}
-                    onChange={(e) => setBoughtDate(e.target.value)}
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel>{t.game}</InputLabel>
-                    <Select
-                      value={game}
-                      label={t.game}
-                      onChange={(e) => setGame(e.target.value)}
-                    >
-                      {GAMES.slice(1).map(gameName => (
-                        <MenuItem key={gameName} value={gameName}>{gameName}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
+                {selectedItemDetails && (
+                  <Grid item xs={12} md={6}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      alignItems: 'center', 
+                      p: 3, 
+                      background: theme.palette.background.default, 
+                      borderRadius: 8, 
+                      height: '100%',
+                      gap: 2
+                    }}>
+                      <Typography variant="h6" color="secondary">{t.selectedItem}</Typography>
+                      <img 
+                        src={selectedItemDetails.image} 
+                        alt={selectedItemDetails.label} 
+                        style={{ 
+                          width: 'auto', 
+                          maxHeight: '150px', 
+                          objectFit: 'contain', 
+                          borderRadius: 8 
+                        }} 
+                      />
+                      <Box textAlign="center">
+                        <Typography variant="h6" fontWeight="bold">{selectedItemDetails.label}</Typography>
+                      </Box>
+                    </Box>
+                  </Grid>
+                )}
               </Grid>
             </DialogContent>
             <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
-              <StyledButton onClick={() => setAddDialog(false)} color="secondary" variant="outlined">{t.cancel}</StyledButton>
-              <StyledButton onClick={addInvestment} color="primary" variant="contained">{t.add}</StyledButton>
+              <Button 
+                onClick={() => setAddDialog(false)} 
+                color="secondary" 
+                variant="outlined"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.cancel}
+              </Button>
+              <Button 
+                onClick={addItem} 
+                color="primary" 
+                variant="contained" 
+                endIcon={<ArrowUp />}
+                sx={{ borderRadius: 8 }}
+              >
+                {t.save}
+              </Button>
             </DialogActions>
           </Dialog>
-
+  
           <Dialog open={editDialog} onClose={() => setEditDialog(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
-            <DialogTitle sx={{ textAlign: 'center', pb: 0 }}>
-              <Typography variant="h6" fontWeight="bold" color="primary">{t.editInvestment}</Typography>
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold" color="primary">{t.editItem}</Typography>
             </DialogTitle>
-            <DialogContent dividers>
+            <DialogContent dividers sx={{ p: 3 }}>
               <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <StyledTextField
-                    label={t.itemName}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    fullWidth
-                    required
+                <Grid item xs={12} sm={6}>
+                  <TextField 
+                    label={t.name} 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
+                    fullWidth 
+                    required 
                   />
                 </Grid>
-                <Grid item xs={12}>
-                  <StyledTextField
-                    label={t.quantity}
-                    type="number"
-                    value={count}
-                    onChange={(e) => setCount(e.target.value)}
-                    fullWidth
-                    required
-                    InputProps={{ inputProps: { min: 1 } }}
+                <Grid item xs={12} sm={6}>
+                  <TextField 
+                    label={t.count} 
+                    type="number" 
+                    value={count} 
+                    onChange={(e) => setCount(e.target.value)} 
+                    fullWidth 
+                    required 
+                    InputProps={{ inputProps: { min: 1 } }} 
                   />
                 </Grid>
-                <Grid item xs={12}>
-                  <StyledTextField
-                    label={t.buyPrice}
-                    type="number"
-                    value={buyPrice}
-                    onChange={(e) => setBuyPrice(e.target.value)}
-                    fullWidth
-                    required
-                    InputProps={{ inputProps: { min: 0 } }}
+                <Grid item xs={12} sm={6}>
+                  <TextField 
+                    label={t.buyPrice} 
+                    type="number" 
+                    value={buyPrice} 
+                    onChange={(e) => setBuyPrice(e.target.value)} 
+                    fullWidth 
+                    required 
+                    InputProps={{ inputProps: { min: 0 } }} 
                   />
                 </Grid>
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel>{t.buyCurrency}</InputLabel>
-                    <Select
-                      value={buyCurrency}
-                      label={t.buyCurrency}
-                      onChange={(e) => setBuyCurrency(e.target.value)}
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth required>
+                    <InputLabel>{t.game}</InputLabel>
+                    <Select 
+                      value={game} 
+                      label={t.game} 
+                      onChange={(e) => setGame(e.target.value)}
+                      sx={{ borderRadius: 8 }}
                     >
-                      {CURRENCIES.map(curr => (
-                        <MenuItem key={curr} value={curr}>{curr} {CURRENCY_SYMBOLS[curr]}</MenuItem>
+                      {GAMES.slice(1).map((gameName, index) => (
+                        <MenuItem key={index} value={gameName}>{gameName}</MenuItem>
                       ))}
                     </Select>
                   </FormControl>
                 </Grid>
+                <Grid item xs={12}>
+                  <TextField 
+                    label={t.boughtDate} 
+                    type="date" 
+                    value={boughtDate} 
+                    onChange={(e) => setBoughtDate(e.target.value)} 
+                    fullWidth 
+                    required 
+                    InputLabelProps={{ shrink: true }} 
+                  />
+                </Grid>
               </Grid>
             </DialogContent>
-            <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
-              <StyledButton onClick={() => setEditDialog(false)} color="secondary" variant="outlined">{t.cancel}</StyledButton>
-              <StyledButton onClick={handleEditInvestment} color="primary" variant="contained">{t.save}</StyledButton>
+            <DialogActions sx={{ p: 3 }}>
+              <Button 
+                onClick={() => setEditDialog(false)} 
+                color="secondary" 
+                variant="outlined"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.cancel}
+              </Button>
+              <Button 
+                onClick={saveEditedItem} 
+                color="primary" 
+                variant="contained"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.save}
+              </Button>
             </DialogActions>
           </Dialog>
-
-          <Dialog
-            open={deleteDialogOpen}
-            onClose={() => setDeleteDialogOpen(false)}
-            maxWidth="xs"
-            fullWidth
-            PaperProps={{ style: { borderRadius: 16 } }}
-          >
-            <DialogTitle sx={{ textAlign: 'center', pb: 0 }}>
-              <Typography variant="h6" fontWeight="bold" color="error">{t.confirmDeleteTitle}</Typography>
+  
+          <Dialog open={sellDialog} onClose={() => setSellDialog(false)} PaperProps={{ style: { borderRadius: 16 } }}>
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold" color="primary">{t.markAsSold}</Typography>
             </DialogTitle>
             <DialogContent dividers>
-              <Typography variant="body1" align="center" color="text.secondary">
-                {t.confirmDeleteMessage}
-              </Typography>
+              <TextField 
+                autoFocus 
+                margin="dense" 
+                label={t.sellPrice} 
+                type="number" 
+                fullWidth 
+                value={sellPrice} 
+                onChange={(e) => setSellPrice(e.target.value)} 
+                InputProps={{ inputProps: { min: 0 } }} 
+                sx={{ mb: 2 }}
+              />
+              <TextField 
+                margin="dense" 
+                label={t.sellDate} 
+                type="date" 
+                fullWidth 
+                value={sellDate} 
+                onChange={(e) => setSellDate(e.target.value)} 
+                InputLabelProps={{ shrink: true }} 
+              />
             </DialogContent>
-            <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
-              <StyledButton onClick={() => setDeleteDialogOpen(false)} color="secondary" variant="outlined">{t.cancel}</StyledButton>
-              <StyledButton onClick={() => { deleteInvestment(itemToDelete.id); setDeleteDialogOpen(false); }} color="error" variant="contained">{t.delete}</StyledButton>
+            <DialogActions sx={{ p: 2 }}>
+              <Button 
+                onClick={() => setSellDialog(false)} 
+                color="secondary" 
+                variant="outlined"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.cancel}
+              </Button>
+              <Button 
+                onClick={markAsSold} 
+                color="primary" 
+                variant="contained"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.save}
+              </Button>
             </DialogActions>
           </Dialog>
-          
-          <SellDialog
-            open={sellDialog}
-            onClose={() => setSellDialog(false)}
-            item={itemToSell}
-            sellPrice={sellPrice}
-            setSellPrice={setSellPrice}
-            handleSellInvestment={handleSellInvestment}
-            t={t}
-            theme={theme}
-            convertCurrency={convertCurrency}
-            displayCurrency={displayCurrency}
-            CURRENCY_SYMBOLS={CURRENCY_SYMBOLS}
-            getGameFromItemName={getGameFromItemName}
-          />
+  
+          <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} PaperProps={{ style: { borderRadius: 16 } }}>
+            <DialogTitle>{t.deleteConfirmation}</DialogTitle>
+            <DialogContent>
+              <Typography>{t.deleteConfirmation}</Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button 
+                onClick={() => setDeleteDialogOpen(false)} 
+                color="secondary"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.no}
+              </Button>
+              <Button 
+                onClick={handleDelete} 
+                color="error"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.yes}
+              </Button>
+            </DialogActions>
+          </Dialog>
+  
+          <Dialog open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold" color="primary">{t.analytics}</Typography>
+            </DialogTitle>
+            <DialogContent dividers>
+              <Typography variant="h6" mb={2} color="secondary">Динаміка прибутку</Typography>
+              {cumulativeProfit.length === 0 ? (
+                <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={cumulativeProfit} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                    <XAxis dataKey="date" stroke={theme.palette.text.secondary} />
+                    <YAxis stroke={theme.palette.text.secondary} />
+                    <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, border: '1px solid #ccc', borderRadius: 8 }} />
+                    <Legend />
+                    <Line type="monotone" dataKey="profit" stroke={theme.palette.primary.main} activeDot={{ r: 8 }} name={t.profit} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+              <Divider sx={{ my: 3 }} />
+              <Typography variant="h6" mb={2} color="secondary">{t.investmentDistribution}</Typography>
+              {investmentDistributionData.length === 0 ? (
+                <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie data={investmentDistributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill={theme.palette.primary.main} label>
+                      {investmentDistributionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, border: '1px solid #ccc', borderRadius: 8 }} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+              <Divider sx={{ my: 3 }} />
+              <Typography variant="h6" mb={2} color="secondary">Прибуток по іграх</Typography>
+              {profitByGameData.length === 0 ? (
+                <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <RechartsBarChart data={profitByGameData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                    <XAxis dataKey="name" stroke={theme.palette.text.secondary} />
+                    <YAxis stroke={theme.palette.text.secondary} />
+                    <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, border: '1px solid #ccc', borderRadius: 8 }} />
+                    <Legend />
+                    <Bar dataKey="profit" name="Прибуток" fill={theme.palette.primary.main} />
+                  </RechartsBarChart>
+                </ResponsiveContainer>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button 
+                onClick={() => setAnalyticsOpen(false)} 
+                color="secondary" 
+                variant="outlined"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.cancel}
+              </Button>
+            </DialogActions>
+          </Dialog>
+  
+          <Dialog open={marketAnalysisDialog} onClose={() => setMarketAnalysisDialog(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold" color="primary">{t.marketAnalysisTitle}</Typography>
+            </DialogTitle>
+            <DialogContent dividers>
+              {analysisLoading ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', p: 4 }}>
+                  <CircularProgress color="primary" />
+                  <Typography variant="body1" mt={2} color="secondary">{t.marketAnalysisGenerating}</Typography>
+                </Box>
+              ) : (
+                <Box>
+                  <Typography variant="h6" mb={1} color="secondary">{itemToAnalyze?.name.replace(/\*/g, '')}</Typography>
+                  <Divider sx={{ my: 1 }} />
+                  <Typography sx={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', color: 'text.secondary' }}>
+                    {analysisText}
+                  </Typography>
+                </Box>
+              )}
+            </DialogContent>
+            <DialogActions>
+              <Button 
+                onClick={() => setMarketAnalysisDialog(false)} 
+                color="secondary" 
+                variant="outlined"
+                sx={{ borderRadius: 8 }}
+              >
+                {t.cancel}
+              </Button>
+            </DialogActions>
+          </Dialog>
 
-          <MarketAnalysisDialog
-            open={marketAnalysisDialog}
-            onClose={() => setMarketAnalysisDialog(false)}
-            analysisText={analysisText}
-            analysisLoading={analysisLoading}
-            t={t}
-            theme={theme}
-            item={itemToAnalyze}
-          />
-          
           <CommissionManagerDialog
             open={commissionManagerDialogOpen}
             onClose={() => setCommissionManagerDialogOpen(false)}
@@ -1724,31 +2081,23 @@ export default function App() {
             showSnackbar={showSnackbar}
             theme={theme}
           />
-          
-          <ItemDetailsDialog
-            open={itemDetailsDialogOpen}
-            onClose={() => setItemDetailsDialogOpen(false)}
+
+          <ItemDetailsDialog 
+            open={itemDetailsDialogOpen} 
+            onClose={() => setItemDetailsDialogOpen(false)} 
             item={itemToDisplayDetails}
           />
-          
-          <AnalyticsDialog
-            open={analyticsOpen}
-            onClose={() => setAnalyticsOpen(false)}
-            t={t}
-            theme={theme}
-            data={analyticsData}
-          />
-          
-          <Snackbar
-            open={snackbar.open}
-            autoHideDuration={3500}
-            onClose={closeSnackbar}
+  
+          <Snackbar 
+            open={snackbar.open} 
+            autoHideDuration={3500} 
+            onClose={closeSnackbar} 
             anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
           >
-            <Alert
-              onClose={closeSnackbar}
-              severity={snackbar.severity}
-              sx={{
+            <Alert 
+              onClose={closeSnackbar} 
+              severity={snackbar.severity} 
+              sx={{ 
                 width: '100%',
                 borderRadius: 8,
                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
@@ -1762,4 +2111,3 @@ export default function App() {
     </ThemeProvider>
   );
 }
-
