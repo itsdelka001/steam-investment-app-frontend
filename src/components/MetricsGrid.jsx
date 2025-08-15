@@ -110,4 +110,37 @@ const MetricsGrid = ({
         </StyledCombinedCard>
       </Grid>
 
+      {/* Комісії */}
+      <Grid item xs={12} sm={6} md={4} lg={2}>
+        <Tooltip title="Загальна сума сплачених комісій під час продажу." arrow>
+          <StyledMetricCard>
+            <Tag size={36} color={theme.palette.warning.main} sx={{ mb: 1 }} />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              Загальні комісії
+            </Typography>
+            <Typography variant="h4" fontWeight="bold" color="text.primary">
+              {totalFeesPaid.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+            </Typography>
+          </StyledMetricCard>
+        </Tooltip>
+      </Grid>
+
+      {/* Середній термін */}
+      <Grid item xs={12} sm={6} md={4} lg={2}>
+        <Tooltip title="Середня кількість днів, які ви тримаєте активи до продажу." arrow>
+          <StyledMetricCard>
+            <Clock size={36} color={theme.palette.secondary.main} sx={{ mb: 1 }} />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              Середній термін
+            </Typography>
+            <Typography variant="h4" fontWeight="bold" color="text.primary">
+              {averageHoldingPeriod.toFixed(1)} {t.days}
+            </Typography>
+          </StyledMetricCard>
+        </Tooltip>
+      </Grid>
+    </Grid>
+  );
+};
+
 export default MetricsGrid;
