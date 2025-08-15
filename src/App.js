@@ -1588,7 +1588,6 @@ export default function App() {
                         label={t.name}
                         variant="outlined"
                         fullWidth
-                        required
                         InputProps={{
                           ...params.InputProps,
                           endAdornment: (
