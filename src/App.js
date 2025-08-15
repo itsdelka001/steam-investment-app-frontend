@@ -535,6 +535,12 @@ export default function App() {
   
   const totalInvestmentInActiveItems = activeInvestments.reduce((sum, item) => 
     sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates), 0);
+    
+   const totalTurnover = 
+    investments.reduce((sum, item) => 
+      sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates), 0) +
+    soldInvestments.reduce((sum, item) => 
+      sum + convertCurrency(item.sellPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates), 0);
   
   const totalSoldProfit = soldInvestments.reduce((sum, item) => {
     const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates) - 
