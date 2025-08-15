@@ -1,10 +1,24 @@
 export const convertCurrency = (value, fromCurrency, toCurrency, rates) => {
-  if (fromCurrency === toCurrency || !rates?.[fromCurrency] || !rates?.[toCurrency]) {
+  if (fromCurrency === toCurrency || !rates || Object.keys(rates).length === 0) {
     return value;
   }
-  const rateToEUR = 1 / rates[fromCurrency];
-  const rateFromEUR = rates[toCurrency];
-  return value * rateToEUR * rateFromEUR;
+
+  // Use a common base currency (e.g., EUR) for conversion.
+  const baseCurrency = 'EUR';
+
+  // Check if both 'from' and 'to' currencies are available in the rates object.
+  if (!rates?.[fromCurrency] || !rates?.[toCurrency]) {
+    console.error(`Missing exchange rate for ${fromCurrency} or ${toCurrency}. Conversion failed.`);
+    return value; // Return original value if rates are missing
+  }
+
+  // Convert the value from its original currency to the base currency (EUR)
+  const valueInBaseCurrency = value / rates[fromCurrency];
+
+  // Convert the value from the base currency to the target currency
+  const convertedValue = valueInBaseCurrency * rates[toCurrency];
+
+  return convertedValue;
 };
 
 export const getNetProfit = (grossProfit, totalValue, commissions = []) => {
