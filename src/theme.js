@@ -15,7 +15,7 @@ export const getTheme = (mode) => createTheme({
     mode: mode,
     primary: {
       main: mode === 'dark' ? '#9575CD' : '#4A148C',
-      dark: mode === 'dark' ? '#7E57C2' : '#311B92', // Додамо темніший відтінок
+      dark: mode === 'dark' ? '#7E57C2' : '#311B92', 
     },
     secondary: {
       main: mode === 'dark' ? '#4FC3F7' : '#007BFF',
@@ -44,7 +44,7 @@ export const getTheme = (mode) => createTheme({
   },
   typography: {
     fontFamily: ['"Inter"', 'sans-serif'].join(','),
-    h3: { fontWeight: 700 }, // Додамо для головної метрики
+    h3: { fontWeight: 700 },
     h4: { fontWeight: 700 },
     h5: { fontWeight: 600 },
     h6: { fontWeight: 600 },
@@ -189,12 +189,11 @@ export const StyledMetricCard = styled(Card)(({ theme }) => ({
   textAlign: 'center',
 }));
 
-// ---> НОВИЙ КОМПОНЕНТ ДЛЯ ОБ'ЄДНАНОЇ КАРТКИ
 export const StyledCombinedMetricCard = styled(Card)(({ theme }) => ({
   padding: theme.spacing(3),
   borderRadius: 16,
   minHeight: 160,
-  height: '100%',
+  // height: '100%', // ---> ВИДАЛЕНО: Це виправляє проблему розтягування
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'space-between',
@@ -213,7 +212,6 @@ export const StyledCombinedMetricCard = styled(Card)(({ theme }) => ({
     boxShadow: `0 12px 28px ${theme.palette.mode === 'dark' ? 'rgba(149, 117, 205, 0.2)' : 'rgba(74, 20, 140, 0.2)'}`,
   },
   
-  // Декоративний елемент
   '&::before': {
     content: '""',
     position: 'absolute',

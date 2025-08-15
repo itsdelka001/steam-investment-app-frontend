@@ -11,13 +11,12 @@ import {
   TrendingUp, Delete, Check, BarChart, Plus, Globe, X, ArrowUp, Edit,
   History, Settings, Tag, Palette, Rocket, Zap, DollarSign, Percent, TrendingDown,
   ArrowDown, Menu as MenuIcon, Eye, Clock, Layers, Activity,
-} from 'lucide-react'; // Додамо іконки
+} from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie,
   Cell, BarChart as RechartsBarChart, Bar
 } from 'recharts';
 import { ThemeProvider } from '@mui/material/styles';
-// ---> StyledCombinedCard більше не потрібен, використовуємо новий StyledCombinedMetricCard
 import { getTheme, StyledCard, StyledMetricCard, StyledCombinedMetricCard, CardHeader, CardFooter } from './theme'; 
 import CommissionManagerDialog from './components/CommissionManagerDialog';
 import ItemDetailsDialog from './components/ItemDetailsDialog';
@@ -27,8 +26,6 @@ import {
   ITEMS_PER_PAGE, PIE_COLORS
 } from './constants';
 import { convertCurrency, getNetProfit } from './utils';
-// MetricsGrid більше не використовується
-// import MetricsGrid from './components/MetricsGrid';
 import PortfolioHeader from './components/PortfolioHeader';
 
 export default function App() {
@@ -639,99 +636,81 @@ export default function App() {
             />
           </Paper>
   
-          {/* ---> ОНОВЛЕНИЙ БЛОК ФІНАНСОВИХ ПОКАЗНИКІВ */}
+          {/* ---> ПОВНІСТЮ ОНОВЛЕНИЙ БЛОК ФІНАНСОВИХ ПОКАЗНИКІВ */}
           <Grid container spacing={3} sx={{ mb: 4 }}>
-            {/* Головна об'єднана картка */}
-            <Grid item xs={12} md={4} lg={4}>
+            {/* Картка 1: Капітал та Оборот */}
+            <Grid item xs={12} sm={6} md={4}>
               <StyledCombinedMetricCard>
-                {/* Головний показник: Активний капітал */}
                 <Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
                     <Layers size={18} />
-                    <Typography variant="body1" fontWeight={600}>
-                      {t.activeCapital || 'Активний капітал'}
-                    </Typography>
+                    <Typography variant="body1" fontWeight={600}>{t.activeCapital || 'Активний капітал'}</Typography>
                   </Box>
-                  <Typography variant="h3" fontWeight="bold" sx={{ 
-                    mt: 1,
-                    color: theme.palette.primary.main,
-                    lineHeight: 1.2
-                  }}>
-                    {totalInvestmentInActiveItems.toLocaleString('uk-UA', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                    <span style={{ fontSize: '1.2rem', marginLeft: '4px', color: theme.palette.text.secondary }}>
-                      {CURRENCY_SYMBOLS[displayCurrency]}
-                    </span>
+                  <Typography variant="h3" fontWeight="bold" sx={{ mt: 1, color: theme.palette.primary.main, lineHeight: 1.2 }}>
+                    {totalInvestmentInActiveItems.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <span style={{ fontSize: '1.2rem', marginLeft: '4px', color: theme.palette.text.secondary }}>{CURRENCY_SYMBOLS[displayCurrency]}</span>
                   </Typography>
                 </Box>
-                {/* Другорядний показник: Оборот */}
                 <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
                     <Activity size={16} />
-                    <Typography variant="body2">
-                      {t.turnover || 'Оборот'}
-                    </Typography>
+                    <Typography variant="body2">{t.turnover || 'Оборот'}</Typography>
                   </Box>
                   <Typography variant="h5" fontWeight={600} color="text.primary" sx={{ mt: 0.5 }}>
-                    {totalTurnover.toLocaleString('uk-UA', {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })} {CURRENCY_SYMBOLS[displayCurrency]}
+                    {totalTurnover.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {CURRENCY_SYMBOLS[displayCurrency]}
                   </Typography>
                 </Box>
               </StyledCombinedMetricCard>
             </Grid>
 
-            {/* Інші метрики */}
-            <Grid item xs={12} md={8} lg={8}>
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6}>
-                  <StyledMetricCard>
-                    <TrendingUp size={28} color={theme.palette.success.main} />
-                    <Typography variant="body1" color="text.secondary" mt={1}>
-                      {t.realizedProfit || 'Фіксований прибуток'}
-                    </Typography>
-                    <Typography variant="h4" fontWeight="bold" sx={{ color: totalSoldProfit >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
-                      {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
-                    </Typography>
-                  </StyledMetricCard>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <StyledMetricCard>
-                    <Zap size={28} color={theme.palette.secondary.main} />
-                    <Typography variant="body1" color="text.secondary" mt={1}>
-                      {t.potentialProfit || 'Потенційний прибуток'}
-                    </Typography>
-                    <Typography variant="h4" fontWeight="bold" sx={{ color: currentMarketProfit >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
-                      {currentMarketProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
-                    </Typography>
-                  </StyledMetricCard>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <StyledMetricCard>
-                    <Percent size={28} color={realizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main} />
-                    <Typography variant="body1" color="text.secondary" mt={1}>
-                      {t.realizedROI || 'Фіксований ROI'}
-                    </Typography>
-                    <Typography variant="h4" fontWeight="bold" sx={{ color: realizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
-                      {realizedROI.toFixed(2)}%
-                    </Typography>
-                  </StyledMetricCard>
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <StyledMetricCard>
-                    <BarChart size={28} color={unrealizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main} />
-                    <Typography variant="body1" color="text.secondary" mt={1}>
-                      {t.potentialROI || 'Потенційний ROI'}
-                    </Typography>
-                    <Typography variant="h4" fontWeight="bold" sx={{ color: unrealizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
-                      {unrealizedROI.toFixed(2)}%
-                    </Typography>
-                  </StyledMetricCard>
-                </Grid>
-              </Grid>
+            {/* Картка 2: Прибуток (Фіксований та Потенційний) */}
+            <Grid item xs={12} sm={6} md={4}>
+              <StyledCombinedMetricCard>
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
+                    <TrendingUp size={18} />
+                    <Typography variant="body1" fontWeight={600}>{t.realizedProfit || 'Фіксований прибуток'}</Typography>
+                  </Box>
+                  <Typography variant="h3" fontWeight="bold" sx={{ mt: 1, color: totalSoldProfit >= 0 ? theme.palette.success.main : theme.palette.error.main, lineHeight: 1.2 }}>
+                    {totalSoldProfit.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    <span style={{ fontSize: '1.2rem', marginLeft: '4px', color: theme.palette.text.secondary }}>{CURRENCY_SYMBOLS[displayCurrency]}</span>
+                  </Typography>
+                </Box>
+                <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
+                    <Zap size={16} />
+                    <Typography variant="body2">{t.potentialProfit || 'Потенційний прибуток'}</Typography>
+                  </Box>
+                  <Typography variant="h5" fontWeight={600} sx={{ mt: 0.5, color: currentMarketProfit >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
+                    {currentMarketProfit.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {CURRENCY_SYMBOLS[displayCurrency]}
+                  </Typography>
+                </Box>
+              </StyledCombinedMetricCard>
+            </Grid>
+
+            {/* Картка 3: ROI (Фіксований та Потенційний) */}
+            <Grid item xs={12} sm={6} md={4}>
+               <StyledCombinedMetricCard>
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
+                    <Percent size={18} />
+                    <Typography variant="body1" fontWeight={600}>{t.realizedROI || 'Фіксований ROI'}</Typography>
+                  </Box>
+                  <Typography variant="h3" fontWeight="bold" sx={{ mt: 1, color: realizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main, lineHeight: 1.2 }}>
+                    {realizedROI.toFixed(2)}
+                    <span style={{ fontSize: '1.2rem', marginLeft: '2px', color: theme.palette.text.secondary }}>%</span>
+                  </Typography>
+                </Box>
+                <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
+                    <BarChart size={16} />
+                    <Typography variant="body2">{t.potentialROI || 'Потенційний ROI'}</Typography>
+                  </Box>
+                  <Typography variant="h5" fontWeight={600} sx={{ mt: 0.5, color: unrealizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
+                    {unrealizedROI.toFixed(2)}%
+                  </Typography>
+                </Box>
+              </StyledCombinedMetricCard>
             </Grid>
           </Grid>
 
@@ -742,6 +721,7 @@ export default function App() {
             width: '100%', 
             mx: 'auto',
           }}>
+            {/* ... решта коду App.js без змін ... */}
             <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap">
               <Tabs 
                 value={tabValue} 
@@ -795,7 +775,6 @@ export default function App() {
             </Box>
           </Paper>
 
-          {/* ... решта коду App.js без змін ... */}
           <Box sx={{ 
             width: '100%',
             display: 'flex',
@@ -1031,8 +1010,7 @@ export default function App() {
               <Plus size={24} />
             </Fab>
           </Tooltip>
-  
-          {/* ... решта діалогових вікон без змін ... */}
+
           <Dialog
             open={addDialog}
             onClose={() => setAddDialog(false)}
