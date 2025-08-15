@@ -10,11 +10,11 @@ import {
 import {
   TrendingUp, Delete, Check, BarChart, Plus, Globe, X, ArrowUp, Edit,
   History, Settings, Tag, Palette, Rocket, Zap, DollarSign, Percent, TrendingDown,
-  ArrowDown, Menu as MenuIcon, Eye,
+  ArrowDown, Menu as MenuIcon, Eye, Clock,
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie,
-  Cell
+  Cell, BarChart as RechartsBarChart, Bar
 } from 'recharts';
 import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
 
@@ -909,33 +909,50 @@ export default function App() {
     return grossProfit - totalCommission;
   };
 
+  // РОЗРАХУНОК НОВИХ ФІНАНСОВИХ ПОКАЗНИКІВ
+  const soldInvestments = investments.filter(item => item.sold);
+  const activeInvestments = investments.filter(item => !item.sold);
+  
   const totalInvestment = investments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
   
-  const totalSoldProfit = investments
-    .filter(item => item.sold)
-    .reduce((sum, item) => {
-        const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
-        const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
-        const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissions);
-        return sum + netProfit;
-    }, 0);
+  const totalInvestmentInSoldItems = soldInvestments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
+  const totalInvestmentInActiveItems = activeInvestments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
   
-  const totalMarketValue = investments
-    .filter(item => !item.sold)
-    .reduce((sum, item) => sum + convertCurrency((item.currentPrice || item.buyPrice) * item.count, item.buyCurrency), 0);
+  const totalSoldProfit = soldInvestments.reduce((sum, item) => {
+      const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
+      const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
+      const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissions);
+      return sum + netProfit;
+  }, 0);
+
+  const totalMarketValue = activeInvestments.reduce((sum, item) => sum + convertCurrency((item.currentPrice || item.buyPrice) * item.count, item.buyCurrency), 0);
   
-  const currentMarketProfit = totalMarketValue - investments
-    .filter(item => !item.sold)
-    .reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
+  const currentMarketProfit = totalMarketValue - totalInvestmentInActiveItems;
+
+  const totalFeesPaid = soldInvestments.reduce((sum, item) => {
+    const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
+    const totalRate = (item.commissions || []).reduce((rate, c) => rate + c.rate, 0);
+    return sum + (totalSellValue * totalRate / 100);
+  }, 0);
+  
+  const realizedROI = totalInvestmentInSoldItems > 0 ? (totalSoldProfit / totalInvestmentInSoldItems) * 100 : 0;
+  const unrealizedROI = totalInvestmentInActiveItems > 0 ? (currentMarketProfit / totalInvestmentInActiveItems) * 100 : 0;
+  
+  const averageHoldingPeriod = soldInvestments.length > 0
+    ? soldInvestments.reduce((sum, item) => {
+        const bought = new Date(item.boughtDate);
+        const sold = new Date(item.sellDate);
+        const diffTime = Math.abs(sold - bought);
+        return sum + Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      }, 0) / soldInvestments.length
+    : 0;
 
   const profitColor = totalSoldProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
-  const percentageProfit = totalInvestment > 0 ? (totalSoldProfit / totalInvestment) * 100 : 0;
-  
   const currentProfitColor = currentMarketProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
-  const currentPercentageProfit = totalInvestment > 0 ? (currentMarketProfit / totalInvestment) * 100 : 0;
+  const realizedROIColor = realizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main;
+  const unrealizedROIColor = unrealizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main;
 
-  const profitByDate = investments
-    .filter(item => item.sold)
+  const profitByDate = soldInvestments
     .map(item => {
         const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
         const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
@@ -965,6 +982,22 @@ export default function App() {
     return acc;
   }, {})).map(([game, value]) => ({ name: game, value }));
 
+  const profitByGameData = Object.entries(investments.reduce((acc, item) => {
+    if (!acc[item.game]) acc[item.game] = 0;
+    if (item.sold) {
+      const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
+      const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
+      const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissions);
+      acc[item.game] += netProfit;
+    } else {
+      const grossProfit = (convertCurrency(item.currentPrice || item.buyPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
+      const totalCurrentValue = convertCurrency((item.currentPrice || item.buyPrice), item.buyCurrency) * item.count;
+      const netProfit = getNetProfit(grossProfit, totalCurrentValue, item.commissions);
+      acc[item.game] += netProfit;
+    }
+    return acc;
+  }, {})).map(([game, value]) => ({ name: game, profit: value }));
+
   const PIE_COLORS = ['#4A148C', '#007BFF', '#DC3545', '#FFC107', '#28A745'];
 
   const ItemDetailsDialog = ({ open, onClose, item }) => {
@@ -974,7 +1007,9 @@ export default function App() {
     const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR") : null;
     const convertedTotalCurrentPrice = convertedCurrentPrice ? convertedCurrentPrice * item.count : convertedTotalBuyPrice;
     
-    const itemGrossProfit = convertedTotalCurrentPrice - convertedTotalBuyPrice;
+    const itemGrossProfit = item.sold ? 
+      (convertCurrency(item.sellPrice, item.buyCurrency) * item.count) - convertedTotalBuyPrice : 
+      convertedTotalCurrentPrice - convertedTotalBuyPrice;
     const itemTotalValue = item.sold ? convertCurrency(item.sellPrice * item.count, item.buyCurrency) : convertedTotalCurrentPrice;
     const itemProfit = getNetProfit(itemGrossProfit, itemTotalValue, item.commissions);
     
@@ -1204,8 +1239,10 @@ export default function App() {
             </Box>
           </Paper>
   
+          {/* ОНОВЛЕНА СІТКА ФІНАНСОВИХ ПОКАЗНИКІВ */}
           <Grid container spacing={2} mb={4} justifyContent="center" sx={{ px: { xs: 1, md: 0 } }}>
-            <Grid item xs={12} sm={6} md={3}>
+            {/* Загальний капітал */}
+            <Grid item xs={12} sm={6} md={4} lg={2}>
               <Tooltip title={t.totalInvestmentTooltip} arrow>
                 <StyledMetricCard>
                   <DollarSign size={36} color={theme.palette.primary.main} sx={{ mb: 1 }} />
@@ -1218,7 +1255,9 @@ export default function App() {
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            
+            {/* Реалізований прибуток */}
+            <Grid item xs={12} sm={6} md={4} lg={2}>
               <Tooltip title={t.totalProfitTooltip} arrow>
                 <StyledMetricCard bgcolor={profitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
                   {totalSoldProfit >= 0 ? 
@@ -1234,31 +1273,65 @@ export default function App() {
                 </StyledMetricCard>
               </Tooltip>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Tooltip title="Сумарна вартість усіх активних предметів за поточною ринковою ціною." arrow>
-                <StyledMetricCard>
-                  <TrendingUp size={36} color={theme.palette.secondary.main} sx={{ mb: 1 }} />
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    {t.currentMarketValue}
-                  </Typography>
-                  <Typography variant="h4" fontWeight="bold" color="secondary">
-                    {totalMarketValue.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
-                  </Typography>
-                </StyledMetricCard>
-              </Tooltip>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <Tooltip title="Різниця між поточною ринковою вартістю та загальним капіталом." arrow>
+
+            {/* Нереалізований прибуток */}
+            <Grid item xs={12} sm={6} md={4} lg={2}>
+              <Tooltip title="Потенційний прибуток від активних інвестицій." arrow>
                 <StyledMetricCard bgcolor={currentProfitColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
                   {currentMarketProfit >= 0 ?
                     <TrendingUp size={36} color={theme.palette.success.main} sx={{ mb: 1 }} /> :
                     <TrendingDown size={36} color={theme.palette.error.main} sx={{ mb: 1 }} />
                   }
                   <Typography variant="h6" color="text.secondary" gutterBottom>
-                    {t.currentMarketProfit}
+                    Поточний прибуток
                   </Typography>
                   <Typography variant="h4" fontWeight="bold" sx={{ color: currentProfitColor }}>
                     {currentMarketProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                  </Typography>
+                </StyledMetricCard>
+              </Tooltip>
+            </Grid>
+
+            {/* Реалізований ROI */}
+            <Grid item xs={12} sm={6} md={4} lg={2}>
+              <Tooltip title="Відсоткова дохідність від проданих інвестицій." arrow>
+                <StyledMetricCard bgcolor={realizedROIColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
+                  <Percent size={36} color={realizedROIColor} sx={{ mb: 1 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    Реалізований ROI
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold" sx={{ color: realizedROIColor }}>
+                    {realizedROI.toFixed(2)}%
+                  </Typography>
+                </StyledMetricCard>
+              </Tooltip>
+            </Grid>
+
+            {/* Нереалізований ROI */}
+            <Grid item xs={12} sm={6} md={4} lg={2}>
+              <Tooltip title="Потенційна дохідність від активних інвестицій." arrow>
+                <StyledMetricCard bgcolor={unrealizedROIColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
+                  <Percent size={36} color={unrealizedROIColor} sx={{ mb: 1 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    Нереалізований ROI
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold" sx={{ color: unrealizedROIColor }}>
+                    {unrealizedROI.toFixed(2)}%
+                  </Typography>
+                </StyledMetricCard>
+              </Tooltip>
+            </Grid>
+
+            {/* Сумарні комісії */}
+            <Grid item xs={12} sm={6} md={4} lg={2}>
+              <Tooltip title="Загальна сума сплачених комісій під час продажу." arrow>
+                <StyledMetricCard>
+                  <Tag size={36} color={theme.palette.warning.main} sx={{ mb: 1 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    Загальні комісії
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold" color="text.primary">
+                    {totalFeesPaid.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
@@ -1880,7 +1953,7 @@ export default function App() {
               <Typography variant="h6" fontWeight="bold" color="primary">{t.analytics}</Typography>
             </DialogTitle>
             <DialogContent dividers>
-              <Typography variant="h6" mb={2} color="secondary">{t.totalProfit} ({CURRENCY_SYMBOLS[displayCurrency]})</Typography>
+              <Typography variant="h6" mb={2} color="secondary">Динаміка прибутку</Typography>
               {cumulativeProfit.length === 0 ? (
                 <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
               ) : (
@@ -1910,6 +1983,22 @@ export default function App() {
                     <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, border: '1px solid #ccc', borderRadius: 8 }} />
                     <Legend />
                   </PieChart>
+                </ResponsiveContainer>
+              )}
+              <Divider sx={{ my: 3 }} />
+              <Typography variant="h6" mb={2} color="secondary">Прибуток по іграх</Typography>
+              {profitByGameData.length === 0 ? (
+                <Typography variant="body1" align="center" color="text.secondary">{t.noData}</Typography>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <RechartsBarChart data={profitByGameData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke={theme.palette.divider} />
+                    <XAxis dataKey="name" stroke={theme.palette.text.secondary} />
+                    <YAxis stroke={theme.palette.text.secondary} />
+                    <ChartTooltip contentStyle={{ backgroundColor: theme.palette.background.paper, border: '1px solid #ccc', borderRadius: 8 }} />
+                    <Legend />
+                    <Bar dataKey="profit" name="Прибуток" fill={theme.palette.primary.main} />
+                  </RechartsBarChart>
                 </ResponsiveContainer>
               )}
             </DialogContent>
