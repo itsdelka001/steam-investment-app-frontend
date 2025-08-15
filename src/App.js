@@ -25,7 +25,7 @@ import {
   EXCHANGERATE_API_KEY, BACKEND_URL, PROXY_SERVER_URL,
   ITEMS_PER_PAGE, PIE_COLORS
 } from './constants';
-import { convertCurrency, getNetProfit } from './utils/utils';
+import { convertCurrency, getNetProfit } from './utils';
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
