@@ -22,7 +22,7 @@ import CommissionManagerDialog from './components/CommissionManagerDialog';
 import ItemDetailsDialog from './components/ItemDetailsDialog';
 import {
   GAMES, CURRENCIES, CURRENCY_SYMBOLS,
-  EXCHANGERATE_API_KEY, BACKEND_URL, PROXY_SERVER_URL,
+  BACKEND_URL, PROXY_SERVER_URL, // EXCHANGERATE_API_KEY видалено
   ITEMS_PER_PAGE, PIE_COLORS
 } from './constants';
 import { convertCurrency, getNetProfit } from './utils';
@@ -91,10 +91,11 @@ export default function App() {
     loadTranslations();
   }, [lang]);
 
+  // ЗМІНЕНО: Запит курсів валют тепер йде на ваш бекенд
   useEffect(() => {
     const fetchExchangeRates = async () => {
       try {
-        const response = await fetch(`https://v6.exchangerate-api.com/v6/${EXCHANGERATE_API_KEY}/latest/EUR`);
+        const response = await fetch(`${BACKEND_URL}/api/exchange-rates`);
         const data = await response.json();
         if (data.result === "success") {
           setExchangeRates(data.conversion_rates);
