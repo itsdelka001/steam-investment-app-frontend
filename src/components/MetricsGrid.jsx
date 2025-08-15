@@ -8,7 +8,8 @@ import {
   DollarSign, 
   TrendingUp, 
   TrendingDown, 
-  Percent
+  Percent,
+  Repeat // Іконка для обороту
 } from 'lucide-react';
 import { CURRENCY_SYMBOLS } from '../constants';
 
@@ -20,6 +21,7 @@ const MetricsGrid = ({
   currentMarketProfit, 
   realizedROI, 
   unrealizedROI,
+  totalTurnover, // Додано новий пропс
   t 
 }) => {
   const profitColor = totalSoldProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
@@ -29,13 +31,13 @@ const MetricsGrid = ({
 
   return (
     <Grid container spacing={2} mb={4} justifyContent="center" sx={{ px: { xs: 1, md: 0 } }}>
-      {/* Загальний капітал */}
+      {/* Активний капітал (тільки не продані інвестиції) */}
       <Grid item xs={12} sm={6} md={4} lg={3}>
-        <Tooltip title={t.totalInvestmentTooltip} arrow>
+        <Tooltip title="Загальна вартість активних (не проданих) інвестицій" arrow>
           <StyledMetricCard>
             <DollarSign size={36} color={theme.palette.primary.main} sx={{ mb: 1 }} />
             <Typography variant="h6" color="text.secondary" gutterBottom>
-              {t.totalInvestment}
+              Активний капітал {/* Змінено назву */}
             </Typography>
             <Typography variant="h4" fontWeight="bold" color="primary">
               {totalInvestment.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
@@ -44,6 +46,21 @@ const MetricsGrid = ({
         </Tooltip>
       </Grid>
       
+      {/* Оборот (всі операції) - НОВА КАРТКА */}
+      <Grid item xs={12} sm={6} md={4} lg={3}>
+        <Tooltip title="Загальна вартість усіх операцій (активні + продані)" arrow>
+          <StyledMetricCard>
+            <Repeat size={36} color={theme.palette.secondary.main} sx={{ mb: 1 }} />
+            <Typography variant="h6" color="text.secondary" gutterBottom>
+              Оборот
+            </Typography>
+            <Typography variant="h4" fontWeight="bold" color="secondary">
+              {totalTurnover.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+            </Typography>
+          </StyledMetricCard>
+        </Tooltip>
+      </Grid>
+
       {/* Реалізований прибуток */}
       <Grid item xs={12} sm={6} md={4} lg={3}>
         <Tooltip title={t.totalProfitTooltip} arrow>
