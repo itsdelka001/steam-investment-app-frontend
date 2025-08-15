@@ -237,9 +237,7 @@ const PROXY_SERVER_URL = "https://steam-proxy-server-lues.onrender.com";
 
 const ITEMS_PER_PAGE = 9;
 
-// ===== ВИПРАВЛЕННЯ 2: ПЕРЕМІЩЕННЯ КОМПОНЕНТА ЗА МЕЖІ ОСНОВНОГО КОМПОНЕНТА =====
 const CommissionManagerDialog = ({ open, onClose, item, updateInvestment, showSnackbar, theme }) => {
-  // ===== ВИПРАВЛЕННЯ: ПЕРЕМІЩЕННЯ ВИКЛИКІВ ХУКІВ НА ПОЧАТОК КОМПОНЕНТА =====
   const [newCommissionRate, setNewCommissionRate] = useState(0);
   const [newCommissionNote, setNewCommissionNote] = useState("");
   const [editingCommissionIndex, setEditingCommissionIndex] = useState(null);
@@ -247,7 +245,6 @@ const CommissionManagerDialog = ({ open, onClose, item, updateInvestment, showSn
   if (!item) {
     return null;
   }
-  // =======================================================================
   
   const isEditing = editingCommissionIndex !== null;
   const totalCommissionRate = (item.commissions || []).reduce((sum, c) => sum + c.rate, 0);
@@ -402,8 +399,6 @@ const CommissionManagerDialog = ({ open, onClose, item, updateInvestment, showSn
     </Dialog>
   );
 };
-// ======================================================================================
-
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
@@ -448,10 +443,6 @@ export default function App() {
 
   const [commissionManagerDialogOpen, setCommissionManagerDialogOpen] = useState(false);
   const [commissionItemToManage, setCommissionItemToManage] = useState(null);
-  // States for commission manager are moved to the dialog component itself
-  // const [newCommissionRate, setNewCommissionRate] = useState(0);
-  // const [newCommissionNote, setNewCommissionNote] = useState("");
-  // const [editingCommissionIndex, setEditingCommissionIndex] = useState(null);
 
   const [page, setPage] = useState(1);
   const [sortOrder, setSortOrder] = useState('asc');
@@ -740,7 +731,6 @@ export default function App() {
   };
 
   const addItem = async () => {
-    // ===== ВИПРАВЛЕННЯ 1: ПРАВИЛЬНА ПЕРЕВІРКА ІМЕНІ ПРЕДМЕТА =====
     const finalName = autocompleteValue?.label || name;
     if (!finalName || finalName.trim() === '' || count <= 0 || buyPrice <= 0 || !boughtDate) {
       showSnackbar("СИСТЕМНА ПОМИЛКА: ВВЕДІТЬ ПОВНІ ДАНІ", "error");
@@ -749,8 +739,8 @@ export default function App() {
 
     try {
       const newItem = {
-        name: finalName, // Використовуємо виправлене значення
-        market_hash_name: selectedItemDetails?.market_hash_name || finalName, // Використовуємо виправлене значення
+        name: finalName,
+        market_hash_name: selectedItemDetails?.market_hash_name || finalName,
         count: Number(count),
         buyPrice: Number(buyPrice),
         currentPrice: 0,
@@ -1018,7 +1008,8 @@ export default function App() {
                 {item.image && (
                   <img src={item.image} alt={item.name} style={{ width: '100%', maxWidth: 200, borderRadius: 8, marginBottom: 16 }} />
                 )}
-                <Typography variant="h5" fontWeight="bold" textAlign="center">{item.name}</Typography>
+                {/* ВИПРАВЛЕННЯ: Видаляємо зірочки з назви */}
+                <Typography variant="h5" fontWeight="bold" textAlign="center">{item.name.replace(/\*/g, '')}</Typography>
                 <Chip 
                   label={item.sold ? t.sold : t.active} 
                   color={item.sold ? "success" : "primary"} 
@@ -1378,7 +1369,7 @@ export default function App() {
                           position: 'absolute',
                           top: 0,
                           right: 0,
-                          transform: 'translate(33px, 3px)',
+                          transform: 'translate(-20px, -20px)',
                           backgroundColor: theme.palette.primary.main,
                           color: 'white',
                           width: 40,
@@ -1386,7 +1377,7 @@ export default function App() {
                           boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                           '&:hover': { 
                             backgroundColor: theme.palette.primary.dark,
-                            transform: 'translate(33px, 3px) scale(1.1) rotate(15deg)',
+                            transform: 'translate(-20px, -20px) scale(1.1) rotate(15deg)',
                           },
                           transition: 'all 0.3s ease',
                           background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
@@ -1409,8 +1400,9 @@ export default function App() {
                               />
                             )}
                             <Box sx={{ overflow: 'hidden' }}>
+                              {/* ВИПРАВЛЕННЯ: Додаємо заміну зірочок */}
                               <Typography variant="subtitle1" fontWeight="bold" noWrap sx={{ textOverflow: 'ellipsis' }}>
-                                {item.name}
+                                {item.name.replace(/\*/g, '')}
                               </Typography>
                               <Typography variant="body2" color="text.secondary" noWrap>
                                 {item.game}
@@ -1588,6 +1580,7 @@ export default function App() {
                         label={t.name}
                         variant="outlined"
                         fullWidth
+                        required
                         InputProps={{
                           ...params.InputProps,
                           endAdornment: (
@@ -1944,7 +1937,8 @@ export default function App() {
                 </Box>
               ) : (
                 <Box>
-                  <Typography variant="h6" mb={1} color="secondary">{itemToAnalyze?.name}</Typography>
+                  {/* ВИПРАВЛЕННЯ: Видаляємо зірочки з назви */}
+                  <Typography variant="h6" mb={1} color="secondary">{itemToAnalyze?.name.replace(/\*/g, '')}</Typography>
                   <Divider sx={{ my: 1 }} />
                   <Typography sx={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', color: 'text.secondary' }}>
                     {analysisText}
