@@ -525,7 +525,7 @@ export default function App() {
   const soldInvestments = investments.filter(item => item.sold);
   const activeInvestments = investments.filter(item => !item.sold);
   
-  const totalInvestment = investments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
+  const totalInvestment = filteredInvestments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates), 0);
   
   const totalInvestmentInSoldItems = soldInvestments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
   const totalInvestmentInActiveItems = activeInvestments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
