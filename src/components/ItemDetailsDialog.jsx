@@ -7,17 +7,28 @@ import { Delete, Zap, Globe, Edit } from 'lucide-react';
 import { CURRENCY_SYMBOLS } from '../constants';
 import { convertCurrency, getNetProfit } from '../utils';
 
-const ItemDetailsDialog = ({ open, onClose, item, t, displayCurrency, theme, confirmDelete, handleCurrentPriceUpdate, handleEdit }) => {
+const ItemDetailsDialog = ({ 
+  open, 
+  onClose, 
+  item, 
+  t, 
+  displayCurrency, 
+  theme, 
+  confirmDelete, 
+  handleCurrentPriceUpdate, 
+  handleEdit,
+  exchangeRates 
+}) => {
   if (!item) return null;
   
-  const convertedTotalBuyPrice = convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency);
-  const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR", displayCurrency) : null;
+  const convertedTotalBuyPrice = convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates);
+  const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR", displayCurrency, exchangeRates) : null;
   const convertedTotalCurrentPrice = convertedCurrentPrice ? convertedCurrentPrice * item.count : convertedTotalBuyPrice;
   
   const itemGrossProfit = item.sold ? 
-    (convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency) * item.count) - convertedTotalBuyPrice : 
+    (convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates) * item.count) - convertedTotalBuyPrice : 
     convertedTotalCurrentPrice - convertedTotalBuyPrice;
-  const itemTotalValue = item.sold ? convertCurrency(item.sellPrice * item.count, item.buyCurrency, displayCurrency) : convertedTotalCurrentPrice;
+  const itemTotalValue = item.sold ? convertCurrency(item.sellPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates) : convertedTotalCurrentPrice;
   const itemProfit = getNetProfit(itemGrossProfit, itemTotalValue, item.commissions);
   
   const profitColor = itemProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
@@ -64,19 +75,19 @@ const ItemDetailsDialog = ({ open, onClose, item, t, displayCurrency, theme, con
                   <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">Ціна за одиницю</Typography>
                       <Typography variant="h6" fontWeight="bold">
-                        {convertCurrency(item.buyPrice, item.buyCurrency, displayCurrency).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                        {convertCurrency(item.buyPrice, item.buyCurrency, displayCurrency, exchangeRates).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
                       </Typography>
                   </Grid>
                   <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">Поточна ціна</Typography>
                       <Typography variant="h6" fontWeight="bold">
-                          {item.currentPrice ? convertCurrency(item.currentPrice, 'EUR', displayCurrency).toFixed(2) : '-'} {item.currentPrice ? CURRENCY_SYMBOLS[displayCurrency] : ''}
+                          {item.currentPrice ? convertCurrency(item.currentPrice, 'EUR', displayCurrency, exchangeRates).toFixed(2) : '-'} {item.currentPrice ? CURRENCY_SYMBOLS[displayCurrency] : ''}
                       </Typography>
                   </Grid>
                   <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">Ціна продажу</Typography>
                       <Typography variant="h6" fontWeight="bold">
-                          {item.sold ? convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency).toFixed(2) : '-'} {item.sold ? CURRENCY_SYMBOLS[displayCurrency] : ''}
+                          {item.sold ? convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates).toFixed(2) : '-'} {item.sold ? CURRENCY_SYMBOLS[displayCurrency] : ''}
                       </Typography>
                   </Grid>
                   <Grid item xs={6}>

@@ -25,6 +25,7 @@ import {
   EXCHANGERATE_API_KEY, BACKEND_URL, PROXY_SERVER_URL,
   ITEMS_PER_PAGE, PIE_COLORS
 } from './constants';
+import { convertCurrency, getNetProfit } from './utils/utils';
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
@@ -116,15 +117,6 @@ export default function App() {
     }
     return () => clearInterval(intervalId);
   }, [autoUpdateEnabled, investments]);
-
-  const convertCurrency = (value, fromCurrency) => {
-    if (fromCurrency === displayCurrency || !exchangeRates[fromCurrency] || !exchangeRates[displayCurrency]) {
-      return value;
-    }
-    const rateToEUR = 1 / exchangeRates[fromCurrency];
-    const rateFromEUR = exchangeRates[displayCurrency];
-    return value * rateToEUR * rateFromEUR;
-  };
 
   const getInvestments = async () => {
     try {
@@ -528,12 +520,6 @@ export default function App() {
 
   const pageCount = Math.ceil(sortedInvestments.length / ITEMS_PER_PAGE);
   const paginatedInvestments = sortedInvestments.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-
-  const getNetProfit = (grossProfit, totalValue, commissions) => {
-    const totalRate = (commissions || []).reduce((sum, c) => sum + c.rate, 0);
-    const totalCommission = totalValue * (totalRate / 100);
-    return grossProfit - totalCommission;
-  };
 
   // РОЗРАХУНОК НОВИХ ФІНАНСОВИХ ПОКАЗНИКІВ
   const soldInvestments = investments.filter(item => item.sold);
