@@ -12,10 +12,6 @@ import {
   History, Settings, Tag, Palette, Rocket, Zap, DollarSign, Percent, TrendingDown,
   ArrowDown, Menu as MenuIcon, Eye, Clock,
 } from 'lucide-react';
-import {
-  LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie,
-  Cell, BarChart as RechartsBarChart, Bar
-} from 'recharts';
 import { ThemeProvider } from '@mui/material/styles';
 import { getTheme, StyledCard, StyledMetricCard, StyledCombinedCard, CardHeader, CardFooter } from './theme';
 import CommissionManagerDialog from './components/CommissionManagerDialog';
@@ -28,6 +24,7 @@ import {
 import { convertCurrency, getNetProfit } from './utils';
 import MetricsGrid from './components/MetricsGrid';
 import PortfolioHeader from './components/PortfolioHeader';
+import PortfolioDashboard from './components/PortfolioDashboard';
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
@@ -1129,90 +1126,23 @@ export default function App() {
             </DialogActions>
           </Dialog>
   
-          <Dialog open={editDialog} onClose={() => setEditDialog(false)} maxWidth="sm" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
-            <DialogTitle>
-              <Typography variant="h6" fontWeight="bold" color="primary">{t.editItem}</Typography>
-            </DialogTitle>
-            <DialogContent dividers sx={{ p: 3 }}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label={t.name} 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)} 
-                    fullWidth 
-                    required 
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label={t.count} 
-                    type="number" 
-                    value={count} 
-                    onChange={(e) => setCount(e.target.value)} 
-                    fullWidth 
-                    required 
-                    InputProps={{ inputProps: { min: 1 } }} 
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField 
-                    label={t.buyPrice} 
-                    type="number" 
-                    value={buyPrice} 
-                    onChange={(e) => setBuyPrice(e.target.value)} 
-                    fullWidth 
-                    required 
-                    InputProps={{ inputProps: { min: 0 } }} 
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth required>
-                    <InputLabel>{t.game}</InputLabel>
-                    <Select 
-                      value={game} 
-                      label={t.game} 
-                      onChange={(e) => setGame(e.target.value)}
-                      sx={{ borderRadius: 8 }}
-                    >
-                      {GAMES.slice(1).map((gameName, index) => (
-                        <MenuItem key={index} value={gameName}>{gameName}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField 
-                    label={t.boughtDate} 
-                    type="date" 
-                    value={boughtDate} 
-                    onChange={(e) => setBoughtDate(e.target.value)} 
-                    fullWidth 
-                    required 
-                    InputLabelProps={{ shrink: true }} 
-                  />
-                </Grid>
-              </Grid>
-            </DialogContent>
-            <DialogActions sx={{ p: 3 }}>
-              <Button 
-                onClick={() => setEditDialog(false)} 
-                color="secondary" 
-                variant="outlined"
-                sx={{ borderRadius: 8 }}
-              >
-                {t.cancel}
-              </Button>
-              <Button 
-                onClick={saveEditedItem} 
-                color="primary" 
-                variant="contained"
-                sx={{ borderRadius: 8 }}
-              >
-                {t.save}
-              </Button>
-            </DialogActions>
-          </Dialog>
+             <EditInvestmentDialog
+              open={editDialog}
+              onClose={() => setEditDialog(false)}
+              t={t}
+              name={name}
+              setName={setName}
+              count={count}
+              setCount={setCount}
+              buyPrice={buyPrice}
+              setBuyPrice={setBuyPrice}
+              game={game}
+              setGame={setGame}
+              boughtDate={boughtDate}
+              setBoughtDate={setBoughtDate}
+              saveEditedItem={saveEditedItem}
+              theme={theme}
+            />
   
           <Dialog open={sellDialog} onClose={() => setSellDialog(false)} PaperProps={{ style: { borderRadius: 16 } }}>
             <DialogTitle>
