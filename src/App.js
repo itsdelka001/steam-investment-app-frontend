@@ -1367,7 +1367,7 @@ export default function App() {
                           position: 'absolute',
                           top: 0,
                           right: 0,
-                          transform: 'translate(-20px, -20px)', // <-- Виправлено
+                          transform: 'translate(-40px, 0px)', // <-- Виправлено
                           backgroundColor: theme.palette.primary.main,
                           color: 'white',
                           width: 40,
