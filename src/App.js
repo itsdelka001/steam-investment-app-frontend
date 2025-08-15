@@ -665,8 +665,6 @@ export default function App() {
               currentMarketProfit={currentMarketProfit}
               realizedROI={realizedROI}
               unrealizedROI={unrealizedROI}
-              totalFeesPaid={totalFeesPaid}
-              averageHoldingPeriod={averageHoldingPeriod}
               t={t}
             />
 
@@ -1396,6 +1394,13 @@ export default function App() {
             open={itemDetailsDialogOpen} 
             onClose={() => setItemDetailsDialogOpen(false)} 
             item={itemToDisplayDetails}
+            t={t}
+            displayCurrency={displayCurrency}
+            theme={theme}
+            confirmDelete={confirmDelete}
+            handleCurrentPriceUpdate={handleCurrentPriceUpdate}
+            handleEdit={handleEdit}
+            exchangeRates={exchangeRates}
           />
   
           <Snackbar 

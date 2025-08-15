@@ -11,13 +11,13 @@ const ItemDetailsDialog = ({
   open, 
   onClose, 
   item, 
-  t, 
-  displayCurrency, 
-  theme, 
-  confirmDelete, 
-  handleCurrentPriceUpdate, 
-  handleEdit,
-  exchangeRates 
+  t = {}, 
+  displayCurrency = 'USD', 
+  theme = { palette: { success: { main: '#28A745' }, error: { main: '#DC3545' }, primary: { main: '#4A148C' } } }, 
+  confirmDelete = () => {}, 
+  handleCurrentPriceUpdate = () => {}, 
+  handleEdit = () => {},
+  exchangeRates = {} 
 }) => {
   if (!item) return null;
   
@@ -52,7 +52,7 @@ const ItemDetailsDialog = ({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth PaperProps={{ style: { borderRadius: 16 } }}>
       <DialogTitle sx={{ textAlign: 'center' }}>
-        <Typography variant="h6" fontWeight="bold" color="primary">{t.itemDetails}</Typography>
+        <Typography variant="h6" fontWeight="bold" color="primary">{t.itemDetails || 'Деталі предмета'}</Typography>
       </DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={3} alignItems="center">
@@ -63,7 +63,7 @@ const ItemDetailsDialog = ({
               )}
               <Typography variant="h5" fontWeight="bold" textAlign="center">{item.name.replace(/\*/g, '')}</Typography>
               <Chip 
-                label={item.sold ? t.sold : t.active} 
+                label={item.sold ? (t.sold || 'Продано') : (t.active || 'Активний')} 
                 color={item.sold ? "success" : "primary"} 
                 size="small" 
                 sx={{ mt: 1, fontWeight: 'bold' }}
@@ -91,7 +91,7 @@ const ItemDetailsDialog = ({
                       </Typography>
                   </Grid>
                   <Grid item xs={6}>
-                      <Typography variant="body2" color="text.secondary">{t.profit}</Typography>
+                      <Typography variant="body2" color="text.secondary">{t.profit || 'Прибуток'}</Typography>
                       <Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>
                           {itemProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
                       </Typography>
@@ -115,18 +115,18 @@ const ItemDetailsDialog = ({
       <DialogActions sx={{ p: 3, display: 'flex', justifyContent: 'space-between' }}>
         <Box>
           <Button onClick={() => { onClose(); confirmDelete(item); }} color="error" variant="text" startIcon={<Delete />} sx={{ borderRadius: 8 }}>
-            {t.delete}
+            {t.delete || 'Видалити'}
           </Button>
         </Box>
         <Box display="flex" gap={1}>
           <Button onClick={() => { onClose(); handleCurrentPriceUpdate(item); }} color="info" variant="outlined" startIcon={<Zap />} sx={{ borderRadius: 8 }}>
-            {t.updatePrice}
+            {t.updatePrice || 'Оновити ціну'}
           </Button>
           <Button onClick={() => { onClose(); handleOpenMarketLink(); }} color="secondary" variant="outlined" startIcon={<Globe />} sx={{ borderRadius: 8 }}>
-            {t.openMarket}
+            {t.openMarket || 'Відкрити в маркеті'}
           </Button>
           <Button onClick={() => { onClose(); handleEdit(item); }} color="primary" variant="contained" startIcon={<Edit />} sx={{ borderRadius: 8 }}>
-            {t.edit}
+            {t.edit || 'Редагувати'}
           </Button>
         </Box>
       </DialogActions>
