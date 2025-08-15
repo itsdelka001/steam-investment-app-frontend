@@ -273,7 +273,7 @@ export default function App() {
       if (data.price) {
         const currentPrice = data.price;
         await updateInvestment(item.id, { currentPrice });
-        showSnackbar(`Поточна ціна для ${item.name}: ${convertCurrency(currentPrice, "EUR").toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}`, 'info');
+        showSnackbar(`Поточна ціна для ${item.name}: ${convertCurrency(currentPrice, "EUR", displayCurrency, exchangeRates).toFixed(2)} ${CURRENCY_SYMBOLS[displayCurrency]}`, 'info');
         getInvestments();
       } else {
         showSnackbar('Не вдалося отримати поточну ціну.', 'warning');
@@ -521,28 +521,34 @@ export default function App() {
   const pageCount = Math.ceil(sortedInvestments.length / ITEMS_PER_PAGE);
   const paginatedInvestments = sortedInvestments.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  // РОЗРАХУНОК НОВИХ ФІНАНСОВИХ ПОКАЗНИКІВ
+  // РОЗРАХУНОК ФІНАНСОВИХ ПОКАЗНИКІВ З ПРАВИЛЬНОЮ КОНВЕРТАЦІЄЮ ВАЛЮТ
   const soldInvestments = investments.filter(item => item.sold);
   const activeInvestments = investments.filter(item => !item.sold);
   
-  const totalInvestment = filteredInvestments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates), 0);
+  const totalInvestment = filteredInvestments.reduce((sum, item) => 
+    sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates), 0);
   
-  const totalInvestmentInSoldItems = soldInvestments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
-  const totalInvestmentInActiveItems = activeInvestments.reduce((sum, item) => sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency), 0);
+  const totalInvestmentInSoldItems = soldInvestments.reduce((sum, item) => 
+    sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates), 0);
+  
+  const totalInvestmentInActiveItems = activeInvestments.reduce((sum, item) => 
+    sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates), 0);
   
   const totalSoldProfit = soldInvestments.reduce((sum, item) => {
-      const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
-      const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
-      const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissions);
-      return sum + netProfit;
+    const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates) - 
+                       convertCurrency(item.buyPrice, item.buyCurrency, displayCurrency, exchangeRates)) * item.count;
+    const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates) * item.count;
+    const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissions);
+    return sum + netProfit;
   }, 0);
 
-  const totalMarketValue = activeInvestments.reduce((sum, item) => sum + convertCurrency((item.currentPrice || item.buyPrice) * item.count, item.buyCurrency), 0);
+  const totalMarketValue = activeInvestments.reduce((sum, item) => 
+    sum + convertCurrency((item.currentPrice || item.buyPrice) * item.count, "EUR", displayCurrency, exchangeRates), 0);
   
   const currentMarketProfit = totalMarketValue - totalInvestmentInActiveItems;
 
   const totalFeesPaid = soldInvestments.reduce((sum, item) => {
-    const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
+    const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates) * item.count;
     const totalRate = (item.commissions || []).reduce((rate, c) => rate + c.rate, 0);
     return sum + (totalSellValue * totalRate / 100);
   }, 0);
@@ -566,8 +572,9 @@ export default function App() {
 
   const profitByDate = soldInvestments
     .map(item => {
-        const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
-        const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
+        const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates) - 
+                           convertCurrency(item.buyPrice, item.buyCurrency, displayCurrency, exchangeRates)) * item.count;
+        const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates) * item.count;
         const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissions);
         return { date: item.sellDate, profit: netProfit };
     })
@@ -590,20 +597,22 @@ export default function App() {
 
   const investmentDistributionData = Object.entries(investments.reduce((acc, item) => {
     if (!acc[item.game]) acc[item.game] = 0;
-    acc[item.game] += convertCurrency(item.buyPrice * item.count, item.buyCurrency);
+    acc[item.game] += convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates);
     return acc;
   }, {})).map(([game, value]) => ({ name: game, value }));
 
   const profitByGameData = Object.entries(investments.reduce((acc, item) => {
     if (!acc[item.game]) acc[item.game] = 0;
     if (item.sold) {
-      const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
-      const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency) * item.count;
+      const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates) - 
+                         convertCurrency(item.buyPrice, item.buyCurrency, displayCurrency, exchangeRates)) * item.count;
+      const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates) * item.count;
       const netProfit = getNetProfit(grossProfit, totalSellValue, item.commissions);
       acc[item.game] += netProfit;
     } else {
-      const grossProfit = (convertCurrency(item.currentPrice || item.buyPrice, item.buyCurrency) - convertCurrency(item.buyPrice, item.buyCurrency)) * item.count;
-      const totalCurrentValue = convertCurrency((item.currentPrice || item.buyPrice), item.buyCurrency) * item.count;
+      const grossProfit = (convertCurrency(item.currentPrice || item.buyPrice, "EUR", displayCurrency, exchangeRates) - 
+                          convertCurrency(item.buyPrice, item.buyCurrency, displayCurrency, exchangeRates)) * item.count;
+      const totalCurrentValue = convertCurrency((item.currentPrice || item.buyPrice), "EUR", displayCurrency, exchangeRates) * item.count;
       const netProfit = getNetProfit(grossProfit, totalCurrentValue, item.commissions);
       acc[item.game] += netProfit;
     }
@@ -819,21 +828,21 @@ export default function App() {
             </Grid>
           </Grid>
           
-          <Paper sx={{ 
-            mb: 4, 
-            p: 1, 
+          <Paper sx={{ 
+            mb: 4, 
+            p: 1, 
             boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
             width: '100%', 
             mx: 'auto',
           }}>
             <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap">
-              <Tabs 
-                value={tabValue} 
+              <Tabs 
+                value={tabValue} 
                 onChange={(e, newValue) => {
                   setTabValue(newValue);
                   setPage(1);
-                }} 
-                aria-label="game tabs" 
+                }} 
+                aria-label="game tabs" 
                 sx={{
                   '& .MuiTabs-indicator': {
                     backgroundColor: theme.palette.primary.main,
@@ -841,9 +850,9 @@ export default function App() {
                 }}
               >
                 {GAMES.map((gameName, index) => (
-                  <Tab 
-                    key={index} 
-                    label={gameName === "Усі" ? t.total : gameName} 
+                  <Tab 
+                    key={index} 
+                    label={gameName === "Усі" ? t.total : gameName} 
                     sx={{
                       minWidth: 0,
                       padding: '6px 12px',
@@ -879,7 +888,7 @@ export default function App() {
             </Box>
           </Paper>
 
-          <Box sx={{ 
+          <Box sx={{ 
             width: '100%',
             display: 'flex',
             flexWrap: 'wrap',
@@ -894,20 +903,26 @@ export default function App() {
               </Box>
             ) : (
               paginatedInvestments.map((item) => {
-                const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency);
-                const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR") : null;
+                const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency, displayCurrency, exchangeRates);
+                const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR", displayCurrency, exchangeRates) : null;
+                const convertedSellPrice = item.sellPrice ? convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates) : null;
+                
                 const itemGrossProfitForCard = item.sold ? 
-                  (convertCurrency(item.sellPrice, item.buyCurrency) - convertedBuyPrice) * item.count : 
+                  (convertedSellPrice - convertedBuyPrice) * item.count : 
                   (convertedCurrentPrice ? convertedCurrentPrice - convertedBuyPrice : 0) * item.count;
-                const itemTotalValueForCard = item.sold ? convertCurrency(item.sellPrice, item.buyCurrency) * item.count : convertedCurrentPrice ? convertedCurrentPrice * item.count : 0;
+                
+                const itemTotalValueForCard = item.sold ? 
+                  convertedSellPrice * item.count : 
+                  convertedCurrentPrice ? convertedCurrentPrice * item.count : 0;
+                
                 const profitForCard = getNetProfit(itemGrossProfitForCard, itemTotalValueForCard, item.commissions);
                 const profitColorForCard = profitForCard >= 0 ? theme.palette.success.main : theme.palette.error.main;
                 const totalCommissionRate = (item.commissions || []).reduce((sum, c) => sum + c.rate, 0);
     
                 return (
-                  <Box 
-                    key={item.id} 
-                    sx={{ 
+                  <Box 
+                    key={item.id} 
+                    sx={{ 
                       width: '30%',
                       minWidth: '280px',
                       overflow: 'visible',
