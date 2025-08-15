@@ -10,23 +10,25 @@ import {
 import {
   TrendingUp, Delete, Check, BarChart, Plus, Globe, X, ArrowUp, Edit,
   History, Settings, Tag, Palette, Rocket, Zap, DollarSign, Percent, TrendingDown,
-  ArrowDown, Menu as MenuIcon, Eye, Clock,
-} from 'lucide-react';
+  ArrowDown, Menu as MenuIcon, Eye, Clock, Layers, Activity,
+} from 'lucide-react'; // Додамо іконки
 import {
   LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie,
   Cell, BarChart as RechartsBarChart, Bar
 } from 'recharts';
 import { ThemeProvider } from '@mui/material/styles';
-import { getTheme, StyledCard, StyledMetricCard, StyledCombinedCard, CardHeader, CardFooter } from './theme';
+// ---> StyledCombinedCard більше не потрібен, використовуємо новий StyledCombinedMetricCard
+import { getTheme, StyledCard, StyledMetricCard, StyledCombinedMetricCard, CardHeader, CardFooter } from './theme'; 
 import CommissionManagerDialog from './components/CommissionManagerDialog';
 import ItemDetailsDialog from './components/ItemDetailsDialog';
 import {
   GAMES, CURRENCIES, CURRENCY_SYMBOLS,
-  BACKEND_URL, PROXY_SERVER_URL, // EXCHANGERATE_API_KEY видалено
+  BACKEND_URL, PROXY_SERVER_URL,
   ITEMS_PER_PAGE, PIE_COLORS
 } from './constants';
 import { convertCurrency, getNetProfit } from './utils';
-import MetricsGrid from './components/MetricsGrid';
+// MetricsGrid більше не використовується
+// import MetricsGrid from './components/MetricsGrid';
 import PortfolioHeader from './components/PortfolioHeader';
 
 export default function App() {
@@ -90,8 +92,7 @@ export default function App() {
     }
     loadTranslations();
   }, [lang]);
-
-  // ЗМІНЕНО: Запит курсів валют тепер йде на ваш бекенд
+  
   useEffect(() => {
     const fetchExchangeRates = async () => {
       try {
@@ -524,12 +525,8 @@ export default function App() {
   const pageCount = Math.ceil(sortedInvestments.length / ITEMS_PER_PAGE);
   const paginatedInvestments = sortedInvestments.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  // РОЗРАХУНОК ФІНАНСОВИХ ПОКАЗНИКІВ З ПРАВИЛЬНОЮ КОНВЕРТАЦІЄЮ ВАЛЮТ
   const soldInvestments = investments.filter(item => item.sold);
   const activeInvestments = investments.filter(item => !item.sold);
-  
-  const totalInvestment = filteredInvestments.reduce((sum, item) => 
-    sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates), 0);
   
   const totalInvestmentInSoldItems = soldInvestments.reduce((sum, item) => 
     sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates), 0);
@@ -537,7 +534,7 @@ export default function App() {
   const totalInvestmentInActiveItems = activeInvestments.reduce((sum, item) => 
     sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates), 0);
     
-   const totalTurnover = 
+  const totalTurnover = 
     investments.reduce((sum, item) => 
       sum + convertCurrency(item.buyPrice * item.count, item.buyCurrency, displayCurrency, exchangeRates), 0) +
     soldInvestments.reduce((sum, item) => 
@@ -555,30 +552,10 @@ export default function App() {
     sum + convertCurrency((item.currentPrice || item.buyPrice) * item.count, "EUR", displayCurrency, exchangeRates), 0);
   
   const currentMarketProfit = totalMarketValue - totalInvestmentInActiveItems;
-
-  const totalFeesPaid = soldInvestments.reduce((sum, item) => {
-    const totalSellValue = convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates) * item.count;
-    const totalRate = (item.commissions || []).reduce((rate, c) => rate + c.rate, 0);
-    return sum + (totalSellValue * totalRate / 100);
-  }, 0);
   
   const realizedROI = totalInvestmentInSoldItems > 0 ? (totalSoldProfit / totalInvestmentInSoldItems) * 100 : 0;
   const unrealizedROI = totalInvestmentInActiveItems > 0 ? (currentMarketProfit / totalInvestmentInActiveItems) * 100 : 0;
   
-  const averageHoldingPeriod = soldInvestments.length > 0
-    ? soldInvestments.reduce((sum, item) => {
-        const bought = new Date(item.boughtDate);
-        const sold = new Date(item.sellDate);
-        const diffTime = Math.abs(sold - bought);
-        return sum + Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      }, 0) / soldInvestments.length
-    : 0;
-
-  const profitColor = totalSoldProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
-  const currentProfitColor = currentMarketProfit >= 0 ? theme.palette.success.main : theme.palette.error.main;
-  const realizedROIColor = realizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main;
-  const unrealizedROIColor = unrealizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main;
-
   const profitByDate = soldInvestments
     .map(item => {
         const grossProfit = (convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates) - 
@@ -662,19 +639,101 @@ export default function App() {
             />
           </Paper>
   
-          {/* ОНОВЛЕНА СІТКА ФІНАНСОВИХ ПОКАЗНИКІВ */}
-          
-            <MetricsGrid
-              theme={theme}
-              displayCurrency={displayCurrency}
-              totalInvestment={totalInvestmentInActiveItems} // Тепер тільки активні
-              totalSoldProfit={totalSoldProfit}
-              currentMarketProfit={currentMarketProfit}
-              realizedROI={realizedROI}
-              unrealizedROI={unrealizedROI}
-              totalTurnover={totalTurnover} // Новий параметр
-              t={t}
-            />
+          {/* ---> ОНОВЛЕНИЙ БЛОК ФІНАНСОВИХ ПОКАЗНИКІВ */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            {/* Головна об'єднана картка */}
+            <Grid item xs={12} md={4} lg={4}>
+              <StyledCombinedMetricCard>
+                {/* Головний показник: Активний капітал */}
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
+                    <Layers size={18} />
+                    <Typography variant="body1" fontWeight={600}>
+                      {t.activeCapital || 'Активний капітал'}
+                    </Typography>
+                  </Box>
+                  <Typography variant="h3" fontWeight="bold" sx={{ 
+                    mt: 1,
+                    color: theme.palette.primary.main,
+                    lineHeight: 1.2
+                  }}>
+                    {totalInvestmentInActiveItems.toLocaleString('uk-UA', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                    <span style={{ fontSize: '1.2rem', marginLeft: '4px', color: theme.palette.text.secondary }}>
+                      {CURRENCY_SYMBOLS[displayCurrency]}
+                    </span>
+                  </Typography>
+                </Box>
+                {/* Другорядний показник: Оборот */}
+                <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
+                    <Activity size={16} />
+                    <Typography variant="body2">
+                      {t.turnover || 'Оборот'}
+                    </Typography>
+                  </Box>
+                  <Typography variant="h5" fontWeight={600} color="text.primary" sx={{ mt: 0.5 }}>
+                    {totalTurnover.toLocaleString('uk-UA', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })} {CURRENCY_SYMBOLS[displayCurrency]}
+                  </Typography>
+                </Box>
+              </StyledCombinedMetricCard>
+            </Grid>
+
+            {/* Інші метрики */}
+            <Grid item xs={12} md={8} lg={8}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                  <StyledMetricCard>
+                    <TrendingUp size={28} color={theme.palette.success.main} />
+                    <Typography variant="body1" color="text.secondary" mt={1}>
+                      {t.realizedProfit || 'Фіксований прибуток'}
+                    </Typography>
+                    <Typography variant="h4" fontWeight="bold" sx={{ color: totalSoldProfit >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
+                      {totalSoldProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                    </Typography>
+                  </StyledMetricCard>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <StyledMetricCard>
+                    <Zap size={28} color={theme.palette.secondary.main} />
+                    <Typography variant="body1" color="text.secondary" mt={1}>
+                      {t.potentialProfit || 'Потенційний прибуток'}
+                    </Typography>
+                    <Typography variant="h4" fontWeight="bold" sx={{ color: currentMarketProfit >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
+                      {currentMarketProfit.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                    </Typography>
+                  </StyledMetricCard>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <StyledMetricCard>
+                    <Percent size={28} color={realizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main} />
+                    <Typography variant="body1" color="text.secondary" mt={1}>
+                      {t.realizedROI || 'Фіксований ROI'}
+                    </Typography>
+                    <Typography variant="h4" fontWeight="bold" sx={{ color: realizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
+                      {realizedROI.toFixed(2)}%
+                    </Typography>
+                  </StyledMetricCard>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <StyledMetricCard>
+                    <BarChart size={28} color={unrealizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main} />
+                    <Typography variant="body1" color="text.secondary" mt={1}>
+                      {t.potentialROI || 'Потенційний ROI'}
+                    </Typography>
+                    <Typography variant="h4" fontWeight="bold" sx={{ color: unrealizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
+                      {unrealizedROI.toFixed(2)}%
+                    </Typography>
+                  </StyledMetricCard>
+                </Grid>
+              </Grid>
+            </Grid>
+          </Grid>
 
           <Paper sx={{ 
             mb: 4, 
@@ -736,6 +795,7 @@ export default function App() {
             </Box>
           </Paper>
 
+          {/* ... решта коду App.js без змін ... */}
           <Box sx={{ 
             width: '100%',
             display: 'flex',
@@ -972,6 +1032,7 @@ export default function App() {
             </Fab>
           </Tooltip>
   
+          {/* ... решта діалогових вікон без змін ... */}
           <Dialog
             open={addDialog}
             onClose={() => setAddDialog(false)}

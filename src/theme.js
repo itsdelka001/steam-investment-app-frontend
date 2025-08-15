@@ -15,6 +15,7 @@ export const getTheme = (mode) => createTheme({
     mode: mode,
     primary: {
       main: mode === 'dark' ? '#9575CD' : '#4A148C',
+      dark: mode === 'dark' ? '#7E57C2' : '#311B92', // Додамо темніший відтінок
     },
     secondary: {
       main: mode === 'dark' ? '#4FC3F7' : '#007BFF',
@@ -43,6 +44,7 @@ export const getTheme = (mode) => createTheme({
   },
   typography: {
     fontFamily: ['"Inter"', 'sans-serif'].join(','),
+    h3: { fontWeight: 700 }, // Додамо для головної метрики
     h4: { fontWeight: 700 },
     h5: { fontWeight: 600 },
     h6: { fontWeight: 600 },
@@ -167,39 +169,70 @@ export const StyledCard = styled(Card)(({ theme }) => ({
   }
 }));
 
-export const StyledMetricCard = styled(Card)(({ theme, bgcolor }) => ({
-  padding: theme.spacing(2),
+export const StyledMetricCard = styled(Card)(({ theme }) => ({
+  padding: theme.spacing(2.5),
   borderRadius: 16,
-  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-  backgroundColor: bgcolor || theme.palette.background.paper,
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    transform: 'translateY(-3px)',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-  },
-  textAlign: 'center',
-  minHeight: 160,
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-}));
-
-export const StyledCombinedCard = styled(Card)(({ theme }) => ({
-  padding: theme.spacing(2),
-  borderRadius: 16,
-  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+  boxShadow: 'none',
+  border: `1px solid ${theme.palette.divider}`,
   backgroundColor: theme.palette.background.paper,
   transition: 'all 0.3s ease',
   '&:hover': {
-    transform: 'translateY(-3px)',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+    transform: 'translateY(-4px)',
+    boxShadow: `0 8px 24px rgba(0,0,0,0.08)`,
+    borderColor: theme.palette.primary.main,
   },
-  textAlign: 'left',
   minHeight: 160,
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
+  alignItems: 'center',
+  textAlign: 'center',
 }));
+
+// ---> НОВИЙ КОМПОНЕНТ ДЛЯ ОБ'ЄДНАНОЇ КАРТКИ
+export const StyledCombinedMetricCard = styled(Card)(({ theme }) => ({
+  padding: theme.spacing(3),
+  borderRadius: 16,
+  minHeight: 160,
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'space-between',
+  position: 'relative',
+  overflow: 'hidden',
+  color: theme.palette.mode === 'dark' ? '#fff' : theme.palette.text.primary,
+  background: theme.palette.mode === 'dark' 
+    ? `linear-gradient(135deg, #2a223a 0%, #1e1e1e 70%)` 
+    : `linear-gradient(135deg, #f3e5f5 0%, #ffffff 70%)`,
+  border: `1px solid ${theme.palette.divider}`,
+  boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+  transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+  
+  '&:hover': {
+    transform: 'translateY(-5px) scale(1.02)',
+    boxShadow: `0 12px 28px ${theme.palette.mode === 'dark' ? 'rgba(149, 117, 205, 0.2)' : 'rgba(74, 20, 140, 0.2)'}`,
+  },
+  
+  // Декоративний елемент
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 150,
+    height: 150,
+    background: theme.palette.primary.main,
+    opacity: 0.1,
+    borderRadius: '50%',
+    filter: 'blur(40px)',
+    transition: 'opacity 0.3s ease',
+  },
+  
+  '&:hover::before': {
+    opacity: 0.2,
+  }
+}));
+
 
 export const CardHeader = styled(Box)(({ theme }) => ({
   display: 'flex',
