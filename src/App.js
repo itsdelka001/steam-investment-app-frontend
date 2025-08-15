@@ -1367,7 +1367,7 @@ export default function App() {
                           position: 'absolute',
                           top: 0,
                           right: 0,
-                          transform: 'translate(50%, -50%)',
+                          transform: 'translate(-20px, 20px)', // <-- Виправлено
                           backgroundColor: theme.palette.primary.main,
                           color: 'white',
                           width: 40,
@@ -1375,7 +1375,7 @@ export default function App() {
                           boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                           '&:hover': { 
                             backgroundColor: theme.palette.primary.dark,
-                            transform: 'translate(50%, -50%) scale(1.1) rotate(15deg)',
+                            transform: 'translate(-20px, 20px) scale(1.1) rotate(15deg)',
                           },
                           transition: 'all 0.3s ease',
                           background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
