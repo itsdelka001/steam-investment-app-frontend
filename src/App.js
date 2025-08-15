@@ -26,6 +26,7 @@ import {
   ITEMS_PER_PAGE, PIE_COLORS
 } from './constants';
 import { convertCurrency, getNetProfit } from './utils';
+import MetricsGrid from './components/MetricsGrid';
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
@@ -720,6 +721,19 @@ export default function App() {
   
           {/* ОНОВЛЕНА СІТКА ФІНАНСОВИХ ПОКАЗНИКІВ */}
           
+            <MetricsGrid
+              theme={theme}
+              displayCurrency={displayCurrency}
+              totalInvestment={totalInvestment}
+              totalSoldProfit={totalSoldProfit}
+              currentMarketProfit={currentMarketProfit}
+              realizedROI={realizedROI}
+              unrealizedROI={unrealizedROI}
+              totalFeesPaid={totalFeesPaid}
+              averageHoldingPeriod={averageHoldingPeriod}
+              t={t}
+            />
+
           <Paper sx={{ 
             mb: 4, 
             p: 1, 
