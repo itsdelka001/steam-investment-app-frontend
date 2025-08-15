@@ -16,7 +16,8 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie,
   Cell, BarChart as RechartsBarChart, Bar
 } from 'recharts';
-import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
+import { getTheme, StyledCard, StyledMetricCard, StyledCombinedCard, CardHeader, CardFooter } from './theme';
 
 const GAMES = ["Усі", "CS2", "Dota 2", "PUBG"];
 const CURRENCIES = ["EUR", "USD", "UAH"];
