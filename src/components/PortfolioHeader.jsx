@@ -2,7 +2,7 @@ import React from 'react';
 import {
   Typography, Box, IconButton, Menu, MenuItem,
   FormGroup, FormControlLabel, Switch, FormControl,
-  InputLabel, Select, Tooltip
+  InputLabel, Select, Tooltip, CircularProgress
 } from '@mui/material';
 import { Zap, BarChart, Settings, Globe, DollarSign } from 'lucide-react';
 
