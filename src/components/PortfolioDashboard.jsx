@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Paper, Grid, Divider, Tooltip } from '@mui/material';
 import { LineChart, Line, XAxis, YAxis, Tooltip as ChartTooltip, ResponsiveContainer, CartesianGrid, Legend, PieChart, Pie, Cell, BarChart as RechartsBarChart, Bar } from 'recharts';
-import { PIE_COLORS } from './constants';
+import { GAMES } from '../constants';
 
 export default function PortfolioDashboard({
   t,
