@@ -27,6 +27,7 @@ import {
 } from './constants';
 import { convertCurrency, getNetProfit } from './utils';
 import MetricsGrid from './components/MetricsGrid';
+import PortfolioHeader from './components/PortfolioHeader';
 
 export default function App() {
   const [investments, setInvestments] = useState([]);
@@ -632,91 +633,26 @@ export default function App() {
             background: theme.palette.background.paper,
             boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
           }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <Typography variant="h4" color="primary" fontWeight="bold">
-                {t.portfolio}
-              </Typography>
-              <Box display="flex" gap={1}>
-                <Tooltip title={t.updateAllPrices}>
-                  <IconButton color="primary" onClick={fetchAndUpdateAllPrices} disabled={isUpdatingAllPrices}>
-                    {isUpdatingAllPrices ? <CircularProgress size={24} /> : <Zap />}
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title={t.analytics}>
-                  <IconButton color="secondary" onClick={handleAnalyticsOpen}>
-                    <BarChart />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title={t.settings}>
-                  <IconButton color="secondary" onClick={handleSettingsMenuClick}>
-                    <Settings />
-                  </IconButton>
-                </Tooltip>
-                <Menu
-                  anchorEl={settingsAnchorEl}
-                  open={settingsMenuOpen}
-                  onClose={handleSettingsMenuClose}
-                  anchorOrigin={{
-                    vertical: 'bottom',
-                    horizontal: 'right',
-                  }}
-                  transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                  }}
-                >
-                  <MenuItem onClick={(e) => e.stopPropagation()}>
-                    <FormGroup>
-                      <FormControlLabel
-                        control={<Switch checked={themeMode === 'dark'} onChange={() => setThemeMode(themeMode === 'dark' ? 'light' : 'dark')} />}
-                        label="Темна тема"
-                      />
-                    </FormGroup>
-                  </MenuItem>
-                  <MenuItem onClick={(e) => e.stopPropagation()}>
-                    <FormGroup>
-                      <FormControlLabel
-                        control={<Switch checked={autoUpdateEnabled} onChange={() => setAutoUpdateEnabled(!autoUpdateEnabled)} />}
-                        label="Автоматичне оновлення"
-                      />
-                    </FormGroup>
-                  </MenuItem>
-                  <MenuItem onClick={handleSettingsMenuClose}>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Globe size={18} />
-                      <FormControl variant="standard" size="small" sx={{ minWidth: 100 }}>
-                        <InputLabel>Мова</InputLabel>
-                        <Select
-                          value={lang}
-                          onChange={(e) => setLang(e.target.value)}
-                          label="Мова"
-                        >
-                          <MenuItem value="uk">Українська</MenuItem>
-                          <MenuItem value="en">English</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Box>
-                  </MenuItem>
-                  <MenuItem onClick={handleSettingsMenuClose}>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <DollarSign size={18} />
-                      <FormControl variant="standard" size="small" sx={{ minWidth: 100 }}>
-                        <InputLabel>Валюта відображення</InputLabel>
-                        <Select
-                          value={displayCurrency}
-                          onChange={(e) => setDisplayCurrency(e.target.value)}
-                          label="Валюта відображення"
-                        >
-                          {CURRENCIES.map((currency, index) => (
-                            <MenuItem key={index} value={currency}>{currency}</MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    </Box>
-                  </MenuItem>
-                </Menu>
-              </Box>
-            </Box>
+            <PortfolioHeader
+              t={t}
+              theme={theme}
+              themeMode={themeMode}
+              setThemeMode={setThemeMode}
+              autoUpdateEnabled={autoUpdateEnabled}
+              setAutoUpdateEnabled={setAutoUpdateEnabled}
+              lang={lang}
+              setLang={setLang}
+              displayCurrency={displayCurrency}
+              setDisplayCurrency={setDisplayCurrency}
+              CURRENCIES={CURRENCIES}
+              fetchAndUpdateAllPrices={fetchAndUpdateAllPrices}
+              isUpdatingAllPrices={isUpdatingAllPrices}
+              handleAnalyticsOpen={handleAnalyticsOpen}
+              handleSettingsMenuClick={handleSettingsMenuClick}
+              settingsAnchorEl={settingsAnchorEl}
+              settingsMenuOpen={settingsMenuOpen}
+              handleSettingsMenuClose={handleSettingsMenuClose}
+            />
           </Paper>
   
           {/* ОНОВЛЕНА СІТКА ФІНАНСОВИХ ПОКАЗНИКІВ */}
