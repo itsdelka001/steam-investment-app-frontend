@@ -211,6 +211,24 @@ const StyledMetricCard = styled(Card)(({ theme, bgcolor }) => ({
   justifyContent: 'center',
 }));
 
+const StyledCombinedCard = styled(Card)(({ theme }) => ({
+  padding: theme.spacing(2),
+  borderRadius: 16,
+  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+  backgroundColor: theme.palette.background.paper,
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-3px)',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+  },
+  textAlign: 'left',
+  minHeight: 160,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+}));
+
+
 const CardHeader = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
@@ -1043,7 +1061,6 @@ export default function App() {
                 {item.image && (
                   <img src={item.image} alt={item.name} style={{ width: '100%', maxWidth: 200, borderRadius: 8, marginBottom: 16 }} />
                 )}
-                {/* ВИПРАВЛЕННЯ: Видаляємо зірочки з назви */}
                 <Typography variant="h5" fontWeight="bold" textAlign="center">{item.name.replace(/\*/g, '')}</Typography>
                 <Chip 
                   label={item.sold ? t.sold : t.active} 
@@ -1292,35 +1309,32 @@ export default function App() {
               </Tooltip>
             </Grid>
 
-            {/* Реалізований ROI */}
+            {/* ОБ'ЄДНАНА КАРТКА ROI */}
             <Grid item xs={12} sm={6} md={4} lg={2}>
-              <Tooltip title="Відсоткова дохідність від проданих інвестицій." arrow>
-                <StyledMetricCard bgcolor={realizedROIColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
-                  <Percent size={36} color={realizedROIColor} sx={{ mb: 1 }} />
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    Реалізований ROI
+              <StyledCombinedCard>
+                <Box sx={{ textAlign: 'center' }}>
+                  <Percent size={36} color={theme.palette.primary.main} />
+                  <Typography variant="h6" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
+                    ROI (%)
                   </Typography>
-                  <Typography variant="h4" fontWeight="bold" sx={{ color: realizedROIColor }}>
-                    {realizedROI.toFixed(2)}%
+                </Box>
+                <Box sx={{ mt: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography variant="body1" fontWeight="bold" color="text.secondary">
+                    Реалізований:
+                    <Typography component="span" fontWeight="bold" sx={{ color: realizedROIColor, ml: 1 }}>
+                      {realizedROI.toFixed(2)}%
+                    </Typography>
                   </Typography>
-                </StyledMetricCard>
-              </Tooltip>
+                  <Typography variant="body1" fontWeight="bold" color="text.secondary">
+                    Нереалізований:
+                    <Typography component="span" fontWeight="bold" sx={{ color: unrealizedROIColor, ml: 1 }}>
+                      {unrealizedROI.toFixed(2)}%
+                    </Typography>
+                  </Typography>
+                </Box>
+              </StyledCombinedCard>
             </Grid>
 
-            {/* Нереалізований ROI */}
-            <Grid item xs={12} sm={6} md={4} lg={2}>
-              <Tooltip title="Потенційна дохідність від активних інвестицій." arrow>
-                <StyledMetricCard bgcolor={unrealizedROIColor === theme.palette.success.main ? theme.palette.success.light : theme.palette.error.light}>
-                  <Percent size={36} color={unrealizedROIColor} sx={{ mb: 1 }} />
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    Нереалізований ROI
-                  </Typography>
-                  <Typography variant="h4" fontWeight="bold" sx={{ color: unrealizedROIColor }}>
-                    {unrealizedROI.toFixed(2)}%
-                  </Typography>
-                </StyledMetricCard>
-              </Tooltip>
-            </Grid>
 
             {/* Сумарні комісії */}
             <Grid item xs={12} sm={6} md={4} lg={2}>
@@ -1332,6 +1346,20 @@ export default function App() {
                   </Typography>
                   <Typography variant="h4" fontWeight="bold" color="text.primary">
                     {totalFeesPaid.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                  </Typography>
+                </StyledMetricCard>
+              </Tooltip>
+            </Grid>
+             {/* Середня тривалість утримання */}
+             <Grid item xs={12} sm={6} md={4} lg={2}>
+              <Tooltip title="Середня кількість днів, які ви тримаєте активи до продажу." arrow>
+                <StyledMetricCard>
+                  <Clock size={36} color={theme.palette.secondary.main} sx={{ mb: 1 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    Середній термін
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold" color="text.primary">
+                    {averageHoldingPeriod.toFixed(1)} {t.days}
                   </Typography>
                 </StyledMetricCard>
               </Tooltip>
@@ -1442,7 +1470,7 @@ export default function App() {
                           position: 'absolute',
                           top: 0,
                           right: 0,
-                          transform: 'translate(-20px, -20px)',
+                          transform: 'translate(33px, 3px)',
                           backgroundColor: theme.palette.primary.main,
                           color: 'white',
                           width: 40,
@@ -1450,7 +1478,7 @@ export default function App() {
                           boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                           '&:hover': { 
                             backgroundColor: theme.palette.primary.dark,
-                            transform: 'translate(-20px, -20px) scale(1.1) rotate(15deg)',
+                            transform: 'translate(33px, 3px) scale(1.1) rotate(15deg)',
                           },
                           transition: 'all 0.3s ease',
                           background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
@@ -1473,7 +1501,6 @@ export default function App() {
                               />
                             )}
                             <Box sx={{ overflow: 'hidden' }}>
-                              {/* ВИПРАВЛЕННЯ: Додаємо заміну зірочок */}
                               <Typography variant="subtitle1" fontWeight="bold" noWrap sx={{ textOverflow: 'ellipsis' }}>
                                 {item.name.replace(/\*/g, '')}
                               </Typography>
@@ -2026,7 +2053,6 @@ export default function App() {
                 </Box>
               ) : (
                 <Box>
-                  {/* ВИПРАВЛЕННЯ: Видаляємо зірочки з назви */}
                   <Typography variant="h6" mb={1} color="secondary">{itemToAnalyze?.name.replace(/\*/g, '')}</Typography>
                   <Divider sx={{ my: 1 }} />
                   <Typography sx={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', color: 'text.secondary' }}>
