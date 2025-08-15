@@ -257,7 +257,7 @@ export default function App() {
   const [sellDialog, setSellDialog] = useState(false);
   const [itemToSell, setItemToSell] = useState(null);
   const [sellPrice, setSellPrice] = useState(0);
-  const [sellDate, setSellDate] = new Date().toISOString().split('T')[0];
+  const [sellDate, setSellDate] = useState(new Date().toISOString().split('T')[0]);
   const [lang, setLang] = useState('uk');
   const [autocompleteLoading, setAutocompleteLoading] = useState(false);
   const [itemOptions, setItemOptions] = useState([]);
@@ -1366,6 +1366,33 @@ export default function App() {
                       paddingTop: '16px',
                     }}
                   >
+                    <Tooltip title={`Комісія: ${totalCommissionRate.toFixed(2)}%`}>
+                      <IconButton
+                        size="small"
+                        onClick={(e) => { e.stopPropagation(); handleCommissionManagerOpen(e, item); }}
+                        sx={{
+                          position: 'absolute',
+                          top: 0,
+                          right: 0,
+                          transform: 'translate(50%, -50%)',
+                          backgroundColor: theme.palette.primary.main,
+                          color: 'white',
+                          width: 40,
+                          height: 40,
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                          '&:hover': { 
+                            backgroundColor: theme.palette.primary.dark,
+                            transform: 'translate(50%, -50%) scale(1.1) rotate(15deg)',
+                          },
+                          transition: 'all 0.3s ease',
+                          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                          zIndex: 3,
+                          border: `2px solid ${theme.palette.background.paper}`,
+                        }}
+                      >
+                        <Percent size={20} />
+                      </IconButton>
+                    </Tooltip>
                     <StyledCard onClick={() => handleItemDetailsOpen(item)}>
                       <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', position: 'relative' }}>
                         <CardHeader>
@@ -1393,33 +1420,6 @@ export default function App() {
                             sx={{ ml: 1 }}
                           />
                         </CardHeader>
-                        <Tooltip title={`Комісія: ${totalCommissionRate.toFixed(2)}%`}>
-                          <IconButton
-                            size="small"
-                            onClick={(e) => { e.stopPropagation(); handleCommissionManagerOpen(e, item); }}
-                            sx={{
-                              position: 'absolute',
-                              top: 0,
-                              right: 0,
-                              transform: 'translate(50%, -50%)',
-                              backgroundColor: theme.palette.primary.main,
-                              color: 'white',
-                              width: 40,
-                              height: 40,
-                              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                              '&:hover': { 
-                                backgroundColor: theme.palette.primary.dark,
-                                transform: 'translate(50%, -50%) scale(1.1) rotate(15deg)',
-                              },
-                              transition: 'all 0.3s ease',
-                              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                              zIndex: 3,
-                              border: `2px solid ${theme.palette.background.paper}`,
-                            }}
-                          >
-                            <Percent size={20} />
-                          </IconButton>
-                        </Tooltip>
                         <Divider sx={{ my: 1 }} />
                         <CardContent sx={{ 
                           p: 1.5,
