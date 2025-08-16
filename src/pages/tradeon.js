@@ -12,23 +12,6 @@ import { ThemeProvider } from '@mui/material/styles';
 import { getTheme } from '../theme';
 import { BACKEND_URL } from '../constants';
 
-// --- Компонент метрики ---
-const MetricCard = ({ title, value, icon, change, changeColor }) => {
-  const theme = getTheme('dark');
-  return (
-    <Paper elevation={3} sx={{ p: 3, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', borderRadius: 4, border: `1px solid ${theme.palette.divider}`, background: theme.palette.background.paper, transition: 'all 0.3s ease', '&:hover': { transform: 'translateY(-4px)', boxShadow: `0 8px 24px rgba(0,0,0,0.1)`, borderColor: theme.palette.primary.main, }, }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center">
-        <Typography variant="subtitle1" color="text.secondary">{title}</Typography>
-        <Box sx={{ color: theme.palette.primary.main }}>{icon}</Box>
-      </Box>
-      <Box mt={2}>
-        <Typography variant="h4" fontWeight="bold">{value}</Typography>
-        {change && (<Typography variant="body2" sx={{ color: changeColor, display: 'flex', alignItems: 'center', mt: 0.5 }}><TrendingUp size={16} style={{ marginRight: 4 }} /> {change}</Typography>)}
-      </Box>
-    </Paper>
-  );
-};
-
 // --- Основний компонент сторінки ---
 export default function TradeonPage() {
   const [themeMode, setThemeMode] = useState('dark');
@@ -39,20 +22,19 @@ export default function TradeonPage() {
   const [sourceMarket, setSourceMarket] = useState('Steam');
   const [destMarket, setDestMarket] = useState('DMarket');
   const [sortBy, setSortBy] = useState('netProfit');
-  const [priceType, setPriceType] = useState('min_price'); // ІНТЕГРОВАНО: Стан для типу ціни
+  const [priceType, setPriceType] = useState('min_price'); 
   
-  const MARKETS = ['Steam', 'DMarket', 'CS.Money', 'Buff'];
+  // --- ІНТЕГРАЦІЯ SKINPORT: Додаємо Skinport у список ---
+  const MARKETS = ['Steam', 'DMarket', 'Skinport', 'CS.Money', 'Buff'];
 
   const fetchOpportunities = async () => {
     setIsLoading(true);
     setOpportunities([]);
 
     try {
-      // ІНТЕГРОВАНО: Правильний виклик нового універсального маршруту
       const response = await fetch(`${BACKEND_URL}/api/arbitrage-opportunities?source=${sourceMarket}&destination=${destMarket}`);
       
       if (!response.ok) {
-        // Кидаємо помилку, щоб її можна було зловити в catch блоці
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -66,8 +48,19 @@ export default function TradeonPage() {
     }
   };
 
+  // --- ІНТЕГРАЦІЯ: Автоматичне оновлення даних ---
   useEffect(() => {
+    // Запускаємо при першому завантаженні
     fetchOpportunities();
+
+    // Встановлюємо інтервал на 5 хвилин (300000 мілісекунд)
+    const intervalId = setInterval(() => {
+      console.log("Auto-refreshing data...");
+      fetchOpportunities();
+    }, 300000);
+
+    // Очищуємо інтервал при розмонтуванні компонента, щоб уникнути витоків пам'яті
+    return () => clearInterval(intervalId);
   }, [sourceMarket, destMarket]);
 
   const calculateProfit = (item) => {
@@ -92,7 +85,6 @@ export default function TradeonPage() {
       return 0;
   });
 
-  // ІНТЕГРОВАНО: Функція для генерації посилань на маркетплейси
   const getMarketLink = (market, itemName) => {
       const encodedName = encodeURIComponent(itemName);
       switch(market) {
@@ -100,6 +92,9 @@ export default function TradeonPage() {
               return `https://steamcommunity.com/market/search?appid=730&q=${encodedName}`;
           case 'DMarket':
               return `https://dmarket.com/ingame-items/item-list/csgo-skins?title=${encodedName}`;
+          // --- ІНТЕГРАЦІЯ SKINPORT: Додаємо посилання ---
+          case 'Skinport':
+              return `https://skinport.com/market?search=${encodedName}`;
           default:
               return '#';
       }
@@ -119,14 +114,8 @@ export default function TradeonPage() {
             </Button>
           </Box>
 
-          <Grid container spacing={3} mb={4}>
-            <Grid item xs={12} sm={6} md={3}><MetricCard title="Знайдено можливостей" value={isLoading ? '...' : sortedOpportunities.length} icon={<TrendingUp />} /></Grid>
-            <Grid item xs={12} sm={6} md={3}><MetricCard title="Сукупний потенціал" value="$0.00" icon={<DollarSign />} /></Grid>
-            <Grid item xs={12} sm={6} md={3}><MetricCard title="Середній ROI" value="0.00%" icon={<Percent />} /></Grid>
-            <Grid item xs={12} sm={6} md={3}><MetricCard title="Середній час угоди" value="~45 хв" icon={<Info />} /></Grid>
-          </Grid>
-
-          <Paper sx={{ p: 2, mb: 4, borderRadius: 4, background: theme.palette.background.paper }}>
+          {/* --- ІНТЕГРАЦІЯ: Видалено блок метрик та додано відступ для панелі фільтрів --- */}
+          <Paper sx={{ p: 2, mb: 4, mt: 4, borderRadius: 4, background: theme.palette.background.paper }}>
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} md={3}><TextField fullWidth variant="outlined" placeholder="Пошук за назвою предмета..." InputProps={{ startAdornment: (<InputAdornment position="start"><Search color={theme.palette.text.secondary} /></InputAdornment>), sx: { borderRadius: 2 } }} /></Grid>
               <Grid item xs={6} md={2}>
@@ -145,7 +134,6 @@ export default function TradeonPage() {
                   </Select>
                 </FormControl>
               </Grid>
-              {/* ІНТЕГРОВАНО: Вибір типу ціни */}
               <Grid item xs={12} md={2}>
                  <FormControl fullWidth variant="outlined">
                   <InputLabel>Тип ціни</InputLabel>
@@ -193,7 +181,6 @@ export default function TradeonPage() {
                     return (
                       <TableRow key={item.id} sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { backgroundColor: theme.palette.action.hover, }, transition: 'background-color 0.2s' }}>
                         <TableCell><Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}><Avatar src={item.image} variant="rounded" /><Typography variant="body1" fontWeight={500}>{item.name}</Typography></Box></TableCell>
-                        {/* ІНТЕГРОВАНО: Клікабельні чіпи */}
                         <TableCell align="center">
                             <Link href={getMarketLink(item.sourceMarket, item.name)} target="_blank" rel="noopener noreferrer" underline="none">
                                 <Chip label={item.sourceMarket} size="small" variant="outlined" clickable />
