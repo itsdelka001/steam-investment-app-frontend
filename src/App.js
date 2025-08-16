@@ -28,7 +28,7 @@ import {
 import { convertCurrency, getNetProfit } from './utils';
 import PortfolioHeader from './components/PortfolioHeader';
 // --- ІНТЕГРАЦІЯ: Імпортуємо сторінку арбітражу ---
-import TradeonPage from './tradeon';
+import TradeonPage from './pages/tradeon';
 
 
 // Кастомний компонент для кращої візуалізації Treemap
