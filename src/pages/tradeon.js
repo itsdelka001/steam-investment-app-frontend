@@ -35,7 +35,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { ThemeProvider } from '@mui/material/styles';
-import { getTheme } from './theme'; // Припускаємо, що theme.js знаходиться в тому ж каталозі
+import { getTheme } from '../theme'; // Припускаємо, що theme.js знаходиться в тому ж каталозі
 
 // --- Компонент метрики ---
 // Створюємо стилізовану картку для ключових показників, схожу на ті, що в App.js
