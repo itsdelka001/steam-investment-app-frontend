@@ -39,7 +39,7 @@ export default function TradeonPage() {
   const [sourceMarket, setSourceMarket] = useState('Steam');
   const [destMarket, setDestMarket] = useState('DMarket');
   const [sortBy, setSortBy] = useState('netProfit');
-  const [priceType, setPriceType] = useState('min_price'); // ДОДАНО: Стан для типу ціни
+  const [priceType, setPriceType] = useState('min_price'); // ІНТЕГРОВАНО: Стан для типу ціни
   
   const MARKETS = ['Steam', 'DMarket', 'CS.Money', 'Buff'];
 
@@ -48,9 +48,11 @@ export default function TradeonPage() {
     setOpportunities([]);
 
     try {
+      // ІНТЕГРОВАНО: Правильний виклик нового універсального маршруту
       const response = await fetch(`${BACKEND_URL}/api/arbitrage-opportunities?source=${sourceMarket}&destination=${destMarket}`);
       
       if (!response.ok) {
+        // Кидаємо помилку, щоб її можна було зловити в catch блоці
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
@@ -84,14 +86,13 @@ export default function TradeonPage() {
       if (sortBy === 'roi') {
           return bProfit.roi - aProfit.roi;
       }
-      // Змінено з minPrice на sourcePrice для відповідності ключу в об'єкті
       if (sortBy === 'sourcePrice') {
           return a.sourcePrice - b.sourcePrice;
       }
       return 0;
   });
 
-  // ДОДАНО: Функція для генерації посилань на маркетплейси
+  // ІНТЕГРОВАНО: Функція для генерації посилань на маркетплейси
   const getMarketLink = (market, itemName) => {
       const encodedName = encodeURIComponent(itemName);
       switch(market) {
@@ -144,7 +145,7 @@ export default function TradeonPage() {
                   </Select>
                 </FormControl>
               </Grid>
-               {/* ДОДАНО: Вибір типу ціни */}
+              {/* ІНТЕГРОВАНО: Вибір типу ціни */}
               <Grid item xs={12} md={2}>
                  <FormControl fullWidth variant="outlined">
                   <InputLabel>Тип ціни</InputLabel>
@@ -155,7 +156,6 @@ export default function TradeonPage() {
                   </Select>
                 </FormControl>
               </Grid>
-              {/* Змінено сортування та кнопку фільтрів для кращого компонування */}
               <Grid item xs={6} md={1.5}>
                  <FormControl fullWidth variant="outlined">
                   <InputLabel>Сортувати</InputLabel>
@@ -193,6 +193,7 @@ export default function TradeonPage() {
                     return (
                       <TableRow key={item.id} sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { backgroundColor: theme.palette.action.hover, }, transition: 'background-color 0.2s' }}>
                         <TableCell><Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}><Avatar src={item.image} variant="rounded" /><Typography variant="body1" fontWeight={500}>{item.name}</Typography></Box></TableCell>
+                        {/* ІНТЕГРОВАНО: Клікабельні чіпи */}
                         <TableCell align="center">
                             <Link href={getMarketLink(item.sourceMarket, item.name)} target="_blank" rel="noopener noreferrer" underline="none">
                                 <Chip label={item.sourceMarket} size="small" variant="outlined" clickable />
