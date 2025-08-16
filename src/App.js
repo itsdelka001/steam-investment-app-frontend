@@ -27,6 +27,9 @@ import {
 } from './constants';
 import { convertCurrency, getNetProfit } from './utils';
 import PortfolioHeader from './components/PortfolioHeader';
+// --- ІНТЕГРАЦІЯ: Імпортуємо сторінку арбітражу ---
+import TradeonPage from './tradeon';
+
 
 // Кастомний компонент для кращої візуалізації Treemap
 const CustomizedTreemapContent = ({ root, depth, x, y, width, height, index, colors, name }) => {
@@ -59,6 +62,9 @@ const CustomizedTreemapContent = ({ root, depth, x, y, width, height, index, col
 };
 
 export default function App() {
+  // --- ІНТЕГРАЦІЯ: Стан для керування поточною сторінкою ---
+  const [currentPage, setCurrentPage] = useState('portfolio'); // 'portfolio' або 'arbitrage'
+
   const [investments, setInvestments] = useState([]);
   const [name, setName] = useState("");
   const [count, setCount] = useState(1);
@@ -741,6 +747,7 @@ export default function App() {
     <ThemeProvider theme={theme}>
       <Box sx={{ backgroundColor: theme.palette.background.default, minHeight: '100vh', pb: 4 }}>
         <Container maxWidth="xl" sx={{ pt: 0, pb: 4 }}>
+          {/* --- ІНТЕГРАЦІЯ: Передаємо керування сторінкою в хедер --- */}
           <Paper elevation={0} sx={{
             py: 2,
             px: 3,
@@ -750,6 +757,8 @@ export default function App() {
             boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
           }}>
             <PortfolioHeader
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
               t={t}
               theme={theme}
               themeMode={themeMode}
@@ -771,455 +780,462 @@ export default function App() {
             />
           </Paper>
 
-          {/* ---> ОНОВЛЕНИЙ БЛОК ФІНАНСОВИХ ПОКАЗНИКІВ З 4 КАРТКАМИ */}
-          <Grid container spacing={3} sx={{ mb: 4, justifyContent: 'center' }}>
-            {/* Картка 1: Капітал та Оборот */}
-            <Grid item xs={12} sm={6} md={3}>
-              <StyledCombinedMetricCard>
-                <Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
-                    <Layers size={18} />
-                    <Typography variant="body1" fontWeight={600}>{t.activeCapital || 'Активний капітал'}</Typography>
-                  </Box>
-                  <Typography variant="h3" fontWeight="bold" sx={{ mt: 1, color: theme.palette.primary.main, lineHeight: 1.2 }}>
-                    {totalInvestmentInActiveItems.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    <span style={{ fontSize: '1.2rem', marginLeft: '4px', color: theme.palette.text.secondary }}>{CURRENCY_SYMBOLS[displayCurrency]}</span>
-                  </Typography>
-                </Box>
-                <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
-                    <Activity size={16} />
-                    <Typography variant="body2">{t.turnover || 'Оборот'}</Typography>
-                  </Box>
-                  <Typography variant="h5" fontWeight={600} color="text.primary" sx={{ mt: 0.5 }}>
-                    {totalTurnover.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {CURRENCY_SYMBOLS[displayCurrency]}
-                  </Typography>
-                </Box>
-              </StyledCombinedMetricCard>
-            </Grid>
+          {/* --- ІНТЕГРАЦІЯ: Умовний рендеринг сторінок --- */}
+          {currentPage === 'arbitrage' && <TradeonPage />}
 
-            {/* Картка 2: Прибуток (Фіксований та Потенційний) */}
-            <Grid item xs={12} sm={6} md={3}>
-              <StyledCombinedMetricCard>
-                <Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
-                    <TrendingUp size={18} />
-                    <Typography variant="body1" fontWeight={600}>{t.realizedProfit || 'Фіксований прибуток'}</Typography>
-                  </Box>
-                  <Typography variant="h3" fontWeight="bold" sx={{ mt: 1, color: totalSoldProfit >= 0 ? theme.palette.success.main : theme.palette.error.main, lineHeight: 1.2 }}>
-                    {totalSoldProfit.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    <span style={{ fontSize: '1.2rem', marginLeft: '4px', color: theme.palette.text.secondary }}>{CURRENCY_SYMBOLS[displayCurrency]}</span>
-                  </Typography>
-                </Box>
-                <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
-                    <Zap size={16} />
-                    <Typography variant="body2">{t.potentialProfit || 'Потенційний прибуток'}</Typography>
-                  </Box>
-                  <Typography variant="h5" fontWeight={600} sx={{ mt: 0.5, color: currentMarketProfit >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
-                    {currentMarketProfit.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {CURRENCY_SYMBOLS[displayCurrency]}
-                  </Typography>
-                </Box>
-              </StyledCombinedMetricCard>
-            </Grid>
+          {currentPage === 'portfolio' && (
+            <>
+              {/* ---> ОНОВЛЕНИЙ БЛОК ФІНАНСОВИХ ПОКАЗНИКІВ З 4 КАРТКАМИ */}
+              <Grid container spacing={3} sx={{ mb: 4, justifyContent: 'center' }}>
+                {/* Картка 1: Капітал та Оборот */}
+                <Grid item xs={12} sm={6} md={3}>
+                  <StyledCombinedMetricCard>
+                    <Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
+                        <Layers size={18} />
+                        <Typography variant="body1" fontWeight={600}>{t.activeCapital || 'Активний капітал'}</Typography>
+                      </Box>
+                      <Typography variant="h3" fontWeight="bold" sx={{ mt: 1, color: theme.palette.primary.main, lineHeight: 1.2 }}>
+                        {totalInvestmentInActiveItems.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <span style={{ fontSize: '1.2rem', marginLeft: '4px', color: theme.palette.text.secondary }}>{CURRENCY_SYMBOLS[displayCurrency]}</span>
+                      </Typography>
+                    </Box>
+                    <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
+                        <Activity size={16} />
+                        <Typography variant="body2">{t.turnover || 'Оборот'}</Typography>
+                      </Box>
+                      <Typography variant="h5" fontWeight={600} color="text.primary" sx={{ mt: 0.5 }}>
+                        {totalTurnover.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {CURRENCY_SYMBOLS[displayCurrency]}
+                      </Typography>
+                    </Box>
+                  </StyledCombinedMetricCard>
+                </Grid>
 
-            {/* Картка 3: ROI (Фіксований та Потенційний) */}
-            <Grid item xs={12} sm={6} md={3}>
-              <StyledCombinedMetricCard>
-                <Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
-                    <Percent size={18} />
-                    <Typography variant="body1" fontWeight={600}>{t.realizedROI || 'Фіксований ROI'}</Typography>
-                  </Box>
-                  <Typography variant="h3" fontWeight="bold" sx={{ mt: 1, color: realizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main, lineHeight: 1.2 }}>
-                    {realizedROI.toFixed(2)}
-                    <span style={{ fontSize: '1.2rem', marginLeft: '2px', color: theme.palette.text.secondary }}>%</span>
-                  </Typography>
-                </Box>
-                <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
-                    <BarChart size={16} />
-                    <Typography variant="body2">{t.potentialROI || 'Потенційний ROI'}</Typography>
-                  </Box>
-                  <Typography variant="h5" fontWeight={600} sx={{ mt: 0.5, color: unrealizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
-                    {unrealizedROI.toFixed(2)}%
-                  </Typography>
-                </Box>
-              </StyledCombinedMetricCard>
-            </Grid>
+                {/* Картка 2: Прибуток (Фіксований та Потенційний) */}
+                <Grid item xs={12} sm={6} md={3}>
+                  <StyledCombinedMetricCard>
+                    <Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
+                        <TrendingUp size={18} />
+                        <Typography variant="body1" fontWeight={600}>{t.realizedProfit || 'Фіксований прибуток'}</Typography>
+                      </Box>
+                      <Typography variant="h3" fontWeight="bold" sx={{ mt: 1, color: totalSoldProfit >= 0 ? theme.palette.success.main : theme.palette.error.main, lineHeight: 1.2 }}>
+                        {totalSoldProfit.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <span style={{ fontSize: '1.2rem', marginLeft: '4px', color: theme.palette.text.secondary }}>{CURRENCY_SYMBOLS[displayCurrency]}</span>
+                      </Typography>
+                    </Box>
+                    <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
+                        <Zap size={16} />
+                        <Typography variant="body2">{t.potentialProfit || 'Потенційний прибуток'}</Typography>
+                      </Box>
+                      <Typography variant="h5" fontWeight={600} sx={{ mt: 0.5, color: currentMarketProfit >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
+                        {currentMarketProfit.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {CURRENCY_SYMBOLS[displayCurrency]}
+                      </Typography>
+                    </Box>
+                  </StyledCombinedMetricCard>
+                </Grid>
 
-            {/* НОВА Картка 4: Час утримання та Профіт Фактор */}
-            <Grid item xs={12} sm={6} md={3}>
-              <StyledCombinedMetricCard>
-                <Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
-                    <Clock size={18} />
-                    <Typography variant="body1" fontWeight={600}>Середній час утримання</Typography>
-                  </Box>
-                  <Typography variant="h3" fontWeight="bold" sx={{ mt: 1, color: theme.palette.primary.main, lineHeight: 1.2 }}>
-                    {averageHoldingTime.toFixed(0)}
-                    <span style={{ fontSize: '1.2rem', marginLeft: '4px', color: theme.palette.text.secondary }}>днів</span>
-                  </Typography>
-                </Box>
-                <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
-                    <Tooltip title="Співвідношення загального прибутку до загального збитку">
-                      <HelpCircle size={16} />
-                    </Tooltip>
-                    <Typography variant="body2">Профіт Фактор</Typography>
-                  </Box>
-                  <Typography variant="h5" fontWeight={600} color="text.primary" sx={{ mt: 0.5 }}>
-                    {isFinite(profitFactor) ? profitFactor.toFixed(2) : '∞'}
-                  </Typography>
-                </Box>
-              </StyledCombinedMetricCard>
-            </Grid>
-          </Grid>
-          
-          {/* ---> ПАНЕЛЬ ГРУПОВИХ ДІЙ */}
-          {selectedItems.length > 0 && (
-            <Paper elevation={3} sx={{
-              p: 2,
-              mb: 3,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              flexWrap: 'wrap',
-              background: theme.palette.background.paper,
-              borderRadius: 2
-            }}>
-              <Typography variant="subtitle1" fontWeight={600}>
-                Обрано: {selectedItems.length}
-              </Typography>
-              <Box sx={{ flexGrow: 1 }} />
-              <Button
-                variant="contained"
-                color="secondary"
-                startIcon={<Zap size={16} />}
-                onClick={handleBulkUpdatePrices}
-              >
-                Оновити ціни
-              </Button>
-              <Button
-                variant="contained"
-                color="error"
-                startIcon={<Delete size={16} />}
-                onClick={() => setBulkDeleteDialogOpen(true)}
-              >
-                Видалити
-              </Button>
-            </Paper>
-          )}
+                {/* Картка 3: ROI (Фіксований та Потенційний) */}
+                <Grid item xs={12} sm={6} md={3}>
+                  <StyledCombinedMetricCard>
+                    <Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
+                        <Percent size={18} />
+                        <Typography variant="body1" fontWeight={600}>{t.realizedROI || 'Фіксований ROI'}</Typography>
+                      </Box>
+                      <Typography variant="h3" fontWeight="bold" sx={{ mt: 1, color: realizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main, lineHeight: 1.2 }}>
+                        {realizedROI.toFixed(2)}
+                        <span style={{ fontSize: '1.2rem', marginLeft: '2px', color: theme.palette.text.secondary }}>%</span>
+                      </Typography>
+                    </Box>
+                    <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
+                        <BarChart size={16} />
+                        <Typography variant="body2">{t.potentialROI || 'Потенційний ROI'}</Typography>
+                      </Box>
+                      <Typography variant="h5" fontWeight={600} sx={{ mt: 0.5, color: unrealizedROI >= 0 ? theme.palette.success.main : theme.palette.error.main }}>
+                        {unrealizedROI.toFixed(2)}%
+                      </Typography>
+                    </Box>
+                  </StyledCombinedMetricCard>
+                </Grid>
 
-          <Paper sx={{
-            mb: 4,
-            p: 1,
-            boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-            width: '100%',
-            mx: 'auto',
-          }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap">
-              <Tabs
-                value={tabValue}
-                onChange={(e, newValue) => {
-                  setTabValue(newValue);
-                  setPage(1);
-                }}
-                aria-label="game tabs"
-                sx={{
-                  '& .MuiTabs-indicator': {
-                    backgroundColor: theme.palette.primary.main,
-                  }
-                }}
-              >
-                {GAMES.map((gameName, index) => (
-                  <Tab
-                    key={index}
-                    label={gameName === "Усі" ? t.total : gameName}
-                    sx={{
-                      minWidth: 0,
-                      padding: '6px 12px',
-                      fontSize: '0.875rem',
-                      '&.Mui-selected': {
-                        color: theme.palette.primary.main,
-                      }
-                    }}
-                  />
-                ))}
-              </Tabs>
+                {/* НОВА Картка 4: Час утримання та Профіт Фактор */}
+                <Grid item xs={12} sm={6} md={3}>
+                  <StyledCombinedMetricCard>
+                    <Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
+                        <Clock size={18} />
+                        <Typography variant="body1" fontWeight={600}>Середній час утримання</Typography>
+                      </Box>
+                      <Typography variant="h3" fontWeight="bold" sx={{ mt: 1, color: theme.palette.primary.main, lineHeight: 1.2 }}>
+                        {averageHoldingTime.toFixed(0)}
+                        <span style={{ fontSize: '1.2rem', marginLeft: '4px', color: theme.palette.text.secondary }}>днів</span>
+                      </Typography>
+                    </Box>
+                    <Box sx={{ mt: 2, pt: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: theme.palette.text.secondary }}>
+                        <Tooltip title="Співвідношення загального прибутку до загального збитку">
+                          <HelpCircle size={16} />
+                        </Tooltip>
+                        <Typography variant="body2">Профіт Фактор</Typography>
+                      </Box>
+                      <Typography variant="h5" fontWeight={600} color="text.primary" sx={{ mt: 0.5 }}>
+                        {isFinite(profitFactor) ? profitFactor.toFixed(2) : '∞'}
+                      </Typography>
+                    </Box>
+                  </StyledCombinedMetricCard>
+                </Grid>
+              </Grid>
+              
+              {/* ---> ПАНЕЛЬ ГРУПОВИХ ДІЙ */}
+              {selectedItems.length > 0 && (
+                <Paper elevation={3} sx={{
+                  p: 2,
+                  mb: 3,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 2,
+                  flexWrap: 'wrap',
+                  background: theme.palette.background.paper,
+                  borderRadius: 2
+                }}>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    Обрано: {selectedItems.length}
+                  </Typography>
+                  <Box sx={{ flexGrow: 1 }} />
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    startIcon={<Zap size={16} />}
+                    onClick={handleBulkUpdatePrices}
+                  >
+                    Оновити ціни
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    startIcon={<Delete size={16} />}
+                    onClick={() => setBulkDeleteDialogOpen(true)}
+                  >
+                    Видалити
+                  </Button>
+                </Paper>
+              )}
 
-              <Box display="flex" alignItems="center" gap={1} flexWrap="wrap" mt={{ xs: 2, sm: 0 }}>
-                <FormControl variant="standard" size="small" sx={{ minWidth: 150 }}>
-                  <InputLabel>Сортувати за</InputLabel>
-                  <Select
-                    value={sortBy}
-                    onChange={(e) => {
-                      setSortBy(e.target.value);
+              <Paper sx={{
+                mb: 4,
+                p: 1,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                width: '100%',
+                mx: 'auto',
+              }}>
+                <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap">
+                  <Tabs
+                    value={tabValue}
+                    onChange={(e, newValue) => {
+                      setTabValue(newValue);
                       setPage(1);
                     }}
-                    label="Сортувати за"
-                  >
-                    <MenuItem value="name">Назвою</MenuItem>
-                    <MenuItem value="boughtDate">Датою покупки</MenuItem>
-                    <MenuItem value="buyPrice">Ціною покупки</MenuItem>
-                    <MenuItem value="sold">Статусом</MenuItem>
-                  </Select>
-                </FormControl>
-                <IconButton onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>
-                  {sortOrder === 'asc' ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
-                </IconButton>
-              </Box>
-            </Box>
-          </Paper>
-
-          <Box sx={{
-            width: '100%',
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '5%',
-            rowGap: '32px',
-            justifyContent: 'flex-start',
-            px: 0,
-          }}>
-            {paginatedInvestments.length === 0 ? (
-              <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary, width: '100%' }}>
-                <Typography variant="h6">{t.noInvestmentsInCategory}</Typography>
-              </Box>
-            ) : (
-              paginatedInvestments.map((item) => {
-                const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency, displayCurrency, exchangeRates);
-                const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR", displayCurrency, exchangeRates) : null;
-                const convertedSellPrice = item.sellPrice ? convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates) : null;
-
-                const itemGrossProfitForCard = item.sold ?
-                  (convertedSellPrice - convertedBuyPrice) * item.count :
-                  (convertedCurrentPrice ? convertedCurrentPrice - convertedBuyPrice : 0) * item.count;
-
-                const itemTotalValueForCard = item.sold ?
-                  convertedSellPrice * item.count :
-                  convertedCurrentPrice ? convertedCurrentPrice * item.count : 0;
-
-                const profitForCard = getNetProfit(itemGrossProfitForCard, itemTotalValueForCard, item.commissions);
-                const profitColorForCard = profitForCard >= 0 ? theme.palette.success.main : theme.palette.error.main;
-                const totalCommissionRate = (item.commissions || []).reduce((sum, c) => sum + c.rate, 0);
-
-                return (
-                  <Box
-                    key={item.id}
+                    aria-label="game tabs"
                     sx={{
-                      width: '30%',
-                      minWidth: '280px',
-                      overflow: 'visible',
-                      position: 'relative',
-                      paddingTop: '16px',
+                      '& .MuiTabs-indicator': {
+                        backgroundColor: theme.palette.primary.main,
+                      }
                     }}
                   >
-                    <Tooltip title={`Комісія: ${totalCommissionRate.toFixed(2)}%`}>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => { e.stopPropagation(); handleCommissionManagerOpen(e, item); }}
+                    {GAMES.map((gameName, index) => (
+                      <Tab
+                        key={index}
+                        label={gameName === "Усі" ? t.total : gameName}
                         sx={{
-                          position: 'absolute',
-                          top: 0,
-                          right: 0,
-                          transform: 'translate(33px, 3px)',
-                          backgroundColor: theme.palette.primary.main,
-                          color: 'white',
-                          width: 40,
-                          height: 40,
-                          boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                          '&:hover': {
-                            backgroundColor: theme.palette.primary.dark,
-                            transform: 'translate(33px, 3px) scale(1.1) rotate(15deg)',
-                          },
-                          transition: 'all 0.3s ease',
-                          background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                          zIndex: 3,
-                          border: `2px solid ${theme.palette.background.paper}`,
-                        }}
-                      >
-                        <Percent size={20} />
-                      </IconButton>
-                    </Tooltip>
-                    <StyledCard onClick={() => handleItemDetailsOpen(item)}>
-                      {/* Чекбокс для групових дій */}
-                      <Checkbox
-                        checked={selectedItems.includes(item.id)}
-                        onChange={() => handleSelectItem(item.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        sx={{
-                          position: 'absolute',
-                          top: -5,
-                          left: -5,
-                          zIndex: 4,
-                          '& .MuiSvgIcon-root': { fontSize: 28 },
+                          minWidth: 0,
+                          padding: '6px 12px',
+                          fontSize: '0.875rem',
+                          '&.Mui-selected': {
+                            color: theme.palette.primary.main,
+                          }
                         }}
                       />
-                      <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', position: 'relative' }}>
-                        <CardHeader>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
-                            {item.image && (
-                              <img
-                                src={item.image}
-                                alt={item.name}
-                                style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }}
-                              />
-                            )}
-                            <Box sx={{ overflow: 'hidden' }}>
-                              <Typography variant="subtitle1" fontWeight="bold" noWrap sx={{ textOverflow: 'ellipsis' }}>
-                                {item.name.replace(/\*/g, '')}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary" noWrap>
-                                {item.game}
-                              </Typography>
-                            </Box>
-                          </Box>
-                          <Chip
-                            label={item.sold ? t.sold : t.active}
-                            color={item.sold ? "default" : "primary"}
-                            size="small"
-                            sx={{ ml: 1, fontWeight: 'bold' }}
-                          />
-                        </CardHeader>
-                        <Divider sx={{ my: 1 }} />
-                        <CardContent sx={{
-                          p: 1.5,
-                          flexGrow: 1,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          overflow: 'hidden',
-                          minHeight: '200px',
-                        }}>
-                          <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1} sx={{ overflow: 'hidden' }}>
-                            <Box>
-                              <Typography variant="body2" color="text.secondary">{t.count}:</Typography>
-                              <Typography variant="h6" fontWeight="bold">{item.count}</Typography>
-                            </Box>
-                            <Box>
-                              <Typography variant="body2" color="text.secondary">{t.buyPrice}:</Typography>
-                              <Typography variant="h6" fontWeight="bold">
-                                {convertedBuyPrice.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
-                              </Typography>
-                            </Box>
-                            <Box>
-                              <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
-                              <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
-                                {(profitForCard).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
-                              </Typography>
-                            </Box>
-                            <Box>
-                              <Typography variant="body2" color="text.secondary">{t.boughtDate}:</Typography>
-                              <Typography variant="h6" fontWeight="bold">{item.boughtDate}</Typography>
-                            </Box>
-                          </Box>
-                        </CardContent>
-                        <CardFooter>
-                          <Box display="flex" gap={0.5} flexWrap="wrap">
-                            <Tooltip title={t.edit}>
-                              <IconButton color="secondary" onClick={(e) => { e.stopPropagation(); handleEdit(item); }} size="small">
-                                <Edit size={16} />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={t.markAsSold}>
-                              <IconButton
-                                color="success"
-                                onClick={(e) => { e.stopPropagation(); setItemToSell(item); setSellPrice(item.buyPrice); setSellDialog(true); }}
-                                disabled={item.sold}
-                                size="small"
-                              >
-                                <TrendingUp size={16} />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={t.delete}>
-                              <IconButton color="error" onClick={(e) => { e.stopPropagation(); confirmDelete(item); }} size="small">
-                                <Delete size={16} />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={t.updatePrice}>
-                              <IconButton color="secondary" onClick={(e) => { e.stopPropagation(); handleCurrentPriceUpdate(item); }} size="small">
-                                <Zap size={16} />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title={t.marketAnalysis}>
-                              <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handleMarketAnalysis(item); }} size="small">
-                                <BarChart size={16} />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Відкрити в Steam Market">
-                              <IconButton
-                                color="primary"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (item.game === "CS2") {
-                                    window.open(`https://steamcommunity.com/market/listings/730/${encodeURIComponent(item.market_hash_name)}`, '_blank');
-                                  } else if (item.game === "Dota 2") {
-                                    window.open(`https://steamcommunity.com/market/listings/570/${encodeURIComponent(item.market_hash_name)}`, '_blank');
-                                  } else if (item.game === "PUBG") {
-                                    window.open(`https://steamcommunity.com/market/listings/578080/${encodeURIComponent(item.market_hash_name)}`, '_blank');
-                                  }
-                                }}
-                                size="small"
-                              >
-                                <Globe size={16} />
-                              </IconButton>
-                            </Tooltip>
-                          </Box>
-                        </CardFooter>
-                      </Box>
-                    </StyledCard>
+                    ))}
+                  </Tabs>
+
+                  <Box display="flex" alignItems="center" gap={1} flexWrap="wrap" mt={{ xs: 2, sm: 0 }}>
+                    <FormControl variant="standard" size="small" sx={{ minWidth: 150 }}>
+                      <InputLabel>Сортувати за</InputLabel>
+                      <Select
+                        value={sortBy}
+                        onChange={(e) => {
+                          setSortBy(e.target.value);
+                          setPage(1);
+                        }}
+                        label="Сортувати за"
+                      >
+                        <MenuItem value="name">Назвою</MenuItem>
+                        <MenuItem value="boughtDate">Датою покупки</MenuItem>
+                        <MenuItem value="buyPrice">Ціною покупки</MenuItem>
+                        <MenuItem value="sold">Статусом</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <IconButton onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>
+                      {sortOrder === 'asc' ? <ArrowDown size={16} /> : <ArrowUp size={16} />}
+                    </IconButton>
                   </Box>
-                );
-              })
-            )}
-          </Box>
+                </Box>
+              </Paper>
 
-          <Box mt={4} display="flex" justifyContent="center">
-            {paginatedInvestments.length > 0 && (
-              <Pagination
-                count={pageCount}
-                page={page}
-                onChange={(event, value) => setPage(value)}
-                color="primary"
-                size="large"
-                sx={{
-                  '& .MuiPaginationItem-root': {
-                    color: theme.palette.text.primary,
-                    '&.Mui-selected': {
-                      backgroundColor: theme.palette.primary.main,
-                      color: 'white',
-                    },
-                    '&.Mui-selected:hover': {
-                      backgroundColor: theme.palette.primary.dark,
-                    },
-                  },
-                }}
-              />
-            )}
-          </Box>
+              <Box sx={{
+                width: '100%',
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '5%',
+                rowGap: '32px',
+                justifyContent: 'flex-start',
+                px: 0,
+              }}>
+                {paginatedInvestments.length === 0 ? (
+                  <Box sx={{ p: 4, textAlign: 'center', color: theme.palette.text.secondary, width: '100%' }}>
+                    <Typography variant="h6">{t.noInvestmentsInCategory}</Typography>
+                  </Box>
+                ) : (
+                  paginatedInvestments.map((item) => {
+                    const convertedBuyPrice = convertCurrency(item.buyPrice, item.buyCurrency, displayCurrency, exchangeRates);
+                    const convertedCurrentPrice = item.currentPrice ? convertCurrency(item.currentPrice, "EUR", displayCurrency, exchangeRates) : null;
+                    const convertedSellPrice = item.sellPrice ? convertCurrency(item.sellPrice, item.buyCurrency, displayCurrency, exchangeRates) : null;
 
-          <Tooltip title={t.addItem} arrow>
-            <Fab
-              color="primary"
-              aria-label="add"
-              sx={{
-                position: 'fixed',
-                bottom: 32,
-                right: 32,
-                width: 56,
-                height: 56,
-                boxShadow: '0 8px 20px rgba(74, 20, 140, 0.3)',
-                '&:hover': {
-                  transform: 'scale(1.1) rotate(90deg)',
-                  boxShadow: '0 12px 24px rgba(74, 20, 140, 0.4)',
-                },
-                transition: 'all 0.3s ease',
-                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-              }}
-              onClick={() => setAddDialog(true)}
-            >
-              <Plus size={24} />
-            </Fab>
-          </Tooltip>
+                    const itemGrossProfitForCard = item.sold ?
+                      (convertedSellPrice - convertedBuyPrice) * item.count :
+                      (convertedCurrentPrice ? convertedCurrentPrice - convertedBuyPrice : 0) * item.count;
+
+                    const itemTotalValueForCard = item.sold ?
+                      convertedSellPrice * item.count :
+                      convertedCurrentPrice ? convertedCurrentPrice * item.count : 0;
+
+                    const profitForCard = getNetProfit(itemGrossProfitForCard, itemTotalValueForCard, item.commissions);
+                    const profitColorForCard = profitForCard >= 0 ? theme.palette.success.main : theme.palette.error.main;
+                    const totalCommissionRate = (item.commissions || []).reduce((sum, c) => sum + c.rate, 0);
+
+                    return (
+                      <Box
+                        key={item.id}
+                        sx={{
+                          width: '30%',
+                          minWidth: '280px',
+                          overflow: 'visible',
+                          position: 'relative',
+                          paddingTop: '16px',
+                        }}
+                      >
+                        <Tooltip title={`Комісія: ${totalCommissionRate.toFixed(2)}%`}>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => { e.stopPropagation(); handleCommissionManagerOpen(e, item); }}
+                            sx={{
+                              position: 'absolute',
+                              top: 0,
+                              right: 0,
+                              transform: 'translate(33px, 3px)',
+                              backgroundColor: theme.palette.primary.main,
+                              color: 'white',
+                              width: 40,
+                              height: 40,
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                              '&:hover': {
+                                backgroundColor: theme.palette.primary.dark,
+                                transform: 'translate(33px, 3px) scale(1.1) rotate(15deg)',
+                              },
+                              transition: 'all 0.3s ease',
+                              background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                              zIndex: 3,
+                              border: `2px solid ${theme.palette.background.paper}`,
+                            }}
+                          >
+                            <Percent size={20} />
+                          </IconButton>
+                        </Tooltip>
+                        <StyledCard onClick={() => handleItemDetailsOpen(item)}>
+                          {/* Чекбокс для групових дій */}
+                          <Checkbox
+                            checked={selectedItems.includes(item.id)}
+                            onChange={() => handleSelectItem(item.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            sx={{
+                              position: 'absolute',
+                              top: -5,
+                              left: -5,
+                              zIndex: 4,
+                              '& .MuiSvgIcon-root': { fontSize: 28 },
+                            }}
+                          />
+                          <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden', position: 'relative' }}>
+                            <CardHeader>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, overflow: 'hidden' }}>
+                                {item.image && (
+                                  <img
+                                    src={item.image}
+                                    alt={item.name}
+                                    style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }}
+                                  />
+                                )}
+                                <Box sx={{ overflow: 'hidden' }}>
+                                  <Typography variant="subtitle1" fontWeight="bold" noWrap sx={{ textOverflow: 'ellipsis' }}>
+                                    {item.name.replace(/\*/g, '')}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary" noWrap>
+                                    {item.game}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                              <Chip
+                                label={item.sold ? t.sold : t.active}
+                                color={item.sold ? "default" : "primary"}
+                                size="small"
+                                sx={{ ml: 1, fontWeight: 'bold' }}
+                              />
+                            </CardHeader>
+                            <Divider sx={{ my: 1 }} />
+                            <CardContent sx={{
+                              p: 1.5,
+                              flexGrow: 1,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              overflow: 'hidden',
+                              minHeight: '200px',
+                            }}>
+                              <Box display="grid" gridTemplateColumns="1fr 1fr" gap={1} sx={{ overflow: 'hidden' }}>
+                                <Box>
+                                  <Typography variant="body2" color="text.secondary">{t.count}:</Typography>
+                                  <Typography variant="h6" fontWeight="bold">{item.count}</Typography>
+                                </Box>
+                                <Box>
+                                  <Typography variant="body2" color="text.secondary">{t.buyPrice}:</Typography>
+                                  <Typography variant="h6" fontWeight="bold">
+                                    {convertedBuyPrice.toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                                  </Typography>
+                                </Box>
+                                <Box>
+                                  <Typography variant="body2" color="text.secondary">{t.profit}:</Typography>
+                                  <Typography variant="h6" fontWeight="bold" sx={{ color: profitColorForCard }}>
+                                    {(profitForCard).toFixed(2)} {CURRENCY_SYMBOLS[displayCurrency]}
+                                  </Typography>
+                                </Box>
+                                <Box>
+                                  <Typography variant="body2" color="text.secondary">{t.boughtDate}:</Typography>
+                                  <Typography variant="h6" fontWeight="bold">{item.boughtDate}</Typography>
+                                </Box>
+                              </Box>
+                            </CardContent>
+                            <CardFooter>
+                              <Box display="flex" gap={0.5} flexWrap="wrap">
+                                <Tooltip title={t.edit}>
+                                  <IconButton color="secondary" onClick={(e) => { e.stopPropagation(); handleEdit(item); }} size="small">
+                                    <Edit size={16} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title={t.markAsSold}>
+                                  <IconButton
+                                    color="success"
+                                    onClick={(e) => { e.stopPropagation(); setItemToSell(item); setSellPrice(item.buyPrice); setSellDialog(true); }}
+                                    disabled={item.sold}
+                                    size="small"
+                                  >
+                                    <TrendingUp size={16} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title={t.delete}>
+                                  <IconButton color="error" onClick={(e) => { e.stopPropagation(); confirmDelete(item); }} size="small">
+                                    <Delete size={16} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title={t.updatePrice}>
+                                  <IconButton color="secondary" onClick={(e) => { e.stopPropagation(); handleCurrentPriceUpdate(item); }} size="small">
+                                    <Zap size={16} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title={t.marketAnalysis}>
+                                  <IconButton color="primary" onClick={(e) => { e.stopPropagation(); handleMarketAnalysis(item); }} size="small">
+                                    <BarChart size={16} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Відкрити в Steam Market">
+                                  <IconButton
+                                    color="primary"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (item.game === "CS2") {
+                                        window.open(`https://steamcommunity.com/market/listings/730/${encodeURIComponent(item.market_hash_name)}`, '_blank');
+                                      } else if (item.game === "Dota 2") {
+                                        window.open(`https://steamcommunity.com/market/listings/570/${encodeURIComponent(item.market_hash_name)}`, '_blank');
+                                      } else if (item.game === "PUBG") {
+                                        window.open(`https://steamcommunity.com/market/listings/578080/${encodeURIComponent(item.market_hash_name)}`, '_blank');
+                                      }
+                                    }}
+                                    size="small"
+                                  >
+                                    <Globe size={16} />
+                                  </IconButton>
+                                </Tooltip>
+                              </Box>
+                            </CardFooter>
+                          </Box>
+                        </StyledCard>
+                      </Box>
+                    );
+                  })
+                )}
+              </Box>
+
+              <Box mt={4} display="flex" justifyContent="center">
+                {paginatedInvestments.length > 0 && (
+                  <Pagination
+                    count={pageCount}
+                    page={page}
+                    onChange={(event, value) => setPage(value)}
+                    color="primary"
+                    size="large"
+                    sx={{
+                      '& .MuiPaginationItem-root': {
+                        color: theme.palette.text.primary,
+                        '&.Mui-selected': {
+                          backgroundColor: theme.palette.primary.main,
+                          color: 'white',
+                        },
+                        '&.Mui-selected:hover': {
+                          backgroundColor: theme.palette.primary.dark,
+                        },
+                      },
+                    }}
+                  />
+                )}
+              </Box>
+
+              <Tooltip title={t.addItem} arrow>
+                <Fab
+                  color="primary"
+                  aria-label="add"
+                  sx={{
+                    position: 'fixed',
+                    bottom: 32,
+                    right: 32,
+                    width: 56,
+                    height: 56,
+                    boxShadow: '0 8px 20px rgba(74, 20, 140, 0.3)',
+                    '&:hover': {
+                      transform: 'scale(1.1) rotate(90deg)',
+                      boxShadow: '0 12px 24px rgba(74, 20, 140, 0.4)',
+                    },
+                    transition: 'all 0.3s ease',
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                  }}
+                  onClick={() => setAddDialog(true)}
+                >
+                  <Plus size={24} />
+                </Fab>
+              </Tooltip>
+            </>
+          )}
           
           {/* DIALOGS */}
 

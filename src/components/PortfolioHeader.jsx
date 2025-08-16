@@ -2,11 +2,13 @@ import React from 'react';
 import {
   Typography, Box, IconButton, Menu, MenuItem,
   FormGroup, FormControlLabel, Switch, FormControl,
-  InputLabel, Select, Tooltip, CircularProgress
+  InputLabel, Select, Tooltip, CircularProgress, Button
 } from '@mui/material';
-import { Zap, BarChart, Settings, Globe, DollarSign } from 'lucide-react';
+import { Zap, BarChart, Settings, Globe, DollarSign, Shuffle, Briefcase } from 'lucide-react';
 
 const PortfolioHeader = ({
+  currentPage,
+  setCurrentPage,
   t,
   theme,
   themeMode,
@@ -27,21 +29,58 @@ const PortfolioHeader = ({
   handleSettingsMenuClose
 }) => {
   return (
-    <Box display="flex" justifyContent="space-between" alignItems="center">
+    <Box display="flex" justifyContent="space-between" alignItems="center" flexWrap="wrap">
       <Typography variant="h4" color="primary" fontWeight="bold">
-        {t.portfolio}
+        {currentPage === 'portfolio' ? (t.portfolio || 'Портфоліо') : 'Arbitrage Pulse'}
       </Typography>
-      <Box display="flex" gap={1}>
-        <Tooltip title={t.updateAllPrices}>
-          <IconButton color="primary" onClick={fetchAndUpdateAllPrices} disabled={isUpdatingAllPrices}>
-            {isUpdatingAllPrices ? <CircularProgress size={24} /> : <Zap />}
-          </IconButton>
+
+      {/* --- ІНТЕГРАЦІЯ: Навігаційний Хаб --- */}
+      <Box sx={{ 
+        display: 'flex', 
+        gap: 1, 
+        border: `1px solid ${theme.palette.divider}`, 
+        borderRadius: '12px', 
+        p: 0.5,
+        backgroundColor: theme.palette.background.default,
+        mx: 2
+      }}>
+        <Tooltip title="Портфоліо">
+          <Button 
+            variant={currentPage === 'portfolio' ? 'contained' : 'text'} 
+            onClick={() => setCurrentPage('portfolio')}
+            sx={{ borderRadius: '8px' }}
+            startIcon={<Briefcase />}
+          >
+            Портфоліо
+          </Button>
         </Tooltip>
-        <Tooltip title={t.analytics}>
-          <IconButton color="secondary" onClick={handleAnalyticsOpen}>
-            <BarChart />
-          </IconButton>
+        <Tooltip title="Арбітраж">
+          <Button 
+            variant={currentPage === 'arbitrage' ? 'contained' : 'text'} 
+            onClick={() => setCurrentPage('arbitrage')}
+            sx={{ borderRadius: '8px' }}
+            startIcon={<Shuffle />}
+          >
+            Арбітраж
+          </Button>
         </Tooltip>
+      </Box>
+
+      <Box display="flex" gap={1} alignItems="center">
+        {currentPage === 'portfolio' && (
+          <>
+            <Tooltip title={t.updateAllPrices}>
+              <IconButton color="primary" onClick={fetchAndUpdateAllPrices} disabled={isUpdatingAllPrices}>
+                {isUpdatingAllPrices ? <CircularProgress size={24} /> : <Zap />}
+              </IconButton>
+            </Tooltip>
+            <Tooltip title={t.analytics}>
+              <IconButton color="secondary" onClick={handleAnalyticsOpen}>
+                <BarChart />
+              </IconButton>
+            </Tooltip>
+          </>
+        )}
         <Tooltip title={t.settings}>
           <IconButton color="secondary" onClick={handleSettingsMenuClick}>
             <Settings />
