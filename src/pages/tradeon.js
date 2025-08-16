@@ -1,3 +1,5 @@
+import React from 'react';
+
 export default function TradeonPage() {
   return (
     <div style={{ padding: "20px" }}>
