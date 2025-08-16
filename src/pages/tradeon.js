@@ -3,7 +3,7 @@ import {
   Box, Container, Typography, Paper, Grid, Button, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, TableSortLabel, TextField, InputAdornment,
   IconButton, Tooltip, Chip, Avatar, Select, MenuItem, FormControl, InputLabel,
-  CircularProgress, LinearProgress
+  CircularProgress, LinearProgress, Link
 } from '@mui/material';
 import {
   Zap, Filter, Search, ArrowRight, TrendingUp, DollarSign, Percent, Info
@@ -39,6 +39,7 @@ export default function TradeonPage() {
   const [sourceMarket, setSourceMarket] = useState('Steam');
   const [destMarket, setDestMarket] = useState('DMarket');
   const [sortBy, setSortBy] = useState('netProfit');
+  const [priceType, setPriceType] = useState('min_price'); // ДОДАНО: Стан для типу ціни
   
   const MARKETS = ['Steam', 'DMarket', 'CS.Money', 'Buff'];
 
@@ -46,37 +47,15 @@ export default function TradeonPage() {
     setIsLoading(true);
     setOpportunities([]);
 
-    if (destMarket !== 'DMarket') {
-        console.warn("Логіка для цього ринку ще не реалізована.");
-        setIsLoading(false);
-        return;
-    }
-
     try {
-      // Запит до нашого бекенд-проксі
-      const response = await fetch(`${BACKEND_URL}/api/dmarket-proxy?path=/exchange/v1/market/items&gameId=a8db&limit=50&currency=USD`);
+      const response = await fetch(`${BACKEND_URL}/api/arbitrage-opportunities?source=${sourceMarket}&destination=${destMarket}`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      
-      if (data.objects && Array.isArray(data.objects)) {
-          const transformedData = data.objects.map(item => ({
-              id: item.itemId,
-              name: item.title,
-              image: item.image,
-              sourceMarket: 'Steam', // Поки що заглушка
-              sourcePrice: (parseFloat(item.price.USD) / 100) * 0.85, // Імітуємо ціну на Steam (умовно -15%)
-              destMarket: 'DMarket',
-              destPrice: parseFloat(item.price.USD) / 100,
-              fees: (parseFloat(item.price.USD) / 100) * 0.07, // Імітуємо комісію DMarket (умовно 7%)
-          }));
-          setOpportunities(transformedData);
-      } else {
-          console.error("DMarket API returned unexpected data structure:", data);
-      }
+      setOpportunities(data);
 
     } catch (error) {
       console.error("Failed to fetch opportunities:", error);
@@ -105,11 +84,25 @@ export default function TradeonPage() {
       if (sortBy === 'roi') {
           return bProfit.roi - aProfit.roi;
       }
-      if (sortBy === 'minPrice') {
+      // Змінено з minPrice на sourcePrice для відповідності ключу в об'єкті
+      if (sortBy === 'sourcePrice') {
           return a.sourcePrice - b.sourcePrice;
       }
       return 0;
   });
+
+  // ДОДАНО: Функція для генерації посилань на маркетплейси
+  const getMarketLink = (market, itemName) => {
+      const encodedName = encodeURIComponent(itemName);
+      switch(market) {
+          case 'Steam':
+              return `https://steamcommunity.com/market/search?appid=730&q=${encodedName}`;
+          case 'DMarket':
+              return `https://dmarket.com/ingame-items/item-list/csgo-skins?title=${encodedName}`;
+          default:
+              return '#';
+      }
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -126,7 +119,7 @@ export default function TradeonPage() {
           </Box>
 
           <Grid container spacing={3} mb={4}>
-            <Grid item xs={12} sm={6} md={3}><MetricCard title="Активні можливості" value={isLoading ? '...' : sortedOpportunities.length} icon={<TrendingUp />} /></Grid>
+            <Grid item xs={12} sm={6} md={3}><MetricCard title="Знайдено можливостей" value={isLoading ? '...' : sortedOpportunities.length} icon={<TrendingUp />} /></Grid>
             <Grid item xs={12} sm={6} md={3}><MetricCard title="Сукупний потенціал" value="$0.00" icon={<DollarSign />} /></Grid>
             <Grid item xs={12} sm={6} md={3}><MetricCard title="Середній ROI" value="0.00%" icon={<Percent />} /></Grid>
             <Grid item xs={12} sm={6} md={3}><MetricCard title="Середній час угоди" value="~45 хв" icon={<Info />} /></Grid>
@@ -135,7 +128,7 @@ export default function TradeonPage() {
           <Paper sx={{ p: 2, mb: 4, borderRadius: 4, background: theme.palette.background.paper }}>
             <Grid container spacing={2} alignItems="center">
               <Grid item xs={12} md={3}><TextField fullWidth variant="outlined" placeholder="Пошук за назвою предмета..." InputProps={{ startAdornment: (<InputAdornment position="start"><Search color={theme.palette.text.secondary} /></InputAdornment>), sx: { borderRadius: 2 } }} /></Grid>
-              <Grid item xs={6} md={2.5}>
+              <Grid item xs={6} md={2}>
                 <FormControl fullWidth variant="outlined">
                   <InputLabel>Ринок покупки</InputLabel>
                   <Select value={sourceMarket} label="Ринок покупки" onChange={(e) => setSourceMarket(e.target.value)} sx={{ borderRadius: 2 }}>
@@ -143,7 +136,7 @@ export default function TradeonPage() {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={6} md={2.5}>
+              <Grid item xs={6} md={2}>
                 <FormControl fullWidth variant="outlined">
                   <InputLabel>Ринок продажу</InputLabel>
                   <Select value={destMarket} label="Ринок продажу" onChange={(e) => setDestMarket(e.target.value)} sx={{ borderRadius: 2 }}>
@@ -151,17 +144,29 @@ export default function TradeonPage() {
                   </Select>
                 </FormControl>
               </Grid>
+               {/* ДОДАНО: Вибір типу ціни */}
               <Grid item xs={12} md={2}>
                  <FormControl fullWidth variant="outlined">
-                  <InputLabel>Сортувати за</InputLabel>
-                  <Select value={sortBy} label="Сортувати за" onChange={(e) => setSortBy(e.target.value)} sx={{ borderRadius: 2 }}>
-                      <MenuItem value="netProfit">Прибутком</MenuItem>
-                      <MenuItem value="roi">ROI</MenuItem>
-                      <MenuItem value="minPrice">Мін. ціною</MenuItem>
+                  <InputLabel>Тип ціни</InputLabel>
+                  <Select value={priceType} label="Тип ціни" onChange={(e) => setPriceType(e.target.value)} sx={{ borderRadius: 2 }}>
+                      <MenuItem value="min_price">Мінімальна ціна</MenuItem>
+                      <MenuItem value="avg_price" disabled>Середня ціна (скоро)</MenuItem>
+                      <MenuItem value="autobuy" disabled>Автобай (скоро)</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12} md={2}><Button fullWidth variant="outlined" color="secondary" startIcon={<Filter />} sx={{ height: '56px', borderRadius: 2 }}>Фільтри</Button></Grid>
+              {/* Змінено сортування та кнопку фільтрів для кращого компонування */}
+              <Grid item xs={6} md={1.5}>
+                 <FormControl fullWidth variant="outlined">
+                  <InputLabel>Сортувати</InputLabel>
+                  <Select value={sortBy} label="Сортувати" onChange={(e) => setSortBy(e.target.value)} sx={{ borderRadius: 2 }}>
+                      <MenuItem value="netProfit">Прибутком</MenuItem>
+                      <MenuItem value="roi">ROI</MenuItem>
+                      <MenuItem value="sourcePrice">Ціною</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={6} md={1.5}><Button fullWidth variant="outlined" color="secondary" startIcon={<Filter />} sx={{ height: '56px', borderRadius: 2 }}>Фільтри</Button></Grid>
             </Grid>
           </Paper>
 
@@ -188,8 +193,18 @@ export default function TradeonPage() {
                     return (
                       <TableRow key={item.id} sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { backgroundColor: theme.palette.action.hover, }, transition: 'background-color 0.2s' }}>
                         <TableCell><Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}><Avatar src={item.image} variant="rounded" /><Typography variant="body1" fontWeight={500}>{item.name}</Typography></Box></TableCell>
-                        <TableCell align="center"><Chip label={item.sourceMarket} size="small" variant="outlined" /><Typography variant="body2" fontWeight="bold" mt={0.5}>${item.sourcePrice.toFixed(2)}</Typography></TableCell>
-                        <TableCell align="center"><Chip label={item.destMarket} size="small" /><Typography variant="body2" fontWeight="bold" mt={0.5}>${item.destPrice.toFixed(2)}</Typography></TableCell>
+                        <TableCell align="center">
+                            <Link href={getMarketLink(item.sourceMarket, item.name)} target="_blank" rel="noopener noreferrer" underline="none">
+                                <Chip label={item.sourceMarket} size="small" variant="outlined" clickable />
+                            </Link>
+                            <Typography variant="body2" fontWeight="bold" mt={0.5}>${item.sourcePrice.toFixed(2)}</Typography>
+                        </TableCell>
+                        <TableCell align="center">
+                            <Link href={getMarketLink(item.destMarket, item.name)} target="_blank" rel="noopener noreferrer" underline="none">
+                                <Chip label={item.destMarket} size="small" clickable />
+                            </Link>
+                            <Typography variant="body2" fontWeight="bold" mt={0.5}>${item.destPrice.toFixed(2)}</Typography>
+                        </TableCell>
                         <TableCell align="right"><Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>${netProfit.toFixed(2)}</Typography><Typography variant="caption" color="text.secondary">Комісія: ${item.fees.toFixed(2)}</Typography></TableCell>
                         <TableCell align="right"><Typography variant="h6" fontWeight="bold" sx={{ color: profitColor }}>{roi.toFixed(2)}%</Typography></TableCell>
                         <TableCell align="center"><Tooltip title="Переглянути деталі угоди"><IconButton color="primary"><ArrowRight /></IconButton></Tooltip></TableCell>
